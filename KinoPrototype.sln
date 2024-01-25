@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34302.85
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinoPrototype", "KinoPrototype\KinoPrototype\KinoPrototype.csproj", "{415B5FB4-8912-4DE7-BA02-B1412CF68ACF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinoPrototype.Client", "KinoPrototype\KinoPrototype.Client\KinoPrototype.Client.csproj", "{6BBB8E20-2855-42DE-9FBE-A1E23D670642}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{415B5FB4-8912-4DE7-BA02-B1412CF68ACF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{415B5FB4-8912-4DE7-BA02-B1412CF68ACF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{415B5FB4-8912-4DE7-BA02-B1412CF68ACF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{415B5FB4-8912-4DE7-BA02-B1412CF68ACF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BBB8E20-2855-42DE-9FBE-A1E23D670642}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BBB8E20-2855-42DE-9FBE-A1E23D670642}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BBB8E20-2855-42DE-9FBE-A1E23D670642}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BBB8E20-2855-42DE-9FBE-A1E23D670642}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A79324BB-5D6E-45D9-80D9-6DB85BABDFB9}
+	EndGlobalSection
+EndGlobal
