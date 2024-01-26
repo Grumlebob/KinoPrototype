@@ -14,7 +14,7 @@ public class Participant
 {
     public int Id { get; set; }
     public string Nickname { get; set; }
-    public List<Showtime> VotedFor { get; set; }
+    public List<Showtime>? VotedFor { get; set; }
 }
 
 public class JoinEvent
@@ -22,7 +22,7 @@ public class JoinEvent
     public int Id { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
-    public List<Showtime> Showtimes { get; set; }
+    public List<Showtime>? Showtimes { get; set; }
     public List<Participant> Participants { get; set; }
     private DateTime _deadline;
 
@@ -37,7 +37,7 @@ public class Movie
 {
     public int Id { get; set; }
     public string Navn { get; set; }
-    public List<Showtime> Showtimes { get; set; }
+    public List<Showtime>? Showtimes { get; set; }
     public string ImageUrl { get; set; }
     public int Duration { get; set; }
     private DateTime _premiereDate;

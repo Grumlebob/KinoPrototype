@@ -50,15 +50,23 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<KinoContext>();
 
+    await dbContext.Database.EnsureDeletedAsync();
+    await dbContext.Database.EnsureCreatedAsync();
     // Creating demo data
-    var host = new Host { AuthId = "host1", Username = "DemoHost" };
 
-    var movie = new Movie { Id = 1, Navn = "Demo Movie", Duration = 120, PremiereDate = DateTime.Now, AgeRating = 12, ImageUrl = "https://via.placeholder.com/150"};
-    var cinema = new Cinema { Id = 1, Navn = "Demo Cinema" };
-    var sal = new Sal { Id = 1, Navn = "Main Hall" };
+    // has no depencies
     var playtime = new Playtime { Id = 1, StartTime = DateTime.Now.AddHours(2) };
     var version = new VersionTag { Id = 1, Type = "3D" };
-
+    var cinema = new Cinema { Id = 1, Navn = "Demo Cinema" };
+    var sal = new Sal { Id = 1, Navn = "Main Hall" };
+    
+    // deps on showTime
+    var movie = new Movie { Id = 1, Navn = "Demo Movie", Duration = 120, PremiereDate = DateTime.Now, AgeRating = 12, ImageUrl = "https://via.placeholder.com/150"};
+    
+    // deps on joinEvent
+    var host = new Host { AuthId = "host1", Username = "DemoHost" };
+    
+    // deps on everything
     var showtime = new Showtime
     {
         MovieId = movie.Id,
@@ -83,27 +91,30 @@ using (var scope = app.Services.CreateScope())
         Description = "Join us for a demo movie night!",
         Deadline = DateTime.Now.AddDays(1),
         Showtimes = new List<Showtime> { showtime },
-        Participants = new List<Participant> { participant1, participant2 }
+        Participants = new List<Participant> { participant1, participant2 },
     };
-
     // Adding demo data to context
-    dbContext.Hosts.Add(host);
-    dbContext.Participants.AddRange(new[] { participant1, participant2 });
-    dbContext.JoinEvents.Add(joinEvent);
-    dbContext.Movies.Add(movie);
-    dbContext.Showtimes.Add(showtime);
+    
     dbContext.Playtimes.Add(playtime);
     dbContext.Versions.Add(version);
     dbContext.Cinemas.Add(cinema);
     dbContext.Sals.Add(sal);
+    
+    dbContext.SaveChanges();
+    
+    dbContext.Hosts.Add(host);
+    dbContext.Participants.AddRange(new[] { participant1, participant2 });
+    dbContext.JoinEvents.Add(joinEvent);
+    dbContext.Movies.Add(movie);
 
     // Save changes to the in-memory database
     dbContext.SaveChanges();
     
+    
     //Make the demo data vote for a specfic movie in the join event
-    movie.Showtimes.Add(showtime);
     
 
+ 
     // Demo: Displaying the details of the join event
     Console.WriteLine($"Event: {joinEvent.Title}");
     Console.WriteLine($"Host: {host.Username}");
