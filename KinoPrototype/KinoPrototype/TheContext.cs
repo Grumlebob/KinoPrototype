@@ -4,7 +4,6 @@ namespace KinoPrototype;
 
 public class TheContext: DbContext
 {
-    public DbSet<User> users { get; set; }
 
     public TheContext(DbContextOptions<TheContext> options) : base(options)
     {
