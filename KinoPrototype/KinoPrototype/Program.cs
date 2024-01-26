@@ -1,4 +1,5 @@
 using KinoPrototype;
+using KinoPrototype.Client;
 using KinoPrototype.Components;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,7 @@ builder.Services.AddDbContextFactory<TheContext>(options =>
     options.UseNpgsql(secret);
     options.EnableDetailedErrors();
 });
+
 
 var app = builder.Build();
 
@@ -39,11 +41,14 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(KinoPrototype.Client._Imports).Assembly);
 
 
+app.MapApiEndpoints();
+
+
 //RUN ONCE WHEN APP STARTS - Create a new scope to be able to resolve scoped services
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<TheContext>();
-    dbContext.users.Add(new User() { Id = 1, Nickname = "Test" });
+    //dbContext.users.Add(new User() { Id = 1, Nickname = "Test" });
     dbContext.SaveChanges();
     //print users from context
     foreach (var user in dbContext.users)
