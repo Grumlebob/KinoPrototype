@@ -18,7 +18,5 @@ public class TheContext: DbContext
     {
         base.OnModelCreating(modelBuilder);
         
-
-
     }
 }

@@ -48,7 +48,10 @@ app.MapApiEndpoints();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<TheContext>();
-    //dbContext.users.Add(new User() { Id = 1, Nickname = "Test" });
+    
+    //add user if doesn't exist
+    if (!dbContext.users.Any())
+        dbContext.users.Add(new User() { Id = 1, Nickname = "Test" });
     dbContext.SaveChanges();
     //print users from context
     foreach (var user in dbContext.users)
