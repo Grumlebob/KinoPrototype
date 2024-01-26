@@ -1,9 +1,4 @@
 ﻿@page "/"
-@inject Everything everything
-
-        
-
-
 
 
 <PageTitle>Home</PageTitle>
@@ -11,19 +6,54 @@
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
 <br/>
 message: @message
+<br/>
 
+show showTimes
+<InputCheckbox @bind-Value="showShowTimes"></InputCheckbox>
+@if (showShowTimes)
+{
+    <div>@showTimes</div>
+}
+<br/>
+
+show aktuelleFilm
+<InputCheckbox @bind-Value="showAktuelleFilm"></InputCheckbox>
+@if (showAktuelleFilm)
+{
+    <div>@aktuelleFilm</div>
+}
+<br/>
+
+show kommendeFilm
+<InputCheckbox @bind-Value="showKommendeFilm"></InputCheckbox>
+@if (showKommendeFilm)
+{
+    <div>@kommendeFilm</div>
+}
 
 
 @code {
     private string message;
+    private string showTimes;
+    private bool showShowTimes;
+    private string aktuelleFilm;
+    private bool showAktuelleFilm;
+    private string kommendeFilm;
+    private bool showKommendeFilm;
 
 
     protected override async Task OnInitializedAsync()
     {
         var client = new HttpClient();
 
-        message = await everything.GetHelloMessageAsync();
+        message = await client.GetStringAsync("https://localhost:7123/hello");
+
+        showTimes = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?format=json&region=content&cinemas%5B0%5D=1&sort=most_viewed");
+        aktuelleFilm = await client.GetStringAsync("https://api.kino.dk/aktuelle-film?region=content&format=json");
+        kommendeFilm = await client.GetStringAsync("https://api.kino.dk/film-paa-vej?region=content&format=json");
     }
+
 }
