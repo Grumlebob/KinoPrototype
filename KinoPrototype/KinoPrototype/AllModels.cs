@@ -8,6 +8,7 @@ public class Host
     [Key] public string AuthId { get; set; }
     public string Username { get; set; }
     public List<JoinEvent> JoinEvents { get; set; }
+    
 }
 
 public class Participant
@@ -22,6 +23,7 @@ public class JoinEvent
     public int Id { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
+    
     public List<Showtime>? Showtimes { get; set; }
     public List<Participant> Participants { get; set; }
     private DateTime _deadline;
@@ -31,6 +33,9 @@ public class JoinEvent
         get => _deadline;
         set => _deadline = value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime();
     }
+    
+    // nagivation property to Host
+    public Host Host { get; set; }
 }
 
 public class Movie
