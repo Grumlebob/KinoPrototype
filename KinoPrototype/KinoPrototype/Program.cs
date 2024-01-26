@@ -115,11 +115,17 @@ using (var scope = app.Services.CreateScope())
     
 
  
-    // Demo: Displaying the details of the join event
-    Console.WriteLine($"Event: {joinEvent.Title}");
-    Console.WriteLine($"Host: {host.Username}");
-    Console.WriteLine($"Participants: {string.Join(", ", joinEvent.Participants.Select(p => p.Nickname))}");
-    Console.WriteLine($"Movie: {showtime.Movie.Navn} at {showtime.Playtime.StartTime}");
+    // Prints results from reading the database
+    Console.WriteLine($"There are {dbContext.JoinEvents.Count()} join events in the database");
+    Console.WriteLine($"There are {dbContext.Movies.Count()} movies in the database");
+    Console.WriteLine($"There are {dbContext.Participants.Count()} participants in the database");
+    Console.WriteLine($"There are {dbContext.Hosts.Count()} hosts in the database");
+    Console.WriteLine($"There are {dbContext.Showtimes.Count()} showtimes in the database");
+    Console.WriteLine($"There are {dbContext.Playtimes.Count()} playtimes in the database");
+    Console.WriteLine($"There are {dbContext.Versions.Count()} versions in the database");
+    Console.WriteLine($"There are {dbContext.Cinemas.Count()} cinemas in the database");
+    Console.WriteLine($"There are {dbContext.Sals.Count()} sals in the database");
+    
 }
 
 app.Run();
