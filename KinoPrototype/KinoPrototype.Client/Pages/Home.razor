@@ -1,4 +1,8 @@
 ﻿@page "/"
+@inject Everything everything
+
+        
+
 
 
 
@@ -7,14 +11,19 @@
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+<br/>
+message: @message
 
 
 
 @code {
-    //private string message;
+    private string message;
 
-    //protected override async Task OnInitializedAsync()
-    //{
-    //    message = await everything.GetHelloMessageAsync();
-    //}
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = new HttpClient();
+
+        message = await everything.GetHelloMessageAsync();
+    }
 }
