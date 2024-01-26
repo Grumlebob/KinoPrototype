@@ -2,6 +2,7 @@ using KinoPrototype;
 using KinoPrototype.Client;
 using KinoPrototype.Components;
 using Microsoft.EntityFrameworkCore;
+using Host = KinoPrototype.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +49,22 @@ app.MapApiEndpoints();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<TheContext>();
+
+    //add demo user to MovieContext
+    var demoUser = new Host()
+    {
+        Id = 1,
+        Username = "demo",
+    };
+    dbContext.Hosts.Add(demoUser);
+    await dbContext.SaveChangesAsync();
+    
+    //print all hosts
+    var hosts = await dbContext.Hosts.ToListAsync();
+    foreach (var host in hosts)
+    {
+        Console.WriteLine("user"+ host.Username);
+    }
 }
 
 app.Run();
