@@ -1,0 +1,344 @@
+﻿{
+  "header": {},
+  "content": {
+    "breadcrumbs": {},
+    "content": {
+      "type": "route",
+      "route_name": "kino_showtimes.overview",
+      "overview": "showtimes",
+      "endpoint": "/transform/showtimes_result/showtimes?facets%5B0%5D=sort&facets%5B1%5D=city&facets%5B2%5D=cinemas&facets%5B3%5D=movies&facets%5B4%5D=versions&facets%5B5%5D=genres&facets%5B6%5D=date&pagination=1&count=5",
+      "initial": {},
+      "facets": {},
+      "content": {
+        "type": "overview_result",
+        "content": [
+          {
+            "type": "cinema",
+            "id": 49,
+            "movies": [
+              {
+                "type": "movie",
+                "id": 76769,
+                "versions": [
+                  {
+                    "type": "combined_version",
+                    "label": "2D - Original tale - Undertekster",
+                    "dates": [
+                      {
+                        "type": "showtime_date",
+                        "date": "ons, 28/02",
+                        "showtimes": [
+                          {
+                            "type": "showtime_item",
+                            "id": 327577,
+                            "available_seats": 163,
+                            "time": "18:00",
+                            "room": {
+                              "type": "room",
+                              "id": 15,
+                              "label": "Sal 1"
+                            }
+                          },
+                          {
+                            "type": "showtime_item",
+                            "id": 327578,
+                            "available_seats": 122,
+                            "time": "20:15",
+                            "room": {
+                              "type": "room",
+                              "id": 16,
+                              "label": "Sal 2"
+                            }
+                          },
+                          {
+                            "type": "showtime_item",
+                            "id": 327579,
+                            "available_seats": 165,
+                            "time": "21:15",
+                            "room": {
+                              "type": "room",
+                              "id": 15,
+                              "label": "Sal 1"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "showtime_date",
+                        "date": "tor, 29/02",
+                        "showtimes": [
+                          {
+                            "type": "showtime_item",
+                            "id": 327580,
+                            "available_seats": 161,
+                            "time": "18:00",
+                            "room": {
+                              "type": "room",
+                              "id": 15,
+                              "label": "Sal 1"
+                            }
+                          },
+                          {
+                            "type": "showtime_item",
+                            "id": 327581,
+                            "available_seats": 128,
+                            "time": "20:15",
+                            "room": {
+                              "type": "room",
+                              "id": 16,
+                              "label": "Sal 2"
+                            }
+                          },
+                          {
+                            "type": "showtime_item",
+                            "id": 327582,
+                            "available_seats": 165,
+                            "time": "21:15",
+                            "room": {
+                              "type": "room",
+                              "id": 15,
+                              "label": "Sal 1"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "showtime_date",
+                        "date": "fre, 01/03",
+                        "showtimes": [
+                          {
+                            "type": "showtime_item",
+                            "id": 327583,
+                            "available_seats": 165,
+                            "time": "18:00",
+                            "room": {
+                              "type": "room",
+                              "id": 15,
+                              "label": "Sal 1"
+                            }
+                          },
+                          {
+                            "type": "showtime_item",
+                            "id": 327585,
+                            "available_seats": 128,
+                            "time": "20:15",
+                            "room": {
+                              "type": "room",
+                              "id": 16,
+                              "label": "Sal 2"
+                            }
+                          },
+                          {
+                            "type": "showtime_item",
+                            "id": 327584,
+                            "available_seats": 165,
+                            "time": "21:15",
+                            "room": {
+                              "type": "room",
+                              "id": 15,
+                              "label": "Sal 1"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "showtime_date",
+                        "date": "lør, 02/03",
+                        "showtimes": [
+                          {
+                            "type": "showtime_item",
+                            "id": 327586,
+                            "available_seats": 163,
+                            "time": "18:00",
+                            "room": {
+                              "type": "room",
+                              "id": 15,
+                              "label": "Sal 1"
+                            }
+                          },
+                          {
+                            "type": "showtime_item",
+                            "id": 327588,
+                            "available_seats": 128,
+                            "time": "20:15",
+                            "room": {
+                              "type": "room",
+                              "id": 16,
+                              "label": "Sal 2"
+                            }
+                          },
+                          {
+                            "type": "showtime_item",
+                            "id": 327587,
+                            "available_seats": 165,
+                            "time": "21:15",
+                            "room": {
+                              "type": "room",
+                              "id": 15,
+                              "label": "Sal 1"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "content": {
+                  "type": "entity",
+                  "id": "1526734",
+                  "label": "Dune: Del 2",
+                  "field_censorship_icon": "censorship--11",
+                  "field_censorship_info": null,
+                  "field_censorship_link": null,
+                  "field_imdb": "tt15239678",
+                  "field_playing_time": "166",
+                  "field_poster": {
+                    "type": "entity",
+                    "entity_type": "media",
+                    "bundle": "image",
+                    "id": "350044",
+                    "label": "Dune2-plakat2.jpg",
+                    "transform_mode": "poster",
+                    "langcode": "da",
+                    "field_copyright": "'Dune: Del 2' / Warner Bros.",
+                    "field_media_image": {
+                      "type": "responsive_image",
+                      "responsive_image_style_id": "isg_poster",
+                      "width": "800",
+                      "height": "1200",
+                      "attributes": {
+                        "loading": "lazy"
+                      },
+                      "sources": [
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_356_534/public/2024-01/Dune2-plakat2.webp?h=7881f276&itok=K-DLndDd 1x",
+                          "media": "all and (min-width : 1921px)",
+                          "type": "image/webp",
+                          "width": 356,
+                          "height": 534
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_356_534/public/2024-01/Dune2-plakat2.webp?h=7881f276&itok=K-DLndDd 1x",
+                          "media": "all and (min-width : 1200px) and (max-width: 1920px)",
+                          "type": "image/webp",
+                          "width": 356,
+                          "height": 534
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_356_534/public/2024-01/Dune2-plakat2.webp?h=7881f276&itok=K-DLndDd 1x",
+                          "media": "all and (min-width : 992px) and (max-width: 1199px)",
+                          "type": "image/webp",
+                          "width": 356,
+                          "height": 534
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_200_300/public/2024-01/Dune2-plakat2.webp?h=7881f276&itok=7kMjZQBm 1x",
+                          "media": "all and (min-width : 768px) and (max-width: 991px)",
+                          "type": "image/webp",
+                          "width": 200,
+                          "height": 300
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_130_195/public/2024-01/Dune2-plakat2.webp?h=7881f276&itok=qAkS7jXa 1x, https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_260_390/public/2024-01/Dune2-plakat2.webp?h=7881f276&itok=VwJh-1Pd 2x",
+                          "media": "all and (min-width : 481px) and (max-width: 767px)",
+                          "type": "image/webp",
+                          "width": 130,
+                          "height": 195
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_130_195/public/2024-01/Dune2-plakat2.webp?h=7881f276&itok=qAkS7jXa 1x, https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_260_390/public/2024-01/Dune2-plakat2.webp?h=7881f276&itok=VwJh-1Pd 2x",
+                          "media": "all and (min-width : 413px) and (max-width: 480px)",
+                          "type": "image/webp",
+                          "width": 130,
+                          "height": 195
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_130_195/public/2024-01/Dune2-plakat2.webp?h=7881f276&itok=qAkS7jXa 1x, https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_260_390/public/2024-01/Dune2-plakat2.webp?h=7881f276&itok=VwJh-1Pd 2x",
+                          "media": "all and (max-width: 412px)",
+                          "type": "image/webp",
+                          "width": 130,
+                          "height": 195
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_356_534/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=K-DLndDd 1x",
+                          "media": "all and (min-width : 1921px)",
+                          "type": "image/jpeg",
+                          "width": 356,
+                          "height": 534
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_356_534/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=K-DLndDd 1x",
+                          "media": "all and (min-width : 1200px) and (max-width: 1920px)",
+                          "type": "image/jpeg",
+                          "width": 356,
+                          "height": 534
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_356_534/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=K-DLndDd 1x",
+                          "media": "all and (min-width : 992px) and (max-width: 1199px)",
+                          "type": "image/jpeg",
+                          "width": 356,
+                          "height": 534
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_200_300/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=7kMjZQBm 1x",
+                          "media": "all and (min-width : 768px) and (max-width: 991px)",
+                          "type": "image/jpeg",
+                          "width": 200,
+                          "height": 300
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_130_195/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=qAkS7jXa 1x, https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_260_390/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=VwJh-1Pd 2x",
+                          "media": "all and (min-width : 481px) and (max-width: 767px)",
+                          "type": "image/jpeg",
+                          "width": 130,
+                          "height": 195
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_130_195/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=qAkS7jXa 1x, https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_260_390/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=VwJh-1Pd 2x",
+                          "media": "all and (min-width : 413px) and (max-width: 480px)",
+                          "type": "image/jpeg",
+                          "width": 130,
+                          "height": 195
+                        },
+                        {
+                          "srcset": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_130_195/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=qAkS7jXa 1x, https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_260_390/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=VwJh-1Pd 2x",
+                          "media": "all and (max-width: 412px)",
+                          "type": "image/jpeg",
+                          "width": 130,
+                          "height": 195
+                        }
+                      ],
+                      "output_image_tag": false,
+                      "img_element": {
+                        "theme": "image",
+                        "uri": "https://api.kino.dk/sites/kino.dk/files/styles/isg_focal_point_356_534/public/2024-01/Dune2-plakat2.jpg?h=7881f276&itok=K-DLndDd",
+                        "attributes": {
+                          "loading": "lazy"
+                        },
+                        "width": 356,
+                        "height": 534,
+                        "alt": "'Dune: Del 2'"
+                      },
+                      "url": null
+                    }
+                  },
+                  "field_premiere": "28. feb. 2024",
+                  "movie_id": 76769,
+                  "url": "/film/dune-del-2"
+                }
+              }
+            ],
+            "content": {}
+          }
+        ],
+        "result_type": "showtimes",
+        "totals_text": "",
+        "pager": {}
+      }
+    },
+    "universe": {},
+    "advertisement": {}
+  },
+  "footer": {}
+}

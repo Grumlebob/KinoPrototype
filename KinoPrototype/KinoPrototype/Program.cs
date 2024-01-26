@@ -1,8 +1,8 @@
+
 using KinoPrototype;
-using KinoPrototype.Client;
 using KinoPrototype.Components;
 using Microsoft.EntityFrameworkCore;
-using Host = KinoPrototype.Host;
+using Host = Microsoft.Extensions.Hosting.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,17 +57,17 @@ using (var scope = app.Services.CreateScope())
     // has no depencies
     var playtime = new Playtime { Id = 1, StartTime = DateTime.Now.AddHours(2) };
     var version = new VersionTag { Id = 1, Type = "3D" };
-    var cinema = new Cinema { Id = 1, Navn = "Demo Cinema" };
+    var cinema = new KinoPrototype.Cinema { Id = 1, Navn = "Demo Cinema" };
     var sal = new Sal { Id = 1, Navn = "Main Hall" };
     
     // deps on showTime
-    var movie = new Movie { Id = 1, Navn = "Demo Movie", Duration = 120, PremiereDate = DateTime.Now, AgeRating = 12, ImageUrl = "https://via.placeholder.com/150"};
+    var movie = new KinoPrototype.Movie { Id = 1, Navn = "Demo Movie", Duration = 120, PremiereDate = DateTime.Now, AgeRating = 12, ImageUrl = "https://via.placeholder.com/150"};
     
     // deps on joinEvent
-    var host = new Host { AuthId = "host1", Username = "DemoHost" };
+    var host = new KinoPrototype.Host { AuthId = "host1", Username = "DemoHost" };
     
     // deps on everything
-    var showtime = new Showtime
+    var showtime = new KinoPrototype.Showtime
     {
         MovieId = movie.Id,
         Movie = movie,
@@ -90,7 +90,7 @@ using (var scope = app.Services.CreateScope())
         Title = "Movie Night",
         Description = "Join us for a demo movie night!",
         Deadline = DateTime.Now.AddDays(1),
-        Showtimes = new List<Showtime> { showtime },
+        Showtimes = new List<KinoPrototype.Showtime> { showtime },
         Participants = new List<Participant> { participant1, participant2 },
     };
     // Adding demo data to context
@@ -112,7 +112,6 @@ using (var scope = app.Services.CreateScope())
     
     
     //Make the demo data vote for a specfic movie in the join event
-    
 
  
     // Prints results from reading the database
@@ -125,7 +124,14 @@ using (var scope = app.Services.CreateScope())
     Console.WriteLine($"There are {dbContext.Versions.Count()} versions in the database");
     Console.WriteLine($"There are {dbContext.Cinemas.Count()} cinemas in the database");
     Console.WriteLine($"There are {dbContext.Sals.Count()} sals in the database");
-    
+
+    var jsonResult = JsonParser.GetMoviesFromJson();
+    Console.WriteLine($"There are {jsonResult.Count} movies in the json file");
+    foreach (var movie1 in jsonResult)
+    {
+        Console.WriteLine("label parsed " + movie1);
+    }
+
 }
 
 app.Run();

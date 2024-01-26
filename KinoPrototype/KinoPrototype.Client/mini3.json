@@ -1,0 +1,51 @@
+﻿{
+  "header": {},
+  "content": {
+    "breadcrumbs": {},
+    "content": {
+      "type": "route",
+      "route_name": "kino_showtimes.overview",
+      "overview": "showtimes",
+      "endpoint": "/transform/showtimes_result/showtimes?facets%5B0%5D=sort&facets%5B1%5D=city&facets%5B2%5D=cinemas&facets%5B3%5D=movies&facets%5B4%5D=versions&facets%5B5%5D=genres&facets%5B6%5D=date&pagination=1&count=5",
+      "initial": {},
+      "facets": {},
+      "content": {
+        "type": "overview_result",
+        "content": [
+          {
+            "type": "cinema",
+            "id": 49,
+            "movies": [
+              {
+                "type": "movie",
+                "id": 76769,
+                "versions": [],
+                "content": {
+                  "type": "entity",
+                  "id": "1526734",
+                  "label": "Dune: Del 2",
+                  "field_censorship_icon": "censorship--11",
+                  "field_censorship_info": null,
+                  "field_censorship_link": null,
+                  "field_imdb": "tt15239678",
+                  "field_playing_time": "166",
+                  "field_poster": {},
+                  "field_premiere": "28. feb. 2024",
+                  "movie_id": 76769,
+                  "url": "/film/dune-del-2"
+                }
+              }
+            ],
+            "content": {}
+          }
+        ],
+        "result_type": "showtimes",
+        "totals_text": "",
+        "pager": {}
+      }
+    },
+    "universe": {},
+    "advertisement": {}
+  },
+  "footer": {}
+}
