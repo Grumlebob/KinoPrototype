@@ -126,12 +126,6 @@ using (var scope = app.Services.CreateScope())
     Console.WriteLine($"There are {dbContext.Sals.Count()} sals in the database");
 
     var jsonResult = JsonParser.GetMoviesFromJson();
-    Console.WriteLine($"There are {jsonResult.Count} movies in the json file");
-    foreach (var movie1 in jsonResult)
-    {
-        Console.WriteLine("label parsed " + movie1);
-    }
-
 }
 
 app.Run();
