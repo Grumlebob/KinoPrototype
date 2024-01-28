@@ -212,6 +212,7 @@ public static class JsonParser
         string json = File.ReadAllText(relativePath);
 
         var CinemaIdAndName = new Dictionary<int, string>();
+        var CinemaFilters = new HashSet<int>();
         var result = new List<string>();
         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
 
@@ -228,10 +229,11 @@ public static class JsonParser
 
                     if (myDeserializedClass.Content.Content.Content.Content != null)
                     {
-                        foreach (var item in myDeserializedClass.Content.Content.Content.Content)
+                        foreach (var cinema in myDeserializedClass.Content.Content.Content.Content)
                         {
-                            Console.WriteLine("Cinema name: " + CinemaIdAndName[item.Id]);
-                            foreach (var movie in item.Movies)
+                            //if (!CinemaFilters.Contains(cinema.Id)) continue; //their cinema filter doesn't work, instead get all cinemas and filter them out here
+                            Console.WriteLine("Cinema name: " + CinemaIdAndName[cinema.Id]);
+                            foreach (var movie in cinema.Movies)
                             {
                                 Console.WriteLine("movie label: " + movie.Content.Label);
                                 Console.WriteLine("Premiere: " + movie.Content.FieldPremiere);
