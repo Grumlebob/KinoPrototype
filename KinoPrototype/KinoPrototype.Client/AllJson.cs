@@ -142,9 +142,11 @@ public class Cinemas
 
     [JsonProperty("title")] public string Title { get; set; }
 
+    //ignore this json
+    [JsonIgnore]
     [JsonProperty("default_value")] public string DefaultValue { get; set; }
-
     [JsonProperty("options")] public List<CinemaOption> Options { get; set; }
+    
 }
 
 public class CinemaOption
@@ -208,7 +210,7 @@ public static class JsonParser
     {
         string
             relativePath =
-                @"..\KinoPrototype.Client\mini8.json"; // Navigates up one level from AllJson to KinoPrototype.Client, then to tester.json
+                @"..\KinoPrototype.Client\mini9.json"; // Navigates up one level from AllJson to KinoPrototype.Client, then to tester.json
         string json = File.ReadAllText(relativePath);
 
         var CinemaIdAndName = new Dictionary<int, string>();
