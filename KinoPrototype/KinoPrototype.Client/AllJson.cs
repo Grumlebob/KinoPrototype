@@ -210,7 +210,7 @@ public static class JsonParser
     {
         string
             relativePath =
-                @"..\KinoPrototype.Client\mini9.json"; // Navigates up one level from AllJson to KinoPrototype.Client, then to tester.json
+                @"..\KinoPrototype.Client\mini11.json"; // Navigates up one level from AllJson to KinoPrototype.Client, then to tester.json
         string json = File.ReadAllText(relativePath);
 
         var CinemaIdAndName = new Dictionary<int, string>();
