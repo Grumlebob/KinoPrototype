@@ -125,7 +125,7 @@ using (var scope = app.Services.CreateScope())
     Console.WriteLine($"There are {dbContext.Cinemas.Count()} cinemas in the database");
     Console.WriteLine($"There are {dbContext.Sals.Count()} sals in the database");
 
-    var jsonResult = JsonParser.GetMoviesFromJson();
+    //var jsonResult = JsonParser.GetMoviesFromJson();
 }
 
 app.Run();

@@ -1,0 +1,429 @@
+﻿@using Newtonsoft.Json;
+@using System.Collections.Generic;
+@using System.Globalization;
+@using KinoPrototype
+@page "/JoinCreate"
+
+<h3>JoinCreate</h3>
+
+@code {
+
+    List<Cinema> cinemas = new List<Cinema>();
+    List<KinoPrototype.Movie> movies = new List<KinoPrototype.Movie>();
+    List<KinoPrototype.Showtime> showtimes = new List<KinoPrototype.Showtime>();
+    List<Playtime> playtimes = new List<Playtime>();
+    List<VersionTag> versionTags = new List<VersionTag>();
+    List<Sal> sals = new List<Sal>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = new HttpClient();
+        string json = await client.GetStringAsync("https://localhost:7123/json");
+        var CinemaIdAndName = new Dictionary<int, string>();
+        var CinemaFilters = new HashSet<int>();
+        var result = new List<string>();
+        Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
+
+       
+
+        if (myDeserializedClass.Content != null)
+        {
+            if (myDeserializedClass.Content.Content != null)
+            {
+                if (myDeserializedClass.Content.Content.Content != null)
+                {
+                    foreach (var cinemaOption in myDeserializedClass.Content.Content.Facets.Cinemas.Options)
+                    {
+                        CinemaIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
+                    }
+
+                    if (myDeserializedClass.Content.Content.Content.Content != null)
+                    {
+                        foreach (var cinema in myDeserializedClass.Content.Content.Content.Content)
+                        {
+                            var cinemaObject = new Cinema()
+                            {
+                                Navn = CinemaIdAndName[cinema.Id]
+                            };
+                            cinemas.Add(cinemaObject);
+
+
+                            //if (!CinemaFilters.Contains(cinema.Id)) continue; //their cinema filter doesn't work, instead get all cinemas and filter them out here
+                            //Console.WriteLine("Cinema name: " + CinemaIdAndName[cinema.Id]);
+                            foreach (var movie in cinema.Movies)
+                            {
+                                KinoPrototype.Movie movieObject;
+
+                                if (!movies.Any(m => m.Navn == movie.Content.Label))
+                                {
+                                    movieObject = new KinoPrototype.Movie()
+                                    {
+                                        Navn = movie.Content.Label,
+                                        PremiereDate = DateTime.Parse(movie.Content.FieldPremiere),
+                                        AgeRating = int.Parse(string.Concat(movie.Content.FieldCensorshipIcon.Where(Char.IsDigit))),
+                                        ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
+                                        Duration = int.Parse(movie.Content.FieldPlayingTime)
+                                    };
+                                    movies.Add(movieObject);
+                                }
+                                else
+                                {
+                                    movieObject = movies.First(m => m.Navn == movie.Content.Label);
+                                }
+
+
+                                foreach (var versions in movie.Versions)
+                                {
+                                    VersionTag versionObject;
+                                    if (!versionTags.Any(v => v.Type == versions.Label))
+                                    {
+                                        versionObject = new VersionTag()
+                                        {
+                                            Type = versions.Label
+                                        };
+                                        versionTags.Add(versionObject);
+                                    }
+                                    else
+                                    {
+                                        versionObject = versionTags.First(v => v.Type == versions.Label);
+                                    }
+
+
+                                    foreach (var showtimeDate in versions.Dates)
+                                    {
+                                        foreach (var showtimeItem in showtimeDate.Showtimes)
+                                        {
+                                            Sal salObject;
+                                            if (!sals.Any(s => s.Navn == showtimeItem.Room.Label))
+                                            {
+                                                salObject = new Sal()
+                                                {
+                                                    Navn = showtimeItem.Room.Label
+                                                };
+                                                sals.Add(salObject);
+                                            }
+                                            else
+                                            {
+                                                salObject = sals.First(s => s.Navn == showtimeItem.Room.Label);
+                                            }
+
+                                            Playtime playtimeObject;
+                                            var dateString = (showtimeDate.Date + " " + showtimeItem.Time);
+                                            var commaIndex = dateString.IndexOf(',');
+                                            if (commaIndex > 0)
+                                            {
+                                                dateString = dateString.Substring(commaIndex + 2);
+                                            }
+
+                                            var dateTimeFormat = "dd/MM HH:mm";
+                                            DateTime dateTime;
+
+                                            if (DateTime.TryParseExact(dateString, dateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+                                            {
+                                                // Successfully parsed the date
+                                            }
+                                            else
+                                            {
+                                                // Failed to parse the date
+                                            }
+
+                                            if (!playtimes.Any(p => p.StartTime == dateTime))
+                                            {
+                                                playtimeObject = new Playtime()
+                                                {
+                                                    StartTime = dateTime
+                                                };
+                                                playtimes.Add(playtimeObject);
+                                            }
+                                            else
+                                            {
+                                                playtimeObject = playtimes.First(p => p.StartTime == dateTime);
+                                            }
+
+
+                                            var showtimeObject = new Showtime()
+                                            {
+                                                Movie = movieObject,
+                                                Cinema = cinemaObject,
+                                                VersionTag = versionObject,
+                                                Sal = salObject,
+                                                Playtime = playtimeObject
+                                            };
+                                            showtimes.Add(showtimeObject);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Level 4 Content is null");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Level 3 Content is null");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Level 2 Content is null");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Level 1 Content is null");
+        }
+
+        Console.WriteLine("Parsed the following cinemas");
+        foreach (var cinema in cinemas)
+        {
+            Console.WriteLine(cinema.Navn);
+        }
+
+        Console.WriteLine(" ");
+        Console.WriteLine("Parsed the following movies");
+        foreach (var movie in movies)
+        {
+            Console.WriteLine(movie.Navn);
+        }
+
+        Console.WriteLine(" ");
+        Console.WriteLine("Parsed the following versions");
+        foreach (var version in versionTags)
+        {
+            Console.WriteLine(version.Type);
+        }
+
+        Console.WriteLine(" ");
+        Console.WriteLine("Parsed the following sals");
+        foreach (var sal in sals)
+        {
+            Console.WriteLine(sal.Navn);
+        }
+
+        Console.WriteLine(" ");
+        Console.WriteLine("Parsed the following playtimes");
+        foreach (var playtime in playtimes)
+        {
+            Console.WriteLine(playtime.StartTime);
+        }
+
+        Console.WriteLine(" ");
+        Console.WriteLine("Parsed the following showtimes");
+        foreach (var showtime in showtimes)
+        {
+            Console.WriteLine(showtime.Movie.Navn + ", " + showtime.Cinema.Navn + "," + showtime.Playtime.StartTime + "," + showtime.VersionTag.Type + "," + showtime.Sal.Navn);
+        }
+    }
+    
+    
+
+    public class Root
+    {
+        [JsonProperty("content")] public ContentLevel1 Content { get; set; }
+    }
+
+    public class ContentLevel1
+    {
+        [JsonProperty("content")] public ContentLevel2 Content { get; set; }
+    }
+
+    public class ContentLevel2
+    {
+        [JsonProperty("content")] public ContentLevel3 Content { get; set; }
+
+        [JsonProperty("facets")] public Facets Facets { get; set; }
+    }
+
+
+    public class ContentLevel3
+    {
+        [JsonProperty("content")] public List<ContentLevel4> Content { get; set; }
+    }
+
+    public class ContentLevel4
+    {
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("id")] public int Id { get; set; }
+
+        [JsonProperty("movies")] public List<Movie> Movies { get; set; }
+    }
+
+    public class Movie
+    {
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("id")] public int Id { get; set; }
+
+        [JsonProperty("versions")] public List<Version> Versions { get; set; }
+
+        [JsonProperty("content")] public MovieContent Content { get; set; }
+    }
+
+    public class Version
+    {
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("label")] public string Label { get; set; }
+
+        [JsonProperty("dates")] public List<ShowtimeDate> Dates { get; set; }
+    }
+
+    public class ShowtimeDate
+    {
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("date")] public string Date { get; set; }
+
+        [JsonProperty("showtimes")] public List<ShowtimeItem> Showtimes { get; set; }
+    }
+
+    public class ShowtimeItem
+    {
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("id")] public int Id { get; set; }
+
+        [JsonProperty("available_seats")] public int AvailableSeats { get; set; }
+
+        [JsonProperty("time")] public string Time { get; set; }
+
+        [JsonProperty("room")] public Room Room { get; set; }
+    }
+
+    public class Room
+    {
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("id")] public int Id { get; set; }
+
+        [JsonProperty("label")] public string Label { get; set; }
+    }
+
+    public class MovieContent
+    {
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("id")] public string Id { get; set; }
+
+        [JsonProperty("label")] public string Label { get; set; }
+
+        [JsonProperty("field_censorship_icon")]
+        public string FieldCensorshipIcon { get; set; }
+
+        [JsonProperty("field_playing_time")] public string FieldPlayingTime { get; set; }
+
+        [JsonProperty("field_poster")] public FieldPoster FieldPoster { get; set; }
+
+        [JsonProperty("field_premiere")] public string FieldPremiere { get; set; }
+    }
+
+    public class FieldPoster
+    {
+        [JsonProperty("type")] public string Type { get; set; }
+        [JsonProperty("field_media_image")] public FieldMediaImage FieldMediaImage { get; set; }
+    }
+
+    public class FieldMediaImage
+    {
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("responsive_image_style_id")]
+        public string ResponsiveImageStyleId { get; set; }
+
+        [JsonProperty("width")] public int Width { get; set; }
+
+        [JsonProperty("height")] public int Height { get; set; }
+
+        [JsonProperty("sources")] public List<SourceItem> Sources { get; set; } // Added this line
+    }
+
+    public class SourceItem
+    {
+        [JsonProperty("srcset")] public string Srcset { get; set; }
+
+        [JsonProperty("media")] public string Media { get; set; }
+
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("width")] public int? Width { get; set; } // Nullable because it might not always be present
+
+        [JsonProperty("height")] public int? Height { get; set; }
+    }
+
+    public class Cinemas
+    {
+        [JsonProperty("type")] public string Type { get; set; }
+
+        [JsonProperty("title")] public string Title { get; set; }
+
+        //ignore this json
+        [JsonIgnore]
+        [JsonProperty("default_value")]
+        public string DefaultValue { get; set; }
+
+        [JsonProperty("options")] public List<CinemaOption> Options { get; set; }
+    }
+
+    public class CinemaOption
+    {
+        [JsonProperty("key")] public int Key { get; set; }
+
+        [JsonProperty("value")] public string Value { get; set; }
+    }
+
+    public class Advertisement
+    {
+    }
+
+    public class Breadcrumbs
+    {
+    }
+
+
+    public class Facets
+    {
+        [JsonProperty("sort")] public object Sort { get; set; } // Replace object with specific type if necessary
+
+        [JsonProperty("city")] public object City { get; set; } // Replace object with specific type if necessary
+
+        [JsonProperty("cinemas")] public Cinemas Cinemas { get; set; }
+
+        [JsonProperty("movies")] public object Movies { get; set; } // Replace object with specific type if necessary
+
+        [JsonProperty("versions")] public object Versions { get; set; } // Replace object with specific type if necessary
+
+        [JsonProperty("genres")] public object Genres { get; set; } // Replace object with specific type if necessary
+
+        [JsonProperty("date")] public object Date { get; set; } // Replace object with specific type if necessary
+    }
+
+    public class Footer
+    {
+    }
+
+    public class Header
+    {
+    }
+
+    public class Initial
+    {
+    }
+
+    public class Pager
+    {
+    }
+
+
+    public class Universe
+    {
+    }
+
+}
+
+//https://kino.dk/ticketflow/showtimes?cinemas=53&movies=35883&sort=most_purchased
+//https://api.kino.dk/ticketflow/showtimes?cinemas=53&movies=35883&sort=most_purchased?region=content&format=json
+}
