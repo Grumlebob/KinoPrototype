@@ -7,6 +7,36 @@
 
 <h3>JoinCreate</h3>
 
+<!-- Hele filmen og dens showtimes -->
+<div class="Redbox">
+
+    <div class="PosterImage">
+        <img src="@showtimes[0].Movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+    </div>
+
+    <div class="MovieDetails">
+        <div class="MovieHeader">
+            <p> @showtimes[0].Movie.Navn </p>
+            <br/>
+            <p> @showtimes[0].Movie.PremiereDate </p>
+            <br/>
+            <p> @showtimes[0].Movie.Duration </p>
+            <br/>
+        </div>
+        <div class="CinemaLocation">
+            <p> @showtimes[0].Movie.Navn </p>
+            <br/>
+            <p> @showtimes[0].Movie.PremiereDate </p>
+            <br/>
+            <p> @showtimes[0].Movie.Duration </p>
+            <br/>
+        </div>
+    </div>
+
+
+</div>
+
+
 <h3>Parsed Cinemas</h3>
 <ul>
     @foreach (var cinema in cinemas)
@@ -69,9 +99,8 @@
 
 
 @code {
-    
-    [Parameter]
-    public string filterString { get; set; }
+
+    [Parameter] public string filterString { get; set; }
 
     string json;
 
@@ -85,9 +114,9 @@
     protected override async Task OnInitializedAsync()
     {
         var client = new HttpClient();
-        
-        var url= "https://api.kino.dk/ticketflow/showtimes?" + filterString;
-        
+
+        var url = "https://api.kino.dk/ticketflow/showtimes?" + filterString;
+
         var uri = new Uri(url);
         var queryParams = HttpUtility.ParseQueryString(uri.Query);
 
@@ -97,31 +126,31 @@
         var datesFilter = queryParams.GetValues("date")?.ToList() ?? new List<string>();
 
 
-        
-        
-        if (cinemasFilter.Count >=1 && moviesFilter.Count >= 1 )
+        if (cinemasFilter.Count >= 1 && moviesFilter.Count >= 1)
         {
-            var movieFilter ="&movies="+ moviesFilter[0];
+            var movieFilter = "&movies=" + moviesFilter[0];
             var cinemaFilter = "&cinemas=" + cinemasFilter[0];
-            
-            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+
+            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
                                                movieFilter + cinemaFilter + "?region=content&format=json");
-        } else if (cinemasFilter.Count >=1)
+        }
+        else if (cinemasFilter.Count >= 1)
         {
             var cinemaFilter = "&cinemas=" + cinemasFilter[0];
-            
-            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+
+            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
                                                cinemaFilter + "?region=content&format=json");
-        } else if (moviesFilter.Count >= 1)
+        }
+        else if (moviesFilter.Count >= 1)
         {
-            var movieFilter ="&movies="+ moviesFilter[0];
-            
-            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+            var movieFilter = "&movies=" + moviesFilter[0];
+
+            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
                                                movieFilter + "?region=content&format=json");
         }
         else
         {
-            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
                                                "&cinemas=53" + "?region=content&format=json");
         }
 
@@ -130,11 +159,11 @@
         {
             var dateString = string.Join("&date=", datesFilter);
             dateString = "&date=" + dateString;
-            
-            Console.WriteLine("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+
+            Console.WriteLine("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
                               dateString + "?region=content&format=json");
-            
-            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+
+            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
                                                dateString + "?region=content&format=json");
         }
         */
@@ -144,16 +173,14 @@
         Console.WriteLine("Genres: " + string.Join(", ", genresfilter));
         Console.WriteLine("Movies: " + string.Join(", ", moviesFilter));
         Console.WriteLine("Dates: " + string.Join(", ", datesFilter));
-        
-        
+
+
         var CinemaIdAndName = new Dictionary<int, string>();
         var MovieIdAndName = new Dictionary<int, string>();
-        
 
-        
+
         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
 
-       
 
         if (myDeserializedClass.Content != null)
         {
@@ -165,7 +192,7 @@
                     {
                         CinemaIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
                     }
-                    
+
                     foreach (var cinemaOption in myDeserializedClass.Content.Content.Facets.Movies.Options)
                     {
                         MovieIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
@@ -176,35 +203,35 @@
                         foreach (var cinema in myDeserializedClass.Content.Content.Content.Content)
                         {
                             Console.WriteLine(cinema.Id);
-                            foreach(var cinemaFilter in cinemasFilter)
+                            foreach (var cinemaFilter in cinemasFilter)
                             {
                                 Console.WriteLine(cinemaFilter);
                             }
-                            
+
                             var cinemaObject = new Cinema()
                             {
                                 Navn = CinemaIdAndName[cinema.Id]
-                            }; cinemas.Add(cinemaObject);
+                            };
+                            cinemas.Add(cinemaObject);
 
                             foreach (var movie in cinema.Movies)
                             {
-                                if(!MovieIdAndName.ContainsKey(movie.Id))
+                                if (!MovieIdAndName.ContainsKey(movie.Id))
                                 {
                                     continue;
                                 }
-                                
+
                                 KinoPrototype.Movie movieObject;
 
                                 if (!movies.Any(m => m.Navn == MovieIdAndName[movie.Id]))
                                 {
-                                    
                                     Console.WriteLine("duration: " + movie.Content.FieldPlayingTime);
 
                                     int duration;
-                                    
-                                   int.TryParse(movie.Content.FieldPlayingTime,out  duration);
-                                   
-                                    
+
+                                    int.TryParse(movie.Content.FieldPlayingTime, out duration);
+
+
                                     movieObject = new KinoPrototype.Movie()
                                     {
                                         Navn = MovieIdAndName[movie.Id],
@@ -327,11 +354,8 @@
         {
             Console.WriteLine("Level 1 Content is null");
         }
-
-       
     }
-    
-    
+
 
     public class Root
     {
@@ -512,14 +536,11 @@
         [JsonProperty("genres")] public object Genres { get; set; } // Replace object with specific type if necessary
 
         [JsonProperty("date")] public object Date { get; set; } // Replace object with specific type if necessary
-        
     }
 
     public class MovieLookup
     {
-        
         [JsonProperty("options")] public List<MovieOptions> Options { get; set; } // Replace object with specific type if necessary
-        
     }
 
     public class MovieOptions
