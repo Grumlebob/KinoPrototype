@@ -163,24 +163,26 @@
             <li>@showtime</li>
         }
     </ul>
+    
+    <button @onclick="finishJoinEvent">Finish</button>
 
-    @foreach (var movie in movies)
+    @foreach (var movie in showtimes.GroupBy(s => s.Movie))
     {
         <div class="Redbox">
             <div class="PosterImage">
-                <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+                <img src="@movie.Key.ImageUrl" alt="Movie Poster" width="200" height="300"/>
             </div>
             <div class="MovieDetails">
                 <div class="MovieHeader">
-                    <h2>@movie.Navn</h2>
+                    <h2>@movie.Key.Navn</h2>
 
                     <div class="movie-info">
-                        <span class="premiere">Premiere @movie.PremiereDate | </span>
-                        <span class="duration">Varighed @movie.Duration min</span>
+                        <span class="premiere">Premiere @movie.Key.PremiereDate | </span>
+                        <span class="duration">Varighed @movie.Key.Duration min</span>
                     </div>
 
                 </div>
-                @foreach (var cinema in movie.Showtimes.GroupBy(s => s.Cinema))
+                @foreach (var cinema in movie.GroupBy(s => s.Cinema))
                 {
                     <div class="CinemaLocation">
                         <h2>@cinema.Key.Navn</h2>
@@ -434,6 +436,7 @@
 
             var cinemaObject = new Cinema()
             {
+                Id = cinema.Id,
                 Navn = CinemaIdAndName[cinema.Id]
             };
             cinemas.Add(cinemaObject);
@@ -456,6 +459,7 @@
 
                     movieObject = new KinoPrototype.Domain.Movie()
                     {
+                        Id = movie.Id,
                         Navn = MovieIdAndName[movie.Id],
                         PremiereDate = movie.Content.FieldPremiere,
                         AgeRating = movie.Content.FieldCensorshipIcon,
@@ -478,6 +482,7 @@
                     {
                         versionObject = new VersionTag()
                         {
+                            
                             Type = versions.Label
                         };
                         versionTags.Add(versionObject);
@@ -550,7 +555,7 @@
                             };
                             showtimes.Add(showtimeObject);
 
-                            movieObject.Showtimes.Add(showtimeObject);
+                            //movieObject.Showtimes.Add(showtimeObject);
                         }
                     }
                 }
@@ -561,6 +566,45 @@
         PrintCount();
     }
 
+    
+    private async Task finishJoinEvent()
+    {
+       HttpClient client = new HttpClient();
+       
+       var url = "https://localhost:7123/putJoinEvent";
+
+       var pickedShowtimes = selectedShowtimeIds.Select(id => showtimes.First(s => s.Id == id)).ToList();
+       
+       var joinEvent = new JoinEvent()
+       {
+           Showtimes = pickedShowtimes,
+           Host = new Host(){Username = "per", AuthId = "1"},
+           Title = "Min fødselsdag",
+           Description = "Kom til min fødselsdag",
+           Deadline = DateTime.Now.AddDays(30),
+       };
+       
+       Console.WriteLine( "before: "+joinEvent.Id);
+       
+       //put pickedShowtimes to api
+       var response = await client.PutAsJsonAsync(url, joinEvent);
+      
+       var id = response.Content.ReadAsStringAsync().Result;
+       
+       Console.WriteLine("after: "+id);
+       
+       //get joinEvent from api
+        var response2 = await client.GetAsync("https://localhost:7123/event/"+id);
+        var returnedJoinEvent = await response2.Content.ReadFromJsonAsync<JoinEvent>();
+
+        foreach (var showtime in returnedJoinEvent .Showtimes)
+        {
+            Console.WriteLine("movieName: "+showtime.Movie.Navn);
+        }
+  
+         
+    }
+    
 
     public class Root
     {

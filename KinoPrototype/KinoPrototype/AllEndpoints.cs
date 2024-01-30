@@ -48,5 +48,116 @@ public static class AllEndpoints
             await context.SaveChangesAsync();
             return Results.Ok();
         });
+        
+        app.MapPut("/putJoinEvent/",async ([FromBody] JoinEvent joinEvent) =>
+        {
+            
+            
+            await using var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<KinoContext>();
+            
+            await context.Database.EnsureDeletedAsync();
+            await context.Database.EnsureCreatedAsync();
+
+            foreach (var showtime in joinEvent.Showtimes)
+            {
+                var dbShowtime = await context.Showtimes.FirstOrDefaultAsync(showtime =>  showtime.Id == showtime.Id);
+                
+                if (dbShowtime != null)
+                {
+                    //joinEvent.Showtimes[joinEvent.Showtimes.IndexOf(showtime)] = dbShowtime;
+                    continue;
+                }
+                
+                //cinemas
+                var dbCinema = await context.Cinemas.FirstOrDefaultAsync(cinema =>  showtime.Cinema.Navn == cinema.Navn);
+                
+                if (dbCinema != null)
+                {
+                   showtime.Cinema = dbCinema;
+                }
+                else
+                {
+                    await context.Cinemas.AddAsync(showtime.Cinema);
+                }
+                
+                //Sals
+                var dbSal = await context.Sals.FirstOrDefaultAsync(sal =>  showtime.Sal.Navn == sal.Navn);
+                
+                if (dbSal != null)
+                {
+                    showtime.Sal = dbSal;
+                }
+                else
+                {
+                    await context.Sals.AddAsync(showtime.Sal);
+                }
+                
+                
+                //Playtimes
+                var dbPlaytime = await context.Playtimes.FirstOrDefaultAsync(playtime =>  showtime.Playtime.StartTime == playtime.StartTime);
+                
+                if (dbPlaytime != null)
+                {
+                    showtime.Playtime = dbPlaytime;
+                }
+                else
+                {
+                    await context.Playtimes.AddAsync(showtime.Playtime);
+                }
+                
+                //VersionTags
+                var dbVersionTag = await context.Versions.FirstOrDefaultAsync(version =>  showtime.VersionTag.Type == version.Type);
+                
+                if (dbVersionTag != null)
+                {
+                    showtime.VersionTag = dbVersionTag;
+                }
+                else
+                {
+                    await context.Versions.AddAsync(showtime.VersionTag);
+                }
+                
+                context.SaveChanges();
+                
+                //Movies
+                var dbMovie = await context.Movies.FirstOrDefaultAsync(movie =>  showtime.Movie.Navn == movie.Navn);
+                
+                if (dbMovie != null)
+                {
+                    showtime.Movie = dbMovie;
+                }
+                else
+                {
+                    await context.Movies.AddAsync(showtime.Movie);
+                }
+                
+                context.SaveChanges();
+            
+                //Showtime
+                await context.Showtimes.AddAsync(showtime);
+                context.SaveChanges();
+                
+            }
+            
+            //Hosts
+            var dbHost = await context.Hosts.FirstOrDefaultAsync(host =>  joinEvent.Host.Username == host.Username);
+            
+            if (dbHost != null)
+            {
+                joinEvent.Host = dbHost;
+            }
+            else
+            {
+                await context.Hosts.AddAsync(joinEvent.Host);
+                context.SaveChanges();
+            }
+            
+            
+            //JoinEvent
+            await context.JoinEvents.AddAsync(joinEvent);
+            context.SaveChanges();
+            
+            return Results.Ok(joinEvent.Id);
+        });
     }
 }
