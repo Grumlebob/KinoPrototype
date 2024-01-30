@@ -154,7 +154,6 @@
 </style>
 
 
-
 @if (showtimes.Count > 0 && movies.Count > 0 && cinemas.Count > 0)
 {
     <h3>Checked Boxes</h3>
@@ -164,7 +163,7 @@
             <li>@showtime</li>
         }
     </ul>
-    
+
     @foreach (var movie in movies)
     {
         <div class="Redbox">
@@ -304,8 +303,8 @@
     string json;
 
     List<Cinema> cinemas = new List<Cinema>();
-    List<KinoPrototype.Domain.Movie> movies = new ();
-    List<KinoPrototype.Domain.Showtime> showtimes = new ();
+    List<KinoPrototype.Domain.Movie> movies = new();
+    List<KinoPrototype.Domain.Showtime> showtimes = new();
     List<Playtime> playtimes = new List<Playtime>();
     List<VersionTag> versionTags = new List<VersionTag>();
     List<Sal> sals = new List<Sal>();
@@ -328,7 +327,7 @@
         }
     }
 
-    
+
     //make method to print count of all lists
     void PrintCount()
     {
@@ -356,28 +355,45 @@
         var moviesFilter = queryParams.GetValues("movies")?.Select(int.Parse).ToList() ?? new List<int>();
         var datesFilter = queryParams.GetValues("date")?.ToList() ?? new List<string>();
 
+        string firstMovie = "";
+        string firstCinema = "";
+        string firstGenre = "";
+
 
         if (cinemasFilter.Count >= 1 && moviesFilter.Count >= 1)
         {
-            var movieFilter = "&movies=" + moviesFilter[0];
-            var cinemaFilter = "&cinemas=" + cinemasFilter[0];
+            firstMovie = "&movies=" + moviesFilter[0];
+            firstCinema = "&cinemas=" + cinemasFilter[0];
+            if (genresfilter.Count >= 1)
+            {
+                firstGenre = "&genres=" + genresfilter[0];
+            }
 
             json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
-                                               movieFilter + cinemaFilter + "?region=content&format=json");
+                                               firstMovie + firstCinema + firstGenre + "?region=content&format=json");
         }
         else if (cinemasFilter.Count >= 1)
         {
-            var cinemaFilter = "&cinemas=" + cinemasFilter[0];
+            firstCinema = "&cinemas=" + cinemasFilter[0];
+            if (genresfilter.Count >= 1)
+            {
+                firstGenre = "&genres=" + genresfilter[0];
+            }
 
             json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
-                                               cinemaFilter + "?region=content&format=json");
+                                               firstCinema + firstGenre + "?region=content&format=json");
         }
         else if (moviesFilter.Count >= 1)
         {
-            var movieFilter = "&movies=" + moviesFilter[0];
+            firstMovie = "&movies=" + moviesFilter[0];
+            
+            if (genresfilter.Count >= 1)
+            {
+                firstGenre = "&genres=" + genresfilter[0];
+            }
 
             json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
-                                               movieFilter + "?region=content&format=json");
+                                               firstMovie + firstGenre + "?region=content&format=json");
         }
         else
         {
@@ -385,33 +401,9 @@
                                                "&cinemas=53" + "?region=content&format=json");
         }
 
-        /*
-        if (datesFilter.Count > 0)
-        {
-            var dateString = string.Join("&date=", datesFilter);
-            dateString = "&date=" + dateString;
-
-            Console.WriteLine("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
-                              dateString + "?region=content&format=json");
-
-            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
-                                               dateString + "?region=content&format=json");
-        }
-        */
-
-        // Display the results
-        //Console.WriteLine("Cinemas: " + string.Join(", ", cinemasFilter));
-        //Console.WriteLine("Genres: " + string.Join(", ", genresfilter));
-        //Console.WriteLine("Movies: " + string.Join(", ", moviesFilter));
-        //Console.WriteLine("Dates: " + string.Join(", ", datesFilter));
-
-
         var CinemaIdAndName = new Dictionary<int, string>();
         var MovieIdAndName = new Dictionary<int, string>();
-
-        int showtimeIdCounter = 0; //TODO ÆNDRER TIL RIGTIG DATA BASE LOGIC!!
-
-        
+        var GenrerIdAndName = new Dictionary<int, string>();
 
         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
 
@@ -427,9 +419,14 @@
                         CinemaIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
                     }
 
-                    foreach (var cinemaOption in myDeserializedClass.Content.Content.Facets.Movies.Options)
+                    foreach (var movieOptions in myDeserializedClass.Content.Content.Facets.Movies.Options)
                     {
-                        MovieIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
+                        MovieIdAndName.Add(movieOptions.Key, movieOptions.Value);
+                    }
+
+                    foreach (var genrerOptions in myDeserializedClass.Content.Content.Facets.Genres.Options)
+                    {
+                        GenrerIdAndName.Add(genrerOptions.Key, genrerOptions.Value);
                     }
 
                     if (myDeserializedClass.Content.Content.Content.Content != null)
@@ -549,7 +546,6 @@
                                                 playtimeObject = playtimes.First(p => p.StartTime == dateTime);
                                             }
 
-                                            showtimeIdCounter++;
                                             var showtimeObject = new Showtime()
                                             {
                                                 Id = showtimeItem.Id,
@@ -768,14 +764,27 @@
 
         [JsonProperty("versions")] public object Versions { get; set; } // Replace object with specific type if necessary
 
-        [JsonProperty("genres")] public object Genres { get; set; } // Replace object with specific type if necessary
+        [JsonProperty("genres")] public GenresLookup Genres { get; set; } // Replace object with specific type if necessary
 
         [JsonProperty("date")] public object Date { get; set; } // Replace object with specific type if necessary
     }
 
+    public class GenresLookup
+    {
+        [JsonProperty("options")] public List<GenrerOptions> Options { get; set; }
+    }
+
+    public class GenrerOptions
+    {
+        [JsonProperty("key")] public int Key { get; set; }
+
+        [JsonProperty("value")] public string Value { get; set; }
+    }
+
+
     public class MovieLookup
     {
-        [JsonProperty("options")] public List<MovieOptions> Options { get; set; } // Replace object with specific type if necessary
+        [JsonProperty("options")] public List<MovieOptions> Options { get; set; }
     }
 
     public class MovieOptions
