@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-namespace KinoPrototype;
+namespace KinoPrototype.Domain;
 
 public class Host
 {
@@ -45,8 +45,13 @@ public class Movie
     public string ImageUrl { get; set; }
     public int Duration { get; set; }
 
-    public  DateTime PremiereDate { get; set; }
-    public int AgeRating { get; set; }
+    public string PremiereDate
+    {
+        get;
+        set;
+    }
+
+    public string AgeRating { get; set; }
 }
 
 public class Showtime
@@ -58,7 +63,7 @@ public class Showtime
     public Cinema Cinema { get; set; }
     public int PlaytimeId { get; set; }
     public Playtime Playtime { get; set; }
-    public int VersionId { get; set; }
+    public int VersionTagId { get; set; }
     public VersionTag VersionTag { get; set; }
     public int SalId { get; set; }
     public Sal Sal { get; set; }

@@ -3,9 +3,9 @@
 @using System.Globalization;
 @using System.Web
 @using KinoPrototype
+@using KinoPrototype.Domain
 @page "/JoinCreate/{filterString}"
 
-<h3>JoinCreate</h3>
 
 <style>
 /* Base container for each movie */
@@ -90,6 +90,7 @@
     border-radius: 4px;
     box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
     white-space: nowrap; /* Keep text in a single line */
+    width: 100px;
 }
 
 /* Style for the sal name */
@@ -99,8 +100,7 @@
     overflow: hidden; /* Ensures the content does not expand the container */
     text-overflow: ellipsis; /* Adds an ellipsis when the text overflows */
     white-space: nowrap; /* Prevents the text from wrapping to the next line */
-    max-width: 50px;
-    min-width: 50px;
+   
 }
 
 /* Style for the playtime */
@@ -151,12 +151,20 @@
     color: #333; /* Dark gray text color for better contrast */
     font-size: 14px; /* Adjust font size as needed */
 }
-
-
 </style>
+
+
 
 @if (showtimes.Count > 0 && movies.Count > 0 && cinemas.Count > 0)
 {
+    <h3>Checked Boxes</h3>
+    <ul>
+        @foreach (var showtime in selectedShowtimeIds)
+        {
+            <li>@showtime</li>
+        }
+    </ul>
+    
     @foreach (var movie in movies)
     {
         <div class="Redbox">
@@ -201,14 +209,18 @@
                                                     @foreach (var showtime in date)
                                                     {
                                                         var checkboxId = "showtime_" + showtime.Id;
+                                                        var showtimeId = showtime.Id;
+                                                        var isChecked = selectedShowtimeIds.Contains(showtimeId);
+
                                                         <div>
-                                                            <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime">
+                                                            <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime" checked="@isChecked" @onclick="() => ToggleCheckedShowtime(showtimeId)">
                                                             <label for="@checkboxId" class="showtime-label">
-                                                                <div class="showtime-sal">@showtime.Sal.Navn.Substring(0,3)</div>
+                                                                <div class="showtime-sal">@showtime.Sal.Navn</div>
                                                                 <div class="showtime-time">@showtime.Playtime.StartTime.ToString("HH:mm")</div>
                                                             </label>
                                                         </div>
                                                     }
+
                                                 </td>
                                             }
                                         </tr>
@@ -292,13 +304,31 @@
     string json;
 
     List<Cinema> cinemas = new List<Cinema>();
-    List<KinoPrototype.Movie> movies = new List<KinoPrototype.Movie>();
-    List<KinoPrototype.Showtime> showtimes = new List<KinoPrototype.Showtime>();
+    List<KinoPrototype.Domain.Movie> movies = new ();
+    List<KinoPrototype.Domain.Showtime> showtimes = new ();
     List<Playtime> playtimes = new List<Playtime>();
     List<VersionTag> versionTags = new List<VersionTag>();
     List<Sal> sals = new List<Sal>();
 
 
+    List<int> selectedShowtimeIds = new List<int>();
+
+
+    void ToggleCheckedShowtime(int showtimeId)
+    {
+        if (selectedShowtimeIds.Contains(showtimeId))
+        {
+            // Showtime is already selected, remove it
+            selectedShowtimeIds.Remove(showtimeId);
+        }
+        else
+        {
+            // Showtime is not selected, add it
+            selectedShowtimeIds.Add(showtimeId);
+        }
+    }
+
+    
     //make method to print count of all lists
     void PrintCount()
     {
@@ -381,6 +411,8 @@
 
         int showtimeIdCounter = 0; //TODO ÆNDRER TIL RIGTIG DATA BASE LOGIC!!
 
+        
+
         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
 
 
@@ -423,7 +455,7 @@
                                     continue;
                                 }
 
-                                KinoPrototype.Movie movieObject;
+                                KinoPrototype.Domain.Movie movieObject;
 
                                 if (!movies.Any(m => m.Navn == MovieIdAndName[movie.Id]))
                                 {
@@ -432,7 +464,7 @@
                                     int.TryParse(movie.Content.FieldPlayingTime, out duration);
 
 
-                                    movieObject = new KinoPrototype.Movie()
+                                    movieObject = new KinoPrototype.Domain.Movie()
                                     {
                                         Navn = MovieIdAndName[movie.Id],
                                         PremiereDate = movie.Content.FieldPremiere,
@@ -589,10 +621,10 @@
 
         [JsonProperty("id")] public int Id { get; set; }
 
-        [JsonProperty("movies")] public List<Movie> Movies { get; set; }
+        [JsonProperty("movies")] public List<MovieJson> Movies { get; set; }
     }
 
-    public class Movie
+    public class MovieJson
     {
         [JsonProperty("type")] public string Type { get; set; }
 
@@ -652,13 +684,13 @@
         [JsonProperty("label")] public string Label { get; set; }
 
         [JsonProperty("field_censorship_icon")]
-        public int FieldCensorshipIcon { get; set; }
+        public string FieldCensorshipIcon { get; set; }
 
         [JsonProperty("field_playing_time")] public string FieldPlayingTime { get; set; }
 
         [JsonProperty("field_poster")] public FieldPoster FieldPoster { get; set; }
 
-        [JsonProperty("field_premiere")] public DateTime FieldPremiere { get; set; }
+        [JsonProperty("field_premiere")] public string FieldPremiere { get; set; }
     }
 
     public class FieldPoster
