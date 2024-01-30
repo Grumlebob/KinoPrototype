@@ -386,7 +386,7 @@
         else if (moviesFilter.Count >= 1)
         {
             firstMovie = "&movies=" + moviesFilter[0];
-            
+
             if (genresfilter.Count >= 1)
             {
                 firstGenre = "&genres=" + genresfilter[0];
@@ -408,181 +408,155 @@
         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
 
 
-        if (myDeserializedClass.Content != null)
+        foreach (var cinemaOption in myDeserializedClass.Content.Content.Facets.Cinemas.Options)
         {
-            if (myDeserializedClass.Content.Content != null)
+            CinemaIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
+        }
+
+        foreach (var movieOptions in myDeserializedClass.Content.Content.Facets.Movies.Options)
+        {
+            MovieIdAndName.Add(movieOptions.Key, movieOptions.Value);
+        }
+
+        foreach (var genrerOptions in myDeserializedClass.Content.Content.Facets.Genres.Options)
+        {
+            GenrerIdAndName.Add(genrerOptions.Key, genrerOptions.Value);
+        }
+
+
+        foreach (var cinema in myDeserializedClass.Content.Content.Content.Content)
+        {
+            Console.WriteLine(cinema.Id);
+            foreach (var cinemaFilter in cinemasFilter)
             {
-                if (myDeserializedClass.Content.Content.Content != null)
+                Console.WriteLine(cinemaFilter);
+            }
+
+            var cinemaObject = new Cinema()
+            {
+                Navn = CinemaIdAndName[cinema.Id]
+            };
+            cinemas.Add(cinemaObject);
+
+            foreach (var movie in cinema.Movies)
+            {
+                if (!MovieIdAndName.ContainsKey(movie.Id))
                 {
-                    foreach (var cinemaOption in myDeserializedClass.Content.Content.Facets.Cinemas.Options)
+                    continue;
+                }
+
+                KinoPrototype.Domain.Movie movieObject;
+
+                if (!movies.Any(m => m.Navn == MovieIdAndName[movie.Id]))
+                {
+                    int duration;
+
+                    int.TryParse(movie.Content.FieldPlayingTime, out duration);
+
+
+                    movieObject = new KinoPrototype.Domain.Movie()
                     {
-                        CinemaIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
-                    }
-
-                    foreach (var movieOptions in myDeserializedClass.Content.Content.Facets.Movies.Options)
-                    {
-                        MovieIdAndName.Add(movieOptions.Key, movieOptions.Value);
-                    }
-
-                    foreach (var genrerOptions in myDeserializedClass.Content.Content.Facets.Genres.Options)
-                    {
-                        GenrerIdAndName.Add(genrerOptions.Key, genrerOptions.Value);
-                    }
-
-                    if (myDeserializedClass.Content.Content.Content.Content != null)
-                    {
-                        foreach (var cinema in myDeserializedClass.Content.Content.Content.Content)
-                        {
-                            Console.WriteLine(cinema.Id);
-                            foreach (var cinemaFilter in cinemasFilter)
-                            {
-                                Console.WriteLine(cinemaFilter);
-                            }
-
-                            var cinemaObject = new Cinema()
-                            {
-                                Navn = CinemaIdAndName[cinema.Id]
-                            };
-                            cinemas.Add(cinemaObject);
-
-                            foreach (var movie in cinema.Movies)
-                            {
-                                if (!MovieIdAndName.ContainsKey(movie.Id))
-                                {
-                                    continue;
-                                }
-
-                                KinoPrototype.Domain.Movie movieObject;
-
-                                if (!movies.Any(m => m.Navn == MovieIdAndName[movie.Id]))
-                                {
-                                    int duration;
-
-                                    int.TryParse(movie.Content.FieldPlayingTime, out duration);
-
-
-                                    movieObject = new KinoPrototype.Domain.Movie()
-                                    {
-                                        Navn = MovieIdAndName[movie.Id],
-                                        PremiereDate = movie.Content.FieldPremiere,
-                                        AgeRating = movie.Content.FieldCensorshipIcon,
-                                        ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
-                                        Duration = duration,
-                                        Showtimes = new List<Showtime>()
-                                    };
-                                    movies.Add(movieObject);
-                                }
-                                else
-                                {
-                                    movieObject = movies.First(m => m.Navn == MovieIdAndName[movie.Id]);
-                                }
-
-
-                                foreach (var versions in movie.Versions)
-                                {
-                                    VersionTag versionObject;
-                                    if (!versionTags.Any(v => v.Type == versions.Label))
-                                    {
-                                        versionObject = new VersionTag()
-                                        {
-                                            Type = versions.Label
-                                        };
-                                        versionTags.Add(versionObject);
-                                    }
-                                    else
-                                    {
-                                        versionObject = versionTags.First(v => v.Type == versions.Label);
-                                    }
-
-
-                                    foreach (var showtimeDate in versions.Dates)
-                                    {
-                                        foreach (var showtimeItem in showtimeDate.Showtimes)
-                                        {
-                                            Sal salObject;
-                                            if (!sals.Any(s => s.Navn == showtimeItem.Room.Label))
-                                            {
-                                                salObject = new Sal()
-                                                {
-                                                    Navn = showtimeItem.Room.Label
-                                                };
-                                                sals.Add(salObject);
-                                            }
-                                            else
-                                            {
-                                                salObject = sals.First(s => s.Navn == showtimeItem.Room.Label);
-                                            }
-
-                                            Playtime playtimeObject;
-                                            var dateString = (showtimeDate.Date + " " + showtimeItem.Time);
-                                            var commaIndex = dateString.IndexOf(',');
-                                            if (commaIndex > 0)
-                                            {
-                                                dateString = dateString.Substring(commaIndex + 2);
-                                            }
-
-                                            var dateTimeFormat = "dd/MM HH:mm";
-                                            DateTime dateTime;
-
-                                            if (DateTime.TryParseExact(dateString, dateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
-                                            {
-                                                // Successfully parsed the date
-                                            }
-                                            else
-                                            {
-                                                // Failed to parse the date
-                                            }
-
-                                            if (!playtimes.Any(p => p.StartTime == dateTime))
-                                            {
-                                                playtimeObject = new Playtime()
-                                                {
-                                                    StartTime = dateTime
-                                                };
-                                                playtimes.Add(playtimeObject);
-                                            }
-                                            else
-                                            {
-                                                playtimeObject = playtimes.First(p => p.StartTime == dateTime);
-                                            }
-
-                                            var showtimeObject = new Showtime()
-                                            {
-                                                Id = showtimeItem.Id,
-                                                Movie = movieObject,
-                                                Cinema = cinemaObject,
-                                                VersionTag = versionObject,
-                                                Sal = salObject,
-                                                Playtime = playtimeObject
-                                            };
-                                            showtimes.Add(showtimeObject);
-
-                                            movieObject.Showtimes.Add(showtimeObject);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Level 4 Content is null");
-                    }
+                        Navn = MovieIdAndName[movie.Id],
+                        PremiereDate = movie.Content.FieldPremiere,
+                        AgeRating = movie.Content.FieldCensorshipIcon,
+                        ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
+                        Duration = duration,
+                        Showtimes = new List<Showtime>()
+                    };
+                    movies.Add(movieObject);
                 }
                 else
                 {
-                    Console.WriteLine("Level 3 Content is null");
+                    movieObject = movies.First(m => m.Navn == MovieIdAndName[movie.Id]);
+                }
+
+
+                foreach (var versions in movie.Versions)
+                {
+                    VersionTag versionObject;
+                    if (!versionTags.Any(v => v.Type == versions.Label))
+                    {
+                        versionObject = new VersionTag()
+                        {
+                            Type = versions.Label
+                        };
+                        versionTags.Add(versionObject);
+                    }
+                    else
+                    {
+                        versionObject = versionTags.First(v => v.Type == versions.Label);
+                    }
+
+
+                    foreach (var showtimeDate in versions.Dates)
+                    {
+                        foreach (var showtimeItem in showtimeDate.Showtimes)
+                        {
+                            Sal salObject;
+                            if (!sals.Any(s => s.Navn == showtimeItem.Room.Label))
+                            {
+                                salObject = new Sal()
+                                {
+                                    Navn = showtimeItem.Room.Label
+                                };
+                                sals.Add(salObject);
+                            }
+                            else
+                            {
+                                salObject = sals.First(s => s.Navn == showtimeItem.Room.Label);
+                            }
+
+                            Playtime playtimeObject;
+                            var dateString = (showtimeDate.Date + " " + showtimeItem.Time);
+                            var commaIndex = dateString.IndexOf(',');
+                            if (commaIndex > 0)
+                            {
+                                dateString = dateString.Substring(commaIndex + 2);
+                            }
+
+                            var dateTimeFormat = "dd/MM HH:mm";
+                            DateTime dateTime;
+
+                            if (DateTime.TryParseExact(dateString, dateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+                            {
+                                // Successfully parsed the date
+                            }
+                            else
+                            {
+                                // Failed to parse the date
+                            }
+
+                            if (!playtimes.Any(p => p.StartTime == dateTime))
+                            {
+                                playtimeObject = new Playtime()
+                                {
+                                    StartTime = dateTime
+                                };
+                                playtimes.Add(playtimeObject);
+                            }
+                            else
+                            {
+                                playtimeObject = playtimes.First(p => p.StartTime == dateTime);
+                            }
+
+                            var showtimeObject = new Showtime()
+                            {
+                                Id = showtimeItem.Id,
+                                Movie = movieObject,
+                                Cinema = cinemaObject,
+                                VersionTag = versionObject,
+                                Sal = salObject,
+                                Playtime = playtimeObject
+                            };
+                            showtimes.Add(showtimeObject);
+
+                            movieObject.Showtimes.Add(showtimeObject);
+                        }
+                    }
                 }
             }
-            else
-            {
-                Console.WriteLine("Level 2 Content is null");
-            }
         }
-        else
-        {
-            Console.WriteLine("Level 1 Content is null");
-        }
+
 
         PrintCount();
     }
