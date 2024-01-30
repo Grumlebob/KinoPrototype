@@ -652,13 +652,13 @@
         [JsonProperty("label")] public string Label { get; set; }
 
         [JsonProperty("field_censorship_icon")]
-        public string FieldCensorshipIcon { get; set; }
+        public int FieldCensorshipIcon { get; set; }
 
         [JsonProperty("field_playing_time")] public string FieldPlayingTime { get; set; }
 
         [JsonProperty("field_poster")] public FieldPoster FieldPoster { get; set; }
 
-        [JsonProperty("field_premiere")] public string FieldPremiere { get; set; }
+        [JsonProperty("field_premiere")] public DateTime FieldPremiere { get; set; }
     }
 
     public class FieldPoster

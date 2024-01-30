@@ -45,8 +45,8 @@ public class Movie
     public string ImageUrl { get; set; }
     public int Duration { get; set; }
 
-    public  string PremiereDate { get; set; }
-    public string AgeRating { get; set; }
+    public  DateTime PremiereDate { get; set; }
+    public int AgeRating { get; set; }
 }
 
 public class Showtime

@@ -19,7 +19,7 @@ public static class AllEndpoints
                         Showtimes = e.Showtimes.Select(s => new Showtime
                         {
                             Id = s.Id, Movie = s.Movie, Cinema = s.Cinema, Playtime = s.Playtime, Sal = s.Sal,
-                            VersionTag = s.VersionTag
+                            VersionTag = s.VersionTag,
                         }).ToList()
                     })
                 .FirstOrDefaultAsync(e => e.Id == id);
