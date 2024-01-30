@@ -24,6 +24,14 @@
         <li>age rating: @movie.AgeRating</li>
         <li>duration: @movie.Duration</li>
         <li>imageurl: @movie.ImageUrl</li>
+        
+        <h3>Parsed Showtimes</h3>
+        <ul>
+            @foreach (var showtime in movie.Showtimes)
+            {
+                <li>@($"{showtime.Movie.Navn}, {showtime.Cinema.Navn}, {showtime.Playtime.StartTime}, {showtime.VersionTag.Type}, {showtime.Sal.Navn}")</li>
+            }
+        </ul>
     }
 </ul>
 
@@ -203,7 +211,8 @@
                                         PremiereDate = movie.Content.FieldPremiere,
                                         AgeRating = movie.Content.FieldCensorshipIcon,
                                         ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
-                                        Duration = duration
+                                        Duration = duration,
+                                        Showtimes = new List<Showtime>()
                                     };
                                     movies.Add(movieObject);
                                 }
@@ -291,6 +300,8 @@
                                                 Playtime = playtimeObject
                                             };
                                             showtimes.Add(showtimeObject);
+                                            
+                                            movieObject.Showtimes.Add(showtimeObject);
                                         }
                                     }
                                 }
