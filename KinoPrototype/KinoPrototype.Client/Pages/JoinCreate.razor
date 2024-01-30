@@ -11,28 +11,14 @@
 /* Base container for each movie */
 .Redbox {
     display: flex;
-    align-items: center; /* Vertically center the items */
-    justify-content: center; /* Horizontally center the items */
+    align-items: flex-start; /* Align the start of the items */
     margin-bottom: 20px;
 }
 
-.ImageContainer {
-    display: flex;
-    align-items: center; /* Vertically center the image */
-    justify-content: center; /* Horizontally center the image */
-    height: 100%; /* Set the height to match the parent container */
-}
-
-
 /* Styling for the poster image */
 .PosterImage {
-    position: fixed; /* Fix the position relative to the viewport */
-    top: 50%; /* Initial top position */
-    transform: translateY(-50%); /* Center it vertically */
     margin-right: 20px;
-    z-index: 10; /* Ensure it's above other content */
 }
-
 
 /* Container for movie details */
 .MovieDetails {
@@ -174,10 +160,8 @@
     @foreach (var movie in movies)
     {
         <div class="Redbox">
-            <div class="ImageContainer">
-                <div class="PosterImage">
-                    <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
-                </div>
+            <div class="PosterImage">
+                <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
             </div>
             <div class="MovieDetails">
                 <div class="MovieHeader">
@@ -575,14 +559,6 @@
         }
 
         PrintCount();
-    }
-    
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JSRuntime.InvokeVoidAsync("adjustPosterPosition");
-        }
     }
 
 
