@@ -1,6 +1,7 @@
 
 using KinoPrototype;
 using KinoPrototype.Components;
+using KinoPrototype.Domain;
 using Microsoft.EntityFrameworkCore;
 using Host = Microsoft.Extensions.Hosting.Host;
 
@@ -57,17 +58,17 @@ using (var scope = app.Services.CreateScope())
     // has no depencies
     var playtime = new Playtime { Id = 1, StartTime = DateTime.Now.AddHours(2) };
     var version = new VersionTag { Id = 1, Type = "3D" };
-    var cinema = new KinoPrototype.Cinema { Id = 1, Navn = "Demo Cinema" };
+    var cinema = new KinoPrototype.Domain.Cinema { Id = 1, Navn = "Demo Cinema" };
     var sal = new Sal { Id = 1, Navn = "Main Hall" };
     
     // deps on showTime
-    var movie = new KinoPrototype.Movie { Id = 1, Navn = "Demo Movie", Duration = 120, PremiereDate = DateTime.Now, AgeRating = 12, ImageUrl = "https://via.placeholder.com/150"};
+    var movie = new KinoPrototype.Domain.Movie { Id = 1, Navn = "Demo Movie", Duration = 120, PremiereDate = DateTime.Now.ToString(), AgeRating = "12", ImageUrl = "https://via.placeholder.com/150"};
     
     // deps on joinEvent
-    var host = new KinoPrototype.Host { AuthId = "host1", Username = "DemoHost" };
+    var host = new KinoPrototype.Domain.Host { AuthId = "host1", Username = "DemoHost" };
     
     // deps on everything
-    var showtime = new KinoPrototype.Showtime
+    var showtime = new KinoPrototype.Domain.Showtime
     {
         MovieId = movie.Id,
         Movie = movie,
@@ -90,7 +91,7 @@ using (var scope = app.Services.CreateScope())
         Title = "Movie Night",
         Description = "Join us for a demo movie night!",
         Deadline = DateTime.Now.AddDays(1),
-        Showtimes = new List<KinoPrototype.Showtime> { showtime },
+        Showtimes = new List<KinoPrototype.Domain.Showtime> { showtime },
         Participants = new List<Participant> { participant1, participant2 },
     };
     // Adding demo data to context

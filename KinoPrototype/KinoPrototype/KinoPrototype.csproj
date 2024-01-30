@@ -18,8 +18,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
+    <ProjectReference Include="..\..\KinoPrototype.Domain\KinoPrototype.Domain.csproj" />
     <ProjectReference Include="..\KinoPrototype.Client\KinoPrototype.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.1" />
+    
   </ItemGroup>
 
 </Project>

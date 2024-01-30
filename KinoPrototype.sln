@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinoPrototype", "KinoProtot
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinoPrototype.Client", "KinoPrototype\KinoPrototype.Client\KinoPrototype.Client.csproj", "{6BBB8E20-2855-42DE-9FBE-A1E23D670642}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinoPrototype.Domain", "KinoPrototype.Domain\KinoPrototype.Domain.csproj", "{4BC960A8-0147-4C7E-92A9-142EDEB0F5C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{6BBB8E20-2855-42DE-9FBE-A1E23D670642}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BBB8E20-2855-42DE-9FBE-A1E23D670642}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BBB8E20-2855-42DE-9FBE-A1E23D670642}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BC960A8-0147-4C7E-92A9-142EDEB0F5C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BC960A8-0147-4C7E-92A9-142EDEB0F5C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BC960A8-0147-4C7E-92A9-142EDEB0F5C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BC960A8-0147-4C7E-92A9-142EDEB0F5C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
