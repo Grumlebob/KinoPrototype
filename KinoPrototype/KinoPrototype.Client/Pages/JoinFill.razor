@@ -1,0 +1,77 @@
+﻿@page "/filling/{JoinEventId}"
+@using Newtonsoft.Json
+@using System.Net
+@using System.Text
+
+
+<PageTitle>JoinEvent</PageTitle>
+
+@if (_event?.Showtimes is null)
+{
+    <h3>Ingen events fundet</h3>
+    return;
+}
+
+<h1>@_event.Title</h1>
+<p>@_event.Description</p>
+<p>Deadline for tilmelding: @_event.Deadline</p>
+<p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime) - @_event.Showtimes.Max(s => s.Playtime.StartTime)</p>
+
+
+<!--<InputCheckbox>Tilføj event til egen kalender</InputCheckbox>-->
+
+<button onclick="@(() => { _showNickNameField = true; })">Gem svar</button>
+
+@if (_showNickNameField)
+{
+    <div>
+        <input placeholder="Indtast dit navn" @bind="@Nickname"/>
+        <button onclick="@(async () => 
+                            { 
+                                if (Nickname is null or "") { _infoMessage = "Indtast venligst et navn"; return;}
+                                var p = new Participant {Id = 6999, Nickname = Nickname, VotedFor = _votedFor}; 
+                                var jsonP = JsonConvert.SerializeObject(p);
+                                var httpClient = new HttpClient();
+                                var response = await httpClient.PutAsync($"https://localhost:7123/participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); 
+                                if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; }
+                                else { _infoMessage = "Noget gik galt. Prøv igen."; }
+                                 })"
+                >Ok</button>
+    </div>
+}
+
+@if (_infoMessage is not null)
+{
+    <p>@_infoMessage</p>
+}
+
+
+@code {
+    [Parameter] public required string JoinEventId { get; set; }
+
+    private JoinEvent? _event;
+
+    private List<Showtime> _votedFor;
+
+    private bool _showNickNameField;
+    
+    private string? Nickname { get; set; }
+
+    private string? _infoMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _infoMessage = null;
+        var httpClient = new HttpClient();
+        var response = await httpClient.GetAsync($"https://localhost:7123/event/{JoinEventId}");
+        if (response.IsSuccessStatusCode)
+        {
+            _event = await response.Content.ReadFromJsonAsync<JoinEvent>();
+            Console.WriteLine(_event.Description);
+            Console.WriteLine(_event.Showtimes.Count);
+            Console.WriteLine(_event.Showtimes[0].Playtime.StartTime);
+        }
+    }
+
+}
+
