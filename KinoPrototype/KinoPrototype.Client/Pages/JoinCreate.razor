@@ -434,6 +434,7 @@
                 Console.WriteLine(cinemaFilter);
             }
 
+            Console.WriteLine("CINEMA ID: +" + cinema.Id);
             var cinemaObject = new Cinema()
             {
                 Id = cinema.Id,
@@ -459,7 +460,7 @@
 
                     movieObject = new KinoPrototype.Domain.Movie()
                     {
-                        Id = movie.Id,
+                        //Id = movie.Id,
                         Navn = MovieIdAndName[movie.Id],
                         PremiereDate = movie.Content.FieldPremiere,
                         AgeRating = movie.Content.FieldCensorshipIcon,
@@ -586,9 +587,7 @@
        
        Console.WriteLine( "before: "+joinEvent.Id);
        
-       //put pickedShowtimes to api
        var response = await client.PutAsJsonAsync(url, joinEvent);
-      
        var id = response.Content.ReadAsStringAsync().Result;
        
        Console.WriteLine("after: "+id);

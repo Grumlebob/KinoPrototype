@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KinoPrototype.Domain;
 
@@ -19,6 +20,8 @@ public class Participant
 
 public class JoinEvent
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
@@ -39,7 +42,7 @@ public class JoinEvent
 
 public class Movie
 {
-    public int Id { get; set; }
+    [Key] public int Id { get; set; }
     public string Navn { get; set; }
     public List<Showtime>? Showtimes { get; set; }
     public string ImageUrl { get; set; }
@@ -57,7 +60,7 @@ public class Movie
 
 public class Showtime
 {
-    public int Id { get; set; }
+    [Key] public int Id { get; set; }
     public int MovieId { get; set; }
     public Movie Movie { get; set; }
     public int CinemaId { get; set; }
@@ -96,7 +99,7 @@ public class VersionTag
 
 public class Cinema
 {
-    public int Id { get; set; }
+    [Key]public int Id { get; set; }
     public string Navn { get; set; }
 }
 
