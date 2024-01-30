@@ -1,4 +1,5 @@
-﻿@page "/"
+﻿@inject NavigationManager NavigationManager
+@page "/"
 
 
 <PageTitle>Home</PageTitle>
@@ -33,7 +34,17 @@ show kommendeFilm
 {
     <div>@kommendeFilm</div>
 }
-
+<br/>
+<a href="https://localhost:7123/joinCreate/cinemas=53&cinemas=4&sort=most_purchased"> Med cinema filtre</a>
+<br/>
+<a href="https://localhost:7123/joinCreate/movies=76769&movies=35883&sort=most_purchased">  Med movie filtre</a>
+<br/>
+<a href="https://localhost:7123/joinCreate/cinemas=53&cinemas=52&movies=76769&movies=35883&sort=most_purchased"> Med movie og cinema filtre</a>
+<br/>
+<a href="https://localhost:7123/joinCreate/cinemas=53&cinemas=4&cinemas=49&genres=96&movies=76769&movies=35883&movies=76769&sort=most_purchased"> Med alle filtre uden tid</a>
+<br/>
+<a href="https://localhost:7123/joinCreate/cinemas=53&cinemas=4&cinemas=49&genres=96&movies=76769&movies=35883&movies=76769&sort=most_purchased&date=2024-01-16T10:07:00.000Z&date=2024-02-27T10:07:00.000Z"> Med alle filtre med tid</a>
+<br/>
 
 @code {
     private string message;
@@ -55,5 +66,8 @@ show kommendeFilm
         aktuelleFilm = await client.GetStringAsync("https://api.kino.dk/aktuelle-film?region=content&format=json");
         kommendeFilm = await client.GetStringAsync("https://api.kino.dk/film-paa-vej?region=content&format=json");
     }
+    
+    
+    
 
 }
