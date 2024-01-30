@@ -7,34 +7,165 @@
 
 <h3>JoinCreate</h3>
 
-<!-- Hele filmen og dens showtimes -->
-<div class="Redbox">
+<style>
+/* Base container for each movie */
+.Redbox {
+    display: flex;
+    align-items: flex-start; /* Align the start of the items */
+    margin-bottom: 20px;
+}
 
-    <div class="PosterImage">
-        <img src="@showtimes[0].Movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
-    </div>
+/* Styling for the poster image */
+.PosterImage {
+    margin-right: 20px;
+}
 
-    <div class="MovieDetails">
-        <div class="MovieHeader">
-            <p> @showtimes[0].Movie.Navn </p>
-            <br/>
-            <p> @showtimes[0].Movie.PremiereDate </p>
-            <br/>
-            <p> @showtimes[0].Movie.Duration </p>
-            <br/>
+/* Container for movie details */
+.MovieDetails {
+    flex-grow: 1; /* Allow the movie details to fill the remaining space */
+}
+
+/* Header for each movie */
+.MovieHeader h2 {
+    margin-top: 0; /* Remove top margin for the movie title */
+    margin-bottom: 0.5em; /* Add a little space below the title */
+}
+
+.MovieHeader p {
+    margin-top: 0; /* Remove top margin for other details */
+    margin-bottom: 0.5em; /* Consistent space below each detail */
+}
+
+/* Styling for cinema location */
+.CinemaLocation {
+    margin-top: 1em; /* Add space above the cinema location */
+    margin-bottom: 0.5em; /* Add space below the cinema location */
+}
+
+/* Styling for versions and showtimes */
+.Version {
+    margin-bottom: 1em; /* Add space below each version */
+}
+
+/* Base styles for the showtime labels */
+.Showtimes .showtime-label {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    user-select: none;
+    background-color: #eee;
+    border-radius: 4px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    padding: 5px; /* Add some padding */
+    white-space: nowrap; /* Keep text in a single line */
+}
+
+/* Style for the sal name */
+.Showtimes .showtime-sal {
+    font-size: 14px; /* Smaller font size for sal name */
+    margin-bottom: 2px; /* Space between sal name and playtime */
+}
+
+/* Style for the playtime */
+.Showtimes .showtime-time {
+    font-weight: bold;
+    font-size: 24px; /* Larger font size for playtime */
+}
+
+/* Hide the default checkbox input */
+.Showtimes input[type="checkbox"] {
+    display: none;
+}
+
+/* Style when checkbox is checked */
+.Showtimes input[type="checkbox"]:checked + .showtime-label {
+    background-color: #66bb6a;
+}
+
+/* Style when checkbox is not checked */
+.Showtimes input[type="checkbox"]:not(:checked) + .showtime-label {
+    background-color: #eee;
+}
+
+/* Style for checked checkbox text */
+.Showtimes input[type="checkbox"]:checked + .showtime-label .showtime-time {
+    color: white;
+}
+
+/* Style for unchecked checkbox text */
+.Showtimes input[type="checkbox"]:not(:checked) + .showtime-label .showtime-time {
+    color: black;
+}
+
+.movie-info {
+    background-color: #E0E0E0; /* Light gray background */
+    padding: 5px;
+    border-radius: 5px; /* Optional: rounds the corners of the background */
+    display: inline-flex; /* Places children next to each other */
+    align-items: center; /* Aligns children vertically in the center */
+    justify-content: center; /* Centers children horizontally */
+    gap: 10px; /* Creates space between the children */
+}
+
+.movie-info .premiere,
+.movie-info .duration {
+    color: #333; /* Dark gray text color for better contrast */
+    font-size: 14px; /* Adjust font size as needed */
+}
+
+
+</style>
+
+@if (showtimes.Count > 0 && movies.Count > 0 && cinemas.Count > 0)
+{
+    @foreach (var movie in movies)
+    {
+        <div class="Redbox">
+            <div class="PosterImage">
+                <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+            </div>
+            <div class="MovieDetails">
+                <div class="MovieHeader">
+                    <h2>@movie.Navn</h2>
+
+                    <div class="movie-info">
+                        <span class="premiere">Premiere @movie.PremiereDate | </span>
+                        <span class="duration">Varighed @movie.Duration min</span>
+                    </div>
+
+                </div>
+                @foreach (var cinema in movie.Showtimes.GroupBy(s => s.Cinema))
+                {
+                    <div class="CinemaLocation">
+                        <h2>@cinema.Key.Navn</h2>
+                    </div>
+                    @foreach (var version in cinema.GroupBy(s => s.VersionTag))
+                    {
+                        <div class="Version">
+                            <strong>@version.Key.Type</strong>
+                            <div class="Showtimes">
+                                @foreach (var showtime in version)
+                                {
+                                    var checkboxId = "showtime_" + showtime.Id;
+                                    <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime">
+                                    <label for="@checkboxId" class="showtime-label">
+                                        <div class="showtime-sal">@showtime.Playtime.StartTime.Day /@showtime.Playtime.StartTime.Month</div>
+                                        <div class="showtime-sal">@showtime.Sal.Navn</div>
+                                        <div class="showtime-time">@showtime.Playtime.StartTime.ToString("HH:mm")</div>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
         </div>
-        <div class="CinemaLocation">
-            <p> @showtimes[0].Movie.Navn </p>
-            <br/>
-            <p> @showtimes[0].Movie.PremiereDate </p>
-            <br/>
-            <p> @showtimes[0].Movie.Duration </p>
-            <br/>
-        </div>
-    </div>
-
-
-</div>
+    }
+}
 
 
 <h3>Parsed Cinemas</h3>
@@ -54,7 +185,7 @@
         <li>age rating: @movie.AgeRating</li>
         <li>duration: @movie.Duration</li>
         <li>imageurl: @movie.ImageUrl</li>
-        
+
         <h3>Parsed Showtimes</h3>
         <ul>
             @foreach (var showtime in movie.Showtimes)
@@ -110,6 +241,20 @@
     List<Playtime> playtimes = new List<Playtime>();
     List<VersionTag> versionTags = new List<VersionTag>();
     List<Sal> sals = new List<Sal>();
+
+
+    //make method to print count of all lists
+    void PrintCount()
+    {
+        Console.WriteLine("STARTING PRINTS");
+        Console.WriteLine("Cinemas: " + cinemas.Count);
+        Console.WriteLine("Movies: " + movies.Count);
+        Console.WriteLine("Showtimes: " + showtimes.Count);
+        Console.WriteLine("Playtimes: " + playtimes.Count);
+        Console.WriteLine("VersionTags: " + versionTags.Count);
+        Console.WriteLine("Sals: " + sals.Count);
+    }
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -169,14 +314,16 @@
         */
 
         // Display the results
-        Console.WriteLine("Cinemas: " + string.Join(", ", cinemasFilter));
-        Console.WriteLine("Genres: " + string.Join(", ", genresfilter));
-        Console.WriteLine("Movies: " + string.Join(", ", moviesFilter));
-        Console.WriteLine("Dates: " + string.Join(", ", datesFilter));
+        //Console.WriteLine("Cinemas: " + string.Join(", ", cinemasFilter));
+        //Console.WriteLine("Genres: " + string.Join(", ", genresfilter));
+        //Console.WriteLine("Movies: " + string.Join(", ", moviesFilter));
+        //Console.WriteLine("Dates: " + string.Join(", ", datesFilter));
 
 
         var CinemaIdAndName = new Dictionary<int, string>();
         var MovieIdAndName = new Dictionary<int, string>();
+
+        int showtimeIdCounter = 0; //TODO ÆNDRER TIL RIGTIG DATA BASE LOGIC!!
 
 
         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
@@ -225,8 +372,6 @@
 
                                 if (!movies.Any(m => m.Navn == MovieIdAndName[movie.Id]))
                                 {
-                                    Console.WriteLine("duration: " + movie.Content.FieldPlayingTime);
-
                                     int duration;
 
                                     int.TryParse(movie.Content.FieldPlayingTime, out duration);
@@ -317,9 +462,10 @@
                                                 playtimeObject = playtimes.First(p => p.StartTime == dateTime);
                                             }
 
-
+                                            showtimeIdCounter++;
                                             var showtimeObject = new Showtime()
                                             {
+                                                Id = showtimeIdCounter,
                                                 Movie = movieObject,
                                                 Cinema = cinemaObject,
                                                 VersionTag = versionObject,
@@ -327,7 +473,7 @@
                                                 Playtime = playtimeObject
                                             };
                                             showtimes.Add(showtimeObject);
-                                            
+
                                             movieObject.Showtimes.Add(showtimeObject);
                                         }
                                     }
@@ -354,6 +500,8 @@
         {
             Console.WriteLine("Level 1 Content is null");
         }
+
+        PrintCount();
     }
 
 
