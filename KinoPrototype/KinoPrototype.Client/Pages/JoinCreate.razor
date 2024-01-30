@@ -115,6 +115,11 @@
                     {
                         CinemaIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
                     }
+                    
+                    foreach (var cinemaOption in myDeserializedClass.Content.Content.Facets.Movies.Options)
+                    {
+                        MovieIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
+                    }
 
                     if (myDeserializedClass.Content.Content.Content.Content != null)
                     {
@@ -126,16 +131,16 @@
                                 Navn = CinemaIdAndName[cinema.Id]
                             }; cinemas.Add(cinemaObject);
 
-
-                         
-                            //Console.WriteLine("Cinema name: " + CinemaIdAndName[cinema.Id]);
                             foreach (var movie in cinema.Movies)
                             {
                                 KinoPrototype.Movie movieObject;
 
                                 if (!movies.Any(m => m.Navn == movie.Content.Label))
                                 {
-                                    
+
+                                    Console.WriteLine("look up movie name: " + movie.Content.Label);
+                                    var testLabel = MovieIdAndName[movie.Id];
+                                    Console.WriteLine("look up movie name: " + testLabel);
                                     movieObject = new KinoPrototype.Movie()
                                     {
                                         Navn = movie.Content.Label,
@@ -433,13 +438,28 @@
 
         [JsonProperty("cinemas")] public Cinemas Cinemas { get; set; }
 
-        [JsonProperty("movies")] public object Movies { get; set; } // Replace object with specific type if necessary
+        [JsonProperty("movies")] public MovieLookup Movies { get; set; } // Replace object with specific type if necessary
 
         [JsonProperty("versions")] public object Versions { get; set; } // Replace object with specific type if necessary
 
         [JsonProperty("genres")] public object Genres { get; set; } // Replace object with specific type if necessary
 
         [JsonProperty("date")] public object Date { get; set; } // Replace object with specific type if necessary
+        
+    }
+
+    public class MovieLookup
+    {
+        
+        [JsonProperty("options")] public List<MovieOptions> Options { get; set; } // Replace object with specific type if necessary
+        
+    }
+
+    public class MovieOptions
+    {
+        [JsonProperty("key")] public int Key { get; set; }
+
+        [JsonProperty("value")] public string Value { get; set; }
     }
 
     public class Footer
