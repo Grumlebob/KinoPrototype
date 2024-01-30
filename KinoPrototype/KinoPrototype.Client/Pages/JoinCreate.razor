@@ -90,6 +90,7 @@
     border-radius: 4px;
     box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
     white-space: nowrap; /* Keep text in a single line */
+    width: 100px;
 }
 
 /* Style for the sal name */
@@ -99,8 +100,7 @@
     overflow: hidden; /* Ensures the content does not expand the container */
     text-overflow: ellipsis; /* Adds an ellipsis when the text overflows */
     white-space: nowrap; /* Prevents the text from wrapping to the next line */
-    max-width: 50px;
-    min-width: 50px;
+   
 }
 
 /* Style for the playtime */
@@ -204,7 +204,7 @@
                                                         <div>
                                                             <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime">
                                                             <label for="@checkboxId" class="showtime-label">
-                                                                <div class="showtime-sal">@showtime.Sal.Navn.Substring(0,3)</div>
+                                                                <div class="showtime-sal">@showtime.Sal.Navn</div>
                                                                 <div class="showtime-time">@showtime.Playtime.StartTime.ToString("HH:mm")</div>
                                                             </label>
                                                         </div>
@@ -380,6 +380,8 @@
         var MovieIdAndName = new Dictionary<int, string>();
 
         int showtimeIdCounter = 0; //TODO ÆNDRER TIL RIGTIG DATA BASE LOGIC!!
+        
+        json = await client.GetStringAsync("https://localhost:7123/json");
 
         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
 
