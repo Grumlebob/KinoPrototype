@@ -44,15 +44,9 @@ public class Movie
     public List<Showtime>? Showtimes { get; set; }
     public string ImageUrl { get; set; }
     public int Duration { get; set; }
-    private DateTime _premiereDate;
 
-    public DateTime PremiereDate
-    {
-        get => _premiereDate;
-        set => _premiereDate = value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime();
-    }
-
-    public int AgeRating { get; set; }
+    public  string PremiereDate { get; set; }
+    public string AgeRating { get; set; }
 }
 
 public class Showtime

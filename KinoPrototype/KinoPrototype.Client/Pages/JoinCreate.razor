@@ -1,12 +1,71 @@
 ﻿@using Newtonsoft.Json;
 @using System.Collections.Generic;
 @using System.Globalization;
+@using System.Web
 @using KinoPrototype
-@page "/JoinCreate"
+@page "/JoinCreate/{filterString}"
 
 <h3>JoinCreate</h3>
 
+<h3>Parsed Cinemas</h3>
+<ul>
+    @foreach (var cinema in cinemas)
+    {
+        <li>@cinema.Navn</li>
+    }
+</ul>
+
+<h3>Parsed Movies</h3>
+<ul>
+    @foreach (var movie in movies)
+    {
+        <li>@movie.Navn</li>
+        <li>premier date: @movie.PremiereDate</li>
+        <li>age rating: @movie.AgeRating</li>
+        <li>duration: @movie.Duration</li>
+        <li>imageurl: @movie.ImageUrl</li>
+    }
+</ul>
+
+<h3>Parsed Versions</h3>
+<ul>
+    @foreach (var version in versionTags)
+    {
+        <li>@version.Type</li>
+    }
+</ul>
+
+<h3>Parsed Sals</h3>
+<ul>
+    @foreach (var sal in sals)
+    {
+        <li>@sal.Navn</li>
+    }
+</ul>
+
+<h3>Parsed Playtimes</h3>
+<ul>
+    @foreach (var playtime in playtimes)
+    {
+        <li>@playtime.StartTime</li>
+    }
+</ul>
+
+<h3>Parsed Showtimes</h3>
+<ul>
+    @foreach (var showtime in showtimes)
+    {
+        <li>@($"{showtime.Movie.Navn}, {showtime.Cinema.Navn}, {showtime.Playtime.StartTime}, {showtime.VersionTag.Type}, {showtime.Sal.Navn}")</li>
+    }
+</ul>
+
+
 @code {
+    
+    [Parameter]
+    public string filterString { get; set; }
+
+    string json;
 
     List<Cinema> cinemas = new List<Cinema>();
     List<KinoPrototype.Movie> movies = new List<KinoPrototype.Movie>();
@@ -18,10 +77,30 @@
     protected override async Task OnInitializedAsync()
     {
         var client = new HttpClient();
-        string json = await client.GetStringAsync("https://localhost:7123/json");
+        json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?" + filterString + "?region=conten&format=json");
+        
+        var url= "https://api.kino.dk/ticketflow/showtimes?" + filterString + "?region=conten&format=json";
+        
+        var uri = new Uri(url);
+        var queryParams = HttpUtility.ParseQueryString(uri.Query);
+
+        var cinemasFilter = queryParams.GetValues("cinemas")?.Select(int.Parse).ToList() ?? new List<int>();
+        var genresfilter = queryParams.GetValues("genres")?.Select(int.Parse).ToList() ?? new List<int>(); //todo make lookup table for genres
+        var moviesFilter = queryParams.GetValues("movies")?.Select(int.Parse).ToList() ?? new List<int>();
+        var datesFilter = queryParams.GetValues("date")?.ToList() ?? new List<string>();
+
+        // Display the results
+        Console.WriteLine("Cinemas: " + string.Join(", ", cinemasFilter));
+        Console.WriteLine("Genres: " + string.Join(", ", genresfilter));
+        Console.WriteLine("Movies: " + string.Join(", ", moviesFilter));
+        Console.WriteLine("Dates: " + string.Join(", ", datesFilter));
+        
+        
         var CinemaIdAndName = new Dictionary<int, string>();
-        var CinemaFilters = new HashSet<int>();
-        var result = new List<string>();
+        var MovieIdAndName = new Dictionary<int, string>();
+        
+
+        
         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
 
        
@@ -41,14 +120,14 @@
                     {
                         foreach (var cinema in myDeserializedClass.Content.Content.Content.Content)
                         {
+                            if (!cinemasFilter.Contains(cinema.Id)) continue; //their cinema filter doesn't work, instead get all cinemas and filter them out here
                             var cinemaObject = new Cinema()
                             {
                                 Navn = CinemaIdAndName[cinema.Id]
-                            };
-                            cinemas.Add(cinemaObject);
+                            }; cinemas.Add(cinemaObject);
 
 
-                            //if (!CinemaFilters.Contains(cinema.Id)) continue; //their cinema filter doesn't work, instead get all cinemas and filter them out here
+                         
                             //Console.WriteLine("Cinema name: " + CinemaIdAndName[cinema.Id]);
                             foreach (var movie in cinema.Movies)
                             {
@@ -56,11 +135,12 @@
 
                                 if (!movies.Any(m => m.Navn == movie.Content.Label))
                                 {
+                                    
                                     movieObject = new KinoPrototype.Movie()
                                     {
                                         Navn = movie.Content.Label,
-                                        PremiereDate = DateTime.Parse(movie.Content.FieldPremiere),
-                                        AgeRating = int.Parse(string.Concat(movie.Content.FieldCensorshipIcon.Where(Char.IsDigit))),
+                                        PremiereDate = movie.Content.FieldPremiere,
+                                        AgeRating = movie.Content.FieldCensorshipIcon,
                                         ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
                                         Duration = int.Parse(movie.Content.FieldPlayingTime)
                                     };
@@ -176,46 +256,7 @@
             Console.WriteLine("Level 1 Content is null");
         }
 
-        Console.WriteLine("Parsed the following cinemas");
-        foreach (var cinema in cinemas)
-        {
-            Console.WriteLine(cinema.Navn);
-        }
-
-        Console.WriteLine(" ");
-        Console.WriteLine("Parsed the following movies");
-        foreach (var movie in movies)
-        {
-            Console.WriteLine(movie.Navn);
-        }
-
-        Console.WriteLine(" ");
-        Console.WriteLine("Parsed the following versions");
-        foreach (var version in versionTags)
-        {
-            Console.WriteLine(version.Type);
-        }
-
-        Console.WriteLine(" ");
-        Console.WriteLine("Parsed the following sals");
-        foreach (var sal in sals)
-        {
-            Console.WriteLine(sal.Navn);
-        }
-
-        Console.WriteLine(" ");
-        Console.WriteLine("Parsed the following playtimes");
-        foreach (var playtime in playtimes)
-        {
-            Console.WriteLine(playtime.StartTime);
-        }
-
-        Console.WriteLine(" ");
-        Console.WriteLine("Parsed the following showtimes");
-        foreach (var showtime in showtimes)
-        {
-            Console.WriteLine(showtime.Movie.Navn + ", " + showtime.Cinema.Navn + "," + showtime.Playtime.StartTime + "," + showtime.VersionTag.Type + "," + showtime.Sal.Navn);
-        }
+       
     }
     
     
@@ -422,8 +463,4 @@
     {
     }
 
-}
-
-//https://kino.dk/ticketflow/showtimes?cinemas=53&movies=35883&sort=most_purchased
-//https://api.kino.dk/ticketflow/showtimes?cinemas=53&movies=35883&sort=most_purchased?region=content&format=json
 }
