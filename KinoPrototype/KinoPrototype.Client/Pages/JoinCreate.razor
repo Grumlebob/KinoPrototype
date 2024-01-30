@@ -148,16 +148,31 @@
                         <div class="Version">
                             <strong>@version.Key.Type</strong>
                             <div class="Showtimes">
-                                @foreach (var showtime in version)
-                                {
-                                    var checkboxId = "showtime_" + showtime.Id;
-                                    <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime">
-                                    <label for="@checkboxId" class="showtime-label">
-                                        <div class="showtime-sal">@showtime.Playtime.StartTime.Day /@showtime.Playtime.StartTime.Month</div>
-                                        <div class="showtime-sal">@showtime.Sal.Navn</div>
-                                        <div class="showtime-time">@showtime.Playtime.StartTime.ToString("HH:mm")</div>
-                                    </label>
-                                }
+                                
+                               <table>
+                                   @foreach (var date in version.GroupBy(s => s.Playtime.StartTime.ToString("dd/MM")))
+                                   {
+                                       <tr>
+                                           <th>@date.Key</th>
+                                       </tr>
+                                       @foreach (var showtime in date)
+                                       {
+                                           var checkboxId = "showtime_" + showtime.Id;
+                                           <tr>
+                                               <td>
+                                                   <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime">
+                                                   <label for="@checkboxId" class="showtime-label">
+                                                       <div class="showtime-sal">@showtime.Playtime.StartTime.Day /@showtime.Playtime.StartTime.Month</div>
+                                                       <div class="showtime-sal">@showtime.Sal.Navn</div>
+                                                       <div class="showtime-time">@showtime.Playtime.StartTime.ToString("HH:mm")</div>
+                                                   </label>
+                                               </td>
+                                           </tr>
+                                       }
+                                   }
+                               </table>
+
+                               
                             </div>
                         </div>
                     }
