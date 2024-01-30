@@ -52,32 +52,83 @@ public static class AllEndpoints
         app.MapPut("/putJoinEvent/", async ([FromBody] JoinEvent joinEvent) =>
         {
             await using var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<KinoContext>();
-
-            // Check if JoinEvent already exists
-            var existingJoinEvent = await context.JoinEvents
-                .Include(e => e.Showtimes)
-                .ThenInclude(s => s.Movie)
-                .FirstOrDefaultAsync(e => e.Id == joinEvent.Id);
-
-            if (existingJoinEvent != null)
+            await context.Database.EnsureDeletedAsync();
+            await context.Database.EnsureCreatedAsync();
+            
+            foreach (var showtime in joinEvent.Showtimes)
             {
-                // Update existing JoinEvent
-                context.Entry(existingJoinEvent).CurrentValues.SetValues(joinEvent);
-            }
-            else
-            {
-                // If JoinEvent does not exist, handle Showtimes and related entities before adding
-                foreach (var showtime in joinEvent.Showtimes)
+                // Handle Cinema
+                var existingCinema = await context.Cinemas.FindAsync(showtime.Cinema.Id);
+                if (existingCinema != null)
                 {
-                    
+                    context.Cinemas.Attach(existingCinema);
+                    showtime.Cinema = existingCinema;
+                }
+                else
+                {
+                    context.Cinemas.Add(showtime.Cinema);
                 }
 
-                // After handling Showtimes and related entities, add the new JoinEvent
-                await context.JoinEvents.AddAsync(joinEvent);
+                // Handle Movie
+                //var existingMovie = await context.Movies.FindAsync(showtime.Movie.Id);
+                //if (existingMovie != null)
+                //{
+                //    context.Movies.Attach(existingMovie);
+                //    showtime.Movie = existingMovie;
+                //}
+                //else
+                //{
+                //    context.Movies.Add(showtime.Movie);
+                //}
+
+                // Handle Playtime
+                var existingPlaytime = await context.Playtimes.FindAsync(showtime.Playtime.Id);
+                if (existingPlaytime != null)
+                {
+                    context.Playtimes.Attach(existingPlaytime);
+                    showtime.Playtime = existingPlaytime;
+                }
+                else
+                {
+                    context.Playtimes.Add(showtime.Playtime);
+                }
+
+                // Handle VersionTag
+                var existingVersionTag = await context.Versions.FindAsync(showtime.VersionTag.Id);
+                if (existingVersionTag != null)
+                {
+                    context.Versions.Attach(existingVersionTag);
+                    showtime.VersionTag = existingVersionTag;
+                }
+                else
+                {
+                    context.Versions.Add(showtime.VersionTag);
+                }
+
+                // Handle Sal
+                var existingSal = await context.Sals.FindAsync(showtime.Sal.Id);
+                if (existingSal != null)
+                {
+                    context.Sals.Attach(existingSal);
+                    showtime.Sal = existingSal;
+                }
+                else
+                {
+                    context.Sals.Add(showtime.Sal);
+                }
             }
 
             await context.SaveChangesAsync();
-            return Results.Ok(joinEvent.Id);
+
+            var joinEventToBeInserted = new JoinEvent
+            {
+                // Set properties for JoinEvent WITHOUT related entities such as Showtimes objects, only Ids
+                Id = joinEvent.Id
+            };
+            
+            
+            //await context.SaveChangesAsync();
+            return Results.Ok(123);
         });
     }
 }

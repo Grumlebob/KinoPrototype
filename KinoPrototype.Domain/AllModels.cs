@@ -81,6 +81,8 @@ public class Showtime
 
 public class Playtime
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     private DateTime _startTime;
 
@@ -93,6 +95,8 @@ public class Playtime
 
 public class VersionTag
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     public string Type { get; set; }
 }
@@ -105,6 +109,8 @@ public class Cinema
 
 public class Sal
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     public string Navn { get; set; }
 }
