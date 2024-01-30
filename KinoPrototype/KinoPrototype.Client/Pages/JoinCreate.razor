@@ -5,7 +5,6 @@
 @using KinoPrototype
 @page "/JoinCreate/{filterString}"
 
-<h3>JoinCreate</h3>
 
 <style>
 /* Base container for each movie */
@@ -151,12 +150,20 @@
     color: #333; /* Dark gray text color for better contrast */
     font-size: 14px; /* Adjust font size as needed */
 }
-
-
 </style>
+
+
 
 @if (showtimes.Count > 0 && movies.Count > 0 && cinemas.Count > 0)
 {
+    <h3>Checked Boxes</h3>
+    <ul>
+        @foreach (var showtime in selectedShowtimeIds)
+        {
+            <li>@showtime</li>
+        }
+    </ul>
+    
     @foreach (var movie in movies)
     {
         <div class="Redbox">
@@ -201,14 +208,18 @@
                                                     @foreach (var showtime in date)
                                                     {
                                                         var checkboxId = "showtime_" + showtime.Id;
+                                                        var showtimeId = showtime.Id;
+                                                        var isChecked = selectedShowtimeIds.Contains(showtimeId);
+
                                                         <div>
-                                                            <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime">
+                                                            <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime" checked="@isChecked" @onclick="() => ToggleCheckedShowtime(showtimeId)">
                                                             <label for="@checkboxId" class="showtime-label">
                                                                 <div class="showtime-sal">@showtime.Sal.Navn</div>
                                                                 <div class="showtime-time">@showtime.Playtime.StartTime.ToString("HH:mm")</div>
                                                             </label>
                                                         </div>
                                                     }
+
                                                 </td>
                                             }
                                         </tr>
@@ -299,6 +310,24 @@
     List<Sal> sals = new List<Sal>();
 
 
+    List<int> selectedShowtimeIds = new List<int>();
+
+
+    void ToggleCheckedShowtime(int showtimeId)
+    {
+        if (selectedShowtimeIds.Contains(showtimeId))
+        {
+            // Showtime is already selected, remove it
+            selectedShowtimeIds.Remove(showtimeId);
+        }
+        else
+        {
+            // Showtime is not selected, add it
+            selectedShowtimeIds.Add(showtimeId);
+        }
+    }
+
+    
     //make method to print count of all lists
     void PrintCount()
     {
@@ -380,7 +409,7 @@
         var MovieIdAndName = new Dictionary<int, string>();
 
         int showtimeIdCounter = 0; //TODO ÆNDRER TIL RIGTIG DATA BASE LOGIC!!
-        
+
         json = await client.GetStringAsync("https://localhost:7123/json");
 
         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
