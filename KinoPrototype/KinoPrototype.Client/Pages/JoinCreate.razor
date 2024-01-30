@@ -77,9 +77,8 @@
     protected override async Task OnInitializedAsync()
     {
         var client = new HttpClient();
-        json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?" + filterString + "?region=conten&format=json");
         
-        var url= "https://api.kino.dk/ticketflow/showtimes?" + filterString + "?region=conten&format=json";
+        var url= "https://api.kino.dk/ticketflow/showtimes?" + filterString;
         
         var uri = new Uri(url);
         var queryParams = HttpUtility.ParseQueryString(uri.Query);
@@ -88,6 +87,49 @@
         var genresfilter = queryParams.GetValues("genres")?.Select(int.Parse).ToList() ?? new List<int>(); //todo make lookup table for genres
         var moviesFilter = queryParams.GetValues("movies")?.Select(int.Parse).ToList() ?? new List<int>();
         var datesFilter = queryParams.GetValues("date")?.ToList() ?? new List<string>();
+
+
+        
+        
+        if (cinemasFilter.Count >=1 && moviesFilter.Count >= 1 )
+        {
+            var movieFilter ="&movies="+ moviesFilter[0];
+            var cinemaFilter = "&cinemas=" + cinemasFilter[0];
+            
+            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+                                               movieFilter + cinemaFilter + "?region=content&format=json");
+        } else if (cinemasFilter.Count >=1)
+        {
+            var cinemaFilter = "&cinemas=" + cinemasFilter[0];
+            
+            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+                                               cinemaFilter + "?region=content&format=json");
+        } else if (moviesFilter.Count >= 1)
+        {
+            var movieFilter ="&movies="+ moviesFilter[0];
+            
+            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+                                               movieFilter + "?region=content&format=json");
+        }
+        else
+        {
+            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+                                               "&cinemas=53" + "?region=content&format=json");
+        }
+
+        /*
+        if (datesFilter.Count > 0)
+        {
+            var dateString = string.Join("&date=", datesFilter);
+            dateString = "&date=" + dateString;
+            
+            Console.WriteLine("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+                              dateString + "?region=content&format=json");
+            
+            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" + 
+                                               dateString + "?region=content&format=json");
+        }
+        */
 
         // Display the results
         Console.WriteLine("Cinemas: " + string.Join(", ", cinemasFilter));
@@ -125,7 +167,12 @@
                     {
                         foreach (var cinema in myDeserializedClass.Content.Content.Content.Content)
                         {
-                            if (!cinemasFilter.Contains(cinema.Id)) continue; //their cinema filter doesn't work, instead get all cinemas and filter them out here
+                            Console.WriteLine(cinema.Id);
+                            foreach(var cinemaFilter in cinemasFilter)
+                            {
+                                Console.WriteLine(cinemaFilter);
+                            }
+                            
                             var cinemaObject = new Cinema()
                             {
                                 Navn = CinemaIdAndName[cinema.Id]
@@ -133,27 +180,36 @@
 
                             foreach (var movie in cinema.Movies)
                             {
+                                if(!MovieIdAndName.ContainsKey(movie.Id))
+                                {
+                                    continue;
+                                }
+                                
                                 KinoPrototype.Movie movieObject;
 
-                                if (!movies.Any(m => m.Navn == movie.Content.Label))
+                                if (!movies.Any(m => m.Navn == MovieIdAndName[movie.Id]))
                                 {
+                                    
+                                    Console.WriteLine("duration: " + movie.Content.FieldPlayingTime);
 
-                                    Console.WriteLine("look up movie name: " + movie.Content.Label);
-                                    var testLabel = MovieIdAndName[movie.Id];
-                                    Console.WriteLine("look up movie name: " + testLabel);
+                                    int duration;
+                                    
+                                   int.TryParse(movie.Content.FieldPlayingTime,out  duration);
+                                   
+                                    
                                     movieObject = new KinoPrototype.Movie()
                                     {
-                                        Navn = movie.Content.Label,
+                                        Navn = MovieIdAndName[movie.Id],
                                         PremiereDate = movie.Content.FieldPremiere,
                                         AgeRating = movie.Content.FieldCensorshipIcon,
                                         ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
-                                        Duration = int.Parse(movie.Content.FieldPlayingTime)
+                                        Duration = duration
                                     };
                                     movies.Add(movieObject);
                                 }
                                 else
                                 {
-                                    movieObject = movies.First(m => m.Navn == movie.Content.Label);
+                                    movieObject = movies.First(m => m.Navn == MovieIdAndName[movie.Id]);
                                 }
 
 
