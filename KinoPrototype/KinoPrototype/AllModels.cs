@@ -65,7 +65,7 @@ public class Showtime
     public Cinema Cinema { get; set; }
     public int PlaytimeId { get; set; }
     public Playtime Playtime { get; set; }
-    public int VersionId { get; set; }
+    public int VersionTagId { get; set; }
     public VersionTag VersionTag { get; set; }
     public int SalId { get; set; }
     public Sal Sal { get; set; }
@@ -142,7 +142,7 @@ public class KinoContext : DbContext
             .WithMany(s => s.JoinEvents);
 
         modelBuilder.Entity<Participant>().HasMany(s => s.VotedFor).WithMany(je => je.Participants);
-
+        
         // Configure primary keys
         modelBuilder.Entity<Movie>().HasKey(m => m.Id);
         modelBuilder.Entity<Showtime>().HasKey(s => s.Id);
@@ -159,7 +159,7 @@ public class KinoContext : DbContext
 
         // Make showtime key MovieId, CinemaId, ShowtimeId, VersionId, SalId
         modelBuilder.Entity<Showtime>()
-            .HasKey(s => new { s.MovieId, s.CinemaId, ShowtimeId = s.PlaytimeId, s.VersionId, s.SalId });
+            .HasKey(s => new { s.MovieId, s.CinemaId, ShowtimeId = s.PlaytimeId, VersionId = s.VersionTagId, s.SalId });
 
         // Call the base method to ensure any configuration from the base class is applied
         base.OnModelCreating(modelBuilder);
