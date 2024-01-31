@@ -112,7 +112,6 @@ public class Cinema
 public class Sal
 {
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
     public string Navn { get; set; }
