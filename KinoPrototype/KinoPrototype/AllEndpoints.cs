@@ -52,7 +52,7 @@ public static class AllEndpoints
         app.MapPut("/putJoinEvent/", async ([FromBody] JoinEvent joinEvent) =>
         {
             await using var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<KinoContext>();
-            await context.Database.EnsureDeletedAsync();
+            //await context.Database.EnsureDeletedAsync();
             await context.Database.EnsureCreatedAsync();
 
             foreach (var st in joinEvent.Showtimes)
@@ -92,14 +92,12 @@ public static class AllEndpoints
                 var existingVersionTag = await context.Versions.FirstOrDefaultAsync(v => v.Type == st.VersionTag.Type);
                 if (existingVersionTag != null)
                 {
-                    Console.WriteLine("Found existing version tag");
+                    Console.WriteLine("Existing version tag: " + existingVersionTag.Type);
                     context.Versions.Attach(existingVersionTag);
                     st.VersionTag = existingVersionTag;
                 }
                 else
                 {
-                    Console.WriteLine("Did not find existing version tag");
-                    //Console.WriteLine("adding")
                     context.Versions.Add(st.VersionTag);
                 }
 
@@ -119,7 +117,6 @@ public static class AllEndpoints
                 
             }
             
-
             //Handle movies Same way as cinemas
             foreach (var st in joinEvent.Showtimes)
             {
@@ -156,7 +153,7 @@ public static class AllEndpoints
 
             await context.SaveChangesAsync();
 
-//            //Handle showtimes
+             //Handle showtimes
             foreach (var showtime in joinEvent.Showtimes)
             {
                 var existingShowtime = await context.Showtimes.FindAsync(showtime.Id);
