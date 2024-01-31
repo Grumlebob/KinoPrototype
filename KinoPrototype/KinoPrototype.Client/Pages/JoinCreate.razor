@@ -3,6 +3,7 @@
 @using System.Globalization;
 @using System.Web
 @using KinoPrototype
+@inject IJSRuntime JSRuntime
 @using KinoPrototype.Domain
 @page "/JoinCreate/{filterString}"
 
@@ -156,15 +157,41 @@
 
 @if (showtimes.Count > 0 && movies.Count > 0 && cinemas.Count > 0)
 {
-    <h3>Checked Boxes</h3>
-    <ul>
-        @foreach (var showtime in selectedShowtimeIds)
-        {
-            <li>@showtime</li>
-        }
-    </ul>
+    <h1>Join Event</h1>
     
-    <button @onclick="finishJoinEvent">Finish</button>
+    <input style="margin-bottom: 5px; width: 300px" type="text" placeholder="Title" @bind-value="_eventTitle" />
+    <br />
+    <textarea style="margin-bottom: 5px;width: 300px" type="text"   placeholder="Beskrivelse"  @bind="_eventDescription"></textarea>
+    <br />
+    <p style="margin-bottom: 0px" >Deadline</p>
+    <input style="margin-bottom: 5px; margin-top: 0px;width: 300px" type="date" placeholder="Deadline" @bind="@_deadline" />
+    <br />
+    <button style="margin-bottom: 5px;width: 200px;height: 50px;bottom: 3rem; right: 3rem; position: fixed; z-index: 999" @onclick="OpenDialog">Opret Event</button>
+    <br />
+    
+    <dialog id="eventDialog">
+        @if (!eventCreated)
+        {
+            <h4>Ønsker du at oprette eventet?</h4>
+            <button style="background-color: green; color: white" @onclick="finishJoinEvent">Opret</button>
+            <button style="background-color: red; color: white" @onclick="CloseDialog">Rediger videre</button>
+
+        }
+        else
+        {
+            <h4>Event oprettet</h4>
+            
+            <p>Send dette link til dine venner</p>
+            <a href="https://localhost:7123/filling/@_joinEventId" >https://localhost:7123/filling/@_joinEventId</a>
+            <button @onclick="CopyLink"> Kopier</button>
+        }
+          
+        
+    </dialog>
+    
+    <h2 style="margin-top: 10px" >Vælg muglige forestillinger</h2>
+    
+    
 
     @foreach (var movie in showtimes.GroupBy(s => s.Movie))
     {
@@ -185,7 +212,7 @@
                 @foreach (var cinema in movie.GroupBy(s => s.Cinema))
                 {
                     <div class="CinemaLocation">
-                        <h2>@cinema.Key.Navn</h2>
+                        <h4>@cinema.Key.Navn</h4>
                     </div>
                     @foreach (var version in cinema.GroupBy(s => s.VersionTag))
                     {
@@ -237,72 +264,25 @@
 }
 
 
-<h3>Parsed Cinemas</h3>
-<ul>
-    @foreach (var cinema in cinemas)
-    {
-        <li>@cinema.Navn</li>
-    }
-</ul>
-
-<h3>Parsed Movies</h3>
-<ul>
-    @foreach (var movie in movies)
-    {
-        <li>@movie.Navn</li>
-        <li>premier date: @movie.PremiereDate</li>
-        <li>age rating: @movie.AgeRating</li>
-        <li>duration: @movie.Duration</li>
-        <li>imageurl: @movie.ImageUrl</li>
-
-        <h3>Parsed Showtimes</h3>
-        <ul>
-            @foreach (var showtime in movie.Showtimes)
-            {
-                <li>@($"{showtime.Movie.Navn}, {showtime.Cinema.Navn}, {showtime.Playtime.StartTime}, {showtime.VersionTag.Type}, {showtime.Sal.Navn}")</li>
-            }
-        </ul>
-    }
-</ul>
-
-<h3>Parsed Versions</h3>
-<ul>
-    @foreach (var version in versionTags)
-    {
-        <li>@version.Type</li>
-    }
-</ul>
-
-<h3>Parsed Sals</h3>
-<ul>
-    @foreach (var sal in sals)
-    {
-        <li>@sal.Navn</li>
-    }
-</ul>
-
-<h3>Parsed Playtimes</h3>
-<ul>
-    @foreach (var playtime in playtimes)
-    {
-        <li>@playtime.StartTime</li>
-    }
-</ul>
-
-<h3>Parsed Showtimes</h3>
-<ul>
-    @foreach (var showtime in showtimes)
-    {
-        <li>@($"{showtime.Movie.Navn}, {showtime.Cinema.Navn}, {showtime.Playtime.StartTime}, {showtime.VersionTag.Type}, {showtime.Sal.Navn}")</li>
-    }
-</ul>
-
-
 @code {
 
     [Parameter] public string filterString { get; set; }
+    
+    
 
     string json;
+    
+    private string _eventTitle;
+    private string _eventDescription;
+    
+    private DateTime _deadline = DateTime.Now.AddDays(30);
+    
+    private bool eventCreated = false;
+    
+    private int _joinEventId;
+   
+    
+    
 
     List<Cinema> cinemas = new List<Cinema>();
     List<KinoPrototype.Domain.Movie> movies = new();
@@ -569,8 +549,27 @@
     }
 
     
-    private async Task finishJoinEvent()
+    private async Task OpenDialog()
     {
+       await  JSRuntime.InvokeVoidAsync("customFunctions.showDialog", "eventDialog");
+    }
+    
+    private async Task CloseDialog()
+    {
+        // Hide the dialog using JavaScript interop
+       await JSRuntime.InvokeVoidAsync("customFunctions.hideDialog", "eventDialog");
+    }
+    
+    private async Task CopyLink()
+    {
+        // Hide the dialog using JavaScript interop
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", "https://localhost:7123/filling/"+_joinEventId);
+    }
+    
+    private async Task finishJoinEvent()
+    { 
+        
+        
        HttpClient client = new HttpClient();
        
        var url = "https://localhost:7123/putJoinEvent";
@@ -581,15 +580,15 @@
        {
            Showtimes = pickedShowtimes,
            Host = new Host(){Username = "per", AuthId = "1"},
-           Title = "Min fødselsdag",
-           Description = "Kom til min fødselsdag",
-           Deadline = DateTime.Now.AddDays(30),
+           Title = _eventTitle,
+           Description = _eventDescription,
+           Deadline = _deadline,
        };
        
        Console.WriteLine( "before: "+joinEvent.Id);
        
        var response = await client.PutAsJsonAsync(url, joinEvent);
-       var id = response.Content.ReadAsStringAsync().Result;
+       var id = await response.Content.ReadAsStringAsync();
        
        Console.WriteLine("after: "+id);
        
@@ -601,8 +600,10 @@
         //{
         //    Console.WriteLine("movieName: "+showtime.Movie.Navn);
         //}
-  
-         
+        
+        _joinEventId = int.Parse(id);
+        
+        eventCreated = true;
     }
     
 
