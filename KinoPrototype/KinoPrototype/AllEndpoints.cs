@@ -77,7 +77,7 @@ public static class AllEndpoints
                 }
 
                 // Handle Playtime
-                var existingPlaytime = await context.Playtimes.FindAsync(st.Playtime.Id);
+                var existingPlaytime = await context.Playtimes.FirstOrDefaultAsync(p => p.StartTime == st.Playtime.StartTime);
                 if (existingPlaytime != null)
                 {
                     context.Playtimes.Attach(existingPlaytime);
@@ -89,14 +89,17 @@ public static class AllEndpoints
                 }
 
                 // Handle VersionTag
-                var existingVersionTag = await context.Versions.FindAsync(st.VersionTag.Id);
+                var existingVersionTag = await context.Versions.FirstOrDefaultAsync(v => v.Type == st.VersionTag.Type);
                 if (existingVersionTag != null)
                 {
+                    Console.WriteLine("Found existing version tag");
                     context.Versions.Attach(existingVersionTag);
                     st.VersionTag = existingVersionTag;
                 }
                 else
                 {
+                    Console.WriteLine("Did not find existing version tag");
+                    //Console.WriteLine("adding")
                     context.Versions.Add(st.VersionTag);
                 }
 
@@ -111,9 +114,11 @@ public static class AllEndpoints
                 {
                     context.Sals.Add(st.Sal);
                 }
+                
+                await context.SaveChangesAsync();
+                
             }
-
-            await context.SaveChangesAsync();
+            
 
             //Handle movies Same way as cinemas
             foreach (var st in joinEvent.Showtimes)
@@ -246,7 +251,7 @@ public static class AllEndpoints
             Console.WriteLine(
                 "movie of first showtime: " + recentlyAddedJoinEvent.Showtimes.FirstOrDefault().Movie.Navn);
 
-            return Results.Ok(123);
+            return Results.Ok(newJoinEventId);
         });
     }
 }
