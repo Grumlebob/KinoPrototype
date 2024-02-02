@@ -50,7 +50,7 @@ public class JoinEvent
 public class Movie
 {
     [Key] public int Id { get; set; }
-    public string Navn { get; set; }
+    public string Title { get; set; }
     public List<Showtime>? Showtimes { get; set; }
     public string ImageUrl { get; set; }
     public int Duration { get; set; }
@@ -69,7 +69,7 @@ public class Showtime
     public int CinemaId { get; set; }
     public int PlaytimeId { get; set; }
     public int VersionTagId { get; set; }
-    public int SalId { get; set; }
+    public int RoomId { get; set; }
 
     //Many to many to JoinEvent
     public List<JoinEvent> JoinEvents { get; set; }
@@ -79,7 +79,7 @@ public class Showtime
 
     //Foreign Keys
     [ForeignKey("VersionTagId")] public VersionTag VersionTag { get; set; }
-    [ForeignKey("SalId")] public Sal Sal { get; set; }
+    [ForeignKey("SalId")] public Room Room { get; set; }
     [ForeignKey("MovieId")] public Movie Movie { get; set; }
     [ForeignKey("CinemaId")] public Cinema Cinema { get; set; }
     [ForeignKey("PlaytimeId")] public Playtime Playtime { get; set; }
@@ -112,13 +112,13 @@ public class VersionTag
 public class Cinema
 {
     [Key] public int Id { get; set; }
-    public string Navn { get; set; }
+    public string Name { get; set; }
 }
 
-public class Sal
+public class Room
 {
     [Key]
     public int Id { get; set; }
 
-    public string Navn { get; set; }
+    public string Name { get; set; }
 }
