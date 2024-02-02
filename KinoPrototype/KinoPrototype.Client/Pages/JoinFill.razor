@@ -3,7 +3,6 @@
 @using System.Net
 @using System.Text
 @using KinoPrototype.Domain
-@using System.Diagnostics
 
 <style>
 /* Base container for each movie */
@@ -246,16 +245,11 @@
     </div>
 }
 
-
-<!--<InputCheckbox>Tilføj event til egen kalender</InputCheckbox>-->
-
-<button onclick="@(() => { _showNickNameField = true; })">Gem svar</button>
-
-@if (_showNickNameField)
+@if (!_answerSaved)
 {
     <div>
         <input placeholder="Indtast dit navn" @bind="@Nickname"/>
-        <button onclick="@(async () => { if (Nickname is null or "") { _infoMessage = "Indtast venligst et navn"; return; } var p = new Participant { Nickname = Nickname, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; var jsonP = JsonConvert.SerializeObject(p); var httpClient = new HttpClient(); var response = await httpClient.PutAsync($"https://localhost:7123/participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; }else { _infoMessage = "Noget gik galt. Prøv igen."; } })">Ok</button>
+        <button onclick="@(async () => { _answerSaved = true; if (Nickname is null or "") { _infoMessage = "Indtast venligst et navn"; return; } var p = new Participant { Nickname = Nickname, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; var jsonP = JsonConvert.SerializeObject(p); var httpClient = new HttpClient(); var response = await httpClient.PutAsync($"https://localhost:7123/participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; }else { _infoMessage = "Noget gik galt. Prøv igen."; } })">Send svar</button>
     </div>
 }
 
@@ -318,7 +312,7 @@
 
     private readonly List<Showtime> _votedFor = new();
 
-    private bool _showNickNameField;
+    private bool _answerSaved = false;
 
     private string? Nickname { get; set; }
 
@@ -340,3 +334,4 @@
     }
 
 }
+
