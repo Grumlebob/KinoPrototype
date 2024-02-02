@@ -300,7 +300,7 @@
                 @foreach (var showtime in _event.Showtimes)
                 {
                     <td>
-                        <div style="height:100%;width: 100%; background: @(participant.VotedFor.Select(s => s.Id).Contains(showtime.Id) ? "green" : "red") ">
+                        <div style="height:2rem; background: @(participant.VotedFor.Select(s => s.Id).Contains(showtime.Id) ? "green" : "red")">
                         </div>
                     </td>
                 }
