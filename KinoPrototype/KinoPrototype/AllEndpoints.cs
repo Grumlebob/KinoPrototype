@@ -10,6 +10,43 @@ public static class AllEndpoints
     {
         app.MapGet("/hello", () => "Hello, World!");
         app.MapGet("/json", () => JsonParser.getJsonString());
+        app.MapGet("events/{hostId}", async (string hostId) =>
+        {
+            using var scope = app.Services.CreateScope();
+            
+            await using var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<KinoContext>();
+            
+            var results =await  context.JoinEvents.Where(j => j.HostId==hostId).Select(
+                    e => new JoinEvent
+                    {
+                        Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host,
+                        Showtimes = e.Showtimes.Select(s => new Showtime
+                        {
+                            Id = s.Id,
+                            Movie = new Movie()
+                            {
+                                Id = s.MovieId, AgeRating = s.Movie.AgeRating, PremiereDate = s.Movie.PremiereDate,
+                                Navn = s.Movie.Navn, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration
+                            },
+                            Cinema = s.Cinema, Playtime = s.Playtime, Sal = s.Sal,
+                            VersionTag = s.VersionTag,
+                        }).ToList()
+                    })
+                .ToListAsync();
+            
+            
+            //create empty participant lists if they are null
+            foreach (var joinEvent in results)
+            {
+                if (joinEvent.Participants == null)
+                {
+                    joinEvent.Participants = new List<Participant>();
+                }
+            }
+            
+            return Results.Ok(results);
+
+        });
         app.MapGet("/event/{id}", async (int id) =>
         {
             using var scope = app.Services.CreateScope();
