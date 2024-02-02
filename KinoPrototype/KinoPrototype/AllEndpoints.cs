@@ -64,7 +64,8 @@ public static class AllEndpoints
                     if (existingCinema == null)
                     {
                         // This should only happen if you're sure you want to add new Cinemas
-                        context.Cinemas.Add(new Cinema { Id = cinemaId, Navn = st.Cinema.Navn });
+                        var cinemaName = joinEvent.Showtimes.FirstOrDefault(st => st.Cinema.Id == cinemaId)?.Cinema.Navn;
+                        context.Cinemas.Add(new Cinema { Id = cinemaId, Navn = cinemaName });
                     }
                     else
                     {
