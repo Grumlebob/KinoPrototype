@@ -53,7 +53,7 @@ public class KinoContext : DbContext
 
         // Make showtime key MovieId, CinemaId, ShowtimeId, VersionId, SalId
         modelBuilder.Entity<Showtime>()
-            .HasKey(s => new { s.MovieId, s.CinemaId, ShowtimeId = s.PlaytimeId, VersionId = s.VersionTagId, s.SalId });
+            .HasKey(st => st.Id);
 
         // Call the base method to ensure any configuration from the base class is applied
         base.OnModelCreating(modelBuilder);

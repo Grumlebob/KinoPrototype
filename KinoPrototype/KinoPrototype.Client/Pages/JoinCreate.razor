@@ -3,6 +3,7 @@
 @using System.Globalization;
 @using System.Web
 @using KinoPrototype
+@inject IJSRuntime JSRuntime
 @using KinoPrototype.Domain
 @page "/JoinCreate/{filterString}"
 
@@ -154,37 +155,64 @@
 </style>
 
 
-
 @if (showtimes.Count > 0 && movies.Count > 0 && cinemas.Count > 0)
 {
-    <h3>Checked Boxes</h3>
-    <ul>
-        @foreach (var showtime in selectedShowtimeIds)
-        {
-            <li>@showtime</li>
-        }
-    </ul>
+    <h1>Join Event</h1>
     
-    @foreach (var movie in movies)
+    <input style="margin-bottom: 5px; width: 300px" type="text" placeholder="Title" @bind-value="_eventTitle" />
+    <br />
+    <textarea style="margin-bottom: 5px;width: 300px" type="text"   placeholder="Beskrivelse"  @bind="_eventDescription"></textarea>
+    <br />
+    <p style="margin-bottom: 0px" >Deadline</p>
+    <input style="margin-bottom: 5px; margin-top: 0px;width: 300px" type="date" placeholder="Deadline" @bind="@_deadline" />
+    <br />
+    <button style="margin-bottom: 5px;width: 200px;height: 50px;bottom: 3rem; right: 3rem; position: fixed; z-index: 999" @onclick="OpenDialog">Opret Event</button>
+    <br />
+    
+    <dialog id="eventDialog">
+        @if (!eventCreated)
+        {
+            <h4>Ønsker du at oprette eventet?</h4>
+            <button style="background-color: green; color: white" @onclick="finishJoinEvent">Opret</button>
+            <button style="background-color: red; color: white" @onclick="CloseDialog">Rediger videre</button>
+
+        }
+        else
+        {
+            <h4>Event oprettet</h4>
+            
+            <p>Send dette link til dine venner</p>
+            <a href="https://localhost:7123/filling/@_joinEventId" >https://localhost:7123/filling/@_joinEventId</a>
+            <button @onclick="CopyLink"> Kopier</button>
+        }
+          
+        
+    </dialog>
+    
+    <h2 style="margin-top: 10px" >Vælg muglige forestillinger</h2>
+    
+    
+
+    @foreach (var movie in showtimes.GroupBy(s => s.Movie))
     {
         <div class="Redbox">
             <div class="PosterImage">
-                <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+                <img src="@movie.Key.ImageUrl" alt="Movie Poster" width="200" height="300"/>
             </div>
             <div class="MovieDetails">
                 <div class="MovieHeader">
-                    <h2>@movie.Navn</h2>
+                    <h2>@movie.Key.Navn</h2>
 
                     <div class="movie-info">
-                        <span class="premiere">Premiere @movie.PremiereDate | </span>
-                        <span class="duration">Varighed @movie.Duration min</span>
+                        <span class="premiere">Premiere @movie.Key.PremiereDate | </span>
+                        <span class="duration">Varighed @movie.Key.Duration min</span>
                     </div>
 
                 </div>
-                @foreach (var cinema in movie.Showtimes.GroupBy(s => s.Cinema))
+                @foreach (var cinema in movie.GroupBy(s => s.Cinema))
                 {
                     <div class="CinemaLocation">
-                        <h2>@cinema.Key.Navn</h2>
+                        <h4>@cinema.Key.Navn</h4>
                     </div>
                     @foreach (var version in cinema.GroupBy(s => s.VersionTag))
                     {
@@ -236,76 +264,29 @@
 }
 
 
-<h3>Parsed Cinemas</h3>
-<ul>
-    @foreach (var cinema in cinemas)
-    {
-        <li>@cinema.Navn</li>
-    }
-</ul>
-
-<h3>Parsed Movies</h3>
-<ul>
-    @foreach (var movie in movies)
-    {
-        <li>@movie.Navn</li>
-        <li>premier date: @movie.PremiereDate</li>
-        <li>age rating: @movie.AgeRating</li>
-        <li>duration: @movie.Duration</li>
-        <li>imageurl: @movie.ImageUrl</li>
-
-        <h3>Parsed Showtimes</h3>
-        <ul>
-            @foreach (var showtime in movie.Showtimes)
-            {
-                <li>@($"{showtime.Movie.Navn}, {showtime.Cinema.Navn}, {showtime.Playtime.StartTime}, {showtime.VersionTag.Type}, {showtime.Sal.Navn}")</li>
-            }
-        </ul>
-    }
-</ul>
-
-<h3>Parsed Versions</h3>
-<ul>
-    @foreach (var version in versionTags)
-    {
-        <li>@version.Type</li>
-    }
-</ul>
-
-<h3>Parsed Sals</h3>
-<ul>
-    @foreach (var sal in sals)
-    {
-        <li>@sal.Navn</li>
-    }
-</ul>
-
-<h3>Parsed Playtimes</h3>
-<ul>
-    @foreach (var playtime in playtimes)
-    {
-        <li>@playtime.StartTime</li>
-    }
-</ul>
-
-<h3>Parsed Showtimes</h3>
-<ul>
-    @foreach (var showtime in showtimes)
-    {
-        <li>@($"{showtime.Movie.Navn}, {showtime.Cinema.Navn}, {showtime.Playtime.StartTime}, {showtime.VersionTag.Type}, {showtime.Sal.Navn}")</li>
-    }
-</ul>
-
-
 @code {
 
     [Parameter] public string filterString { get; set; }
+    
+    
 
     string json;
+    
+    private string _eventTitle;
+    private string _eventDescription;
+    
+    private DateTime _deadline = DateTime.Now.AddDays(30);
+    
+    private bool eventCreated = false;
+    
+    private int _joinEventId;
+   
+    
+    
 
     List<Cinema> cinemas = new List<Cinema>();
-    List<KinoPrototype.Domain.Movie> movies = new ();
-    List<KinoPrototype.Domain.Showtime> showtimes = new ();
+    List<KinoPrototype.Domain.Movie> movies = new();
+    List<KinoPrototype.Domain.Showtime> showtimes = new();
     List<Playtime> playtimes = new List<Playtime>();
     List<VersionTag> versionTags = new List<VersionTag>();
     List<Sal> sals = new List<Sal>();
@@ -328,7 +309,7 @@
         }
     }
 
-    
+
     //make method to print count of all lists
     void PrintCount()
     {
@@ -356,28 +337,45 @@
         var moviesFilter = queryParams.GetValues("movies")?.Select(int.Parse).ToList() ?? new List<int>();
         var datesFilter = queryParams.GetValues("date")?.ToList() ?? new List<string>();
 
+        string firstMovie = "";
+        string firstCinema = "";
+        string firstGenre = "";
+
 
         if (cinemasFilter.Count >= 1 && moviesFilter.Count >= 1)
         {
-            var movieFilter = "&movies=" + moviesFilter[0];
-            var cinemaFilter = "&cinemas=" + cinemasFilter[0];
+            firstMovie = "&movies=" + moviesFilter[0];
+            firstCinema = "&cinemas=" + cinemasFilter[0];
+            if (genresfilter.Count >= 1)
+            {
+                firstGenre = "&genres=" + genresfilter[0];
+            }
 
             json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
-                                               movieFilter + cinemaFilter + "?region=content&format=json");
+                                               firstMovie + firstCinema + firstGenre + "?region=content&format=json");
         }
         else if (cinemasFilter.Count >= 1)
         {
-            var cinemaFilter = "&cinemas=" + cinemasFilter[0];
+            firstCinema = "&cinemas=" + cinemasFilter[0];
+            if (genresfilter.Count >= 1)
+            {
+                firstGenre = "&genres=" + genresfilter[0];
+            }
 
             json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
-                                               cinemaFilter + "?region=content&format=json");
+                                               firstCinema + firstGenre + "?region=content&format=json");
         }
         else if (moviesFilter.Count >= 1)
         {
-            var movieFilter = "&movies=" + moviesFilter[0];
+            firstMovie = "&movies=" + moviesFilter[0];
+
+            if (genresfilter.Count >= 1)
+            {
+                firstGenre = "&genres=" + genresfilter[0];
+            }
 
             json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
-                                               movieFilter + "?region=content&format=json");
+                                               firstMovie + firstGenre + "?region=content&format=json");
         }
         else
         {
@@ -385,212 +383,229 @@
                                                "&cinemas=53" + "?region=content&format=json");
         }
 
-        /*
-        if (datesFilter.Count > 0)
-        {
-            var dateString = string.Join("&date=", datesFilter);
-            dateString = "&date=" + dateString;
-
-            Console.WriteLine("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
-                              dateString + "?region=content&format=json");
-
-            json = await client.GetStringAsync("https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
-                                               dateString + "?region=content&format=json");
-        }
-        */
-
-        // Display the results
-        //Console.WriteLine("Cinemas: " + string.Join(", ", cinemasFilter));
-        //Console.WriteLine("Genres: " + string.Join(", ", genresfilter));
-        //Console.WriteLine("Movies: " + string.Join(", ", moviesFilter));
-        //Console.WriteLine("Dates: " + string.Join(", ", datesFilter));
-
-
         var CinemaIdAndName = new Dictionary<int, string>();
         var MovieIdAndName = new Dictionary<int, string>();
-
-        int showtimeIdCounter = 0; //TODO ÆNDRER TIL RIGTIG DATA BASE LOGIC!!
-
-        
+        var GenrerIdAndName = new Dictionary<int, string>();
 
         Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
 
 
-        if (myDeserializedClass.Content != null)
+        foreach (var cinemaOption in myDeserializedClass.Content.Content.Facets.Cinemas.Options)
         {
-            if (myDeserializedClass.Content.Content != null)
+            CinemaIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
+        }
+
+        foreach (var movieOptions in myDeserializedClass.Content.Content.Facets.Movies.Options)
+        {
+            MovieIdAndName.Add(movieOptions.Key, movieOptions.Value);
+        }
+
+        foreach (var genrerOptions in myDeserializedClass.Content.Content.Facets.Genres.Options)
+        {
+            GenrerIdAndName.Add(genrerOptions.Key, genrerOptions.Value);
+        }
+
+
+        foreach (var cinema in myDeserializedClass.Content.Content.Content.Content)
+        {
+            Console.WriteLine(cinema.Id);
+            foreach (var cinemaFilter in cinemasFilter)
             {
-                if (myDeserializedClass.Content.Content.Content != null)
+                Console.WriteLine(cinemaFilter);
+            }
+
+            Console.WriteLine("CINEMA ID: +" + cinema.Id);
+            var cinemaObject = new Cinema()
+            {
+                Id = cinema.Id,
+                Navn = CinemaIdAndName[cinema.Id]
+            };
+            cinemas.Add(cinemaObject);
+
+            foreach (var movie in cinema.Movies)
+            {
+                if (!MovieIdAndName.ContainsKey(movie.Id))
                 {
-                    foreach (var cinemaOption in myDeserializedClass.Content.Content.Facets.Cinemas.Options)
+                    continue;
+                }
+
+                KinoPrototype.Domain.Movie movieObject;
+
+                if (!movies.Any(m => m.Navn == MovieIdAndName[movie.Id]))
+                {
+                    int duration;
+
+                    int.TryParse(movie.Content.FieldPlayingTime, out duration);
+
+
+                    movieObject = new KinoPrototype.Domain.Movie()
                     {
-                        CinemaIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
-                    }
-
-                    foreach (var cinemaOption in myDeserializedClass.Content.Content.Facets.Movies.Options)
-                    {
-                        MovieIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
-                    }
-
-                    if (myDeserializedClass.Content.Content.Content.Content != null)
-                    {
-                        foreach (var cinema in myDeserializedClass.Content.Content.Content.Content)
-                        {
-                            Console.WriteLine(cinema.Id);
-                            foreach (var cinemaFilter in cinemasFilter)
-                            {
-                                Console.WriteLine(cinemaFilter);
-                            }
-
-                            var cinemaObject = new Cinema()
-                            {
-                                Navn = CinemaIdAndName[cinema.Id]
-                            };
-                            cinemas.Add(cinemaObject);
-
-                            foreach (var movie in cinema.Movies)
-                            {
-                                if (!MovieIdAndName.ContainsKey(movie.Id))
-                                {
-                                    continue;
-                                }
-
-                                KinoPrototype.Domain.Movie movieObject;
-
-                                if (!movies.Any(m => m.Navn == MovieIdAndName[movie.Id]))
-                                {
-                                    int duration;
-
-                                    int.TryParse(movie.Content.FieldPlayingTime, out duration);
-
-
-                                    movieObject = new KinoPrototype.Domain.Movie()
-                                    {
-                                        Navn = MovieIdAndName[movie.Id],
-                                        PremiereDate = movie.Content.FieldPremiere,
-                                        AgeRating = movie.Content.FieldCensorshipIcon,
-                                        ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
-                                        Duration = duration,
-                                        Showtimes = new List<Showtime>()
-                                    };
-                                    movies.Add(movieObject);
-                                }
-                                else
-                                {
-                                    movieObject = movies.First(m => m.Navn == MovieIdAndName[movie.Id]);
-                                }
-
-
-                                foreach (var versions in movie.Versions)
-                                {
-                                    VersionTag versionObject;
-                                    if (!versionTags.Any(v => v.Type == versions.Label))
-                                    {
-                                        versionObject = new VersionTag()
-                                        {
-                                            Type = versions.Label
-                                        };
-                                        versionTags.Add(versionObject);
-                                    }
-                                    else
-                                    {
-                                        versionObject = versionTags.First(v => v.Type == versions.Label);
-                                    }
-
-
-                                    foreach (var showtimeDate in versions.Dates)
-                                    {
-                                        foreach (var showtimeItem in showtimeDate.Showtimes)
-                                        {
-                                            Sal salObject;
-                                            if (!sals.Any(s => s.Navn == showtimeItem.Room.Label))
-                                            {
-                                                salObject = new Sal()
-                                                {
-                                                    Navn = showtimeItem.Room.Label
-                                                };
-                                                sals.Add(salObject);
-                                            }
-                                            else
-                                            {
-                                                salObject = sals.First(s => s.Navn == showtimeItem.Room.Label);
-                                            }
-
-                                            Playtime playtimeObject;
-                                            var dateString = (showtimeDate.Date + " " + showtimeItem.Time);
-                                            var commaIndex = dateString.IndexOf(',');
-                                            if (commaIndex > 0)
-                                            {
-                                                dateString = dateString.Substring(commaIndex + 2);
-                                            }
-
-                                            var dateTimeFormat = "dd/MM HH:mm";
-                                            DateTime dateTime;
-
-                                            if (DateTime.TryParseExact(dateString, dateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
-                                            {
-                                                // Successfully parsed the date
-                                            }
-                                            else
-                                            {
-                                                // Failed to parse the date
-                                            }
-
-                                            if (!playtimes.Any(p => p.StartTime == dateTime))
-                                            {
-                                                playtimeObject = new Playtime()
-                                                {
-                                                    StartTime = dateTime
-                                                };
-                                                playtimes.Add(playtimeObject);
-                                            }
-                                            else
-                                            {
-                                                playtimeObject = playtimes.First(p => p.StartTime == dateTime);
-                                            }
-
-                                            showtimeIdCounter++;
-                                            var showtimeObject = new Showtime()
-                                            {
-                                                Id = showtimeIdCounter,
-                                                Movie = movieObject,
-                                                Cinema = cinemaObject,
-                                                VersionTag = versionObject,
-                                                Sal = salObject,
-                                                Playtime = playtimeObject
-                                            };
-                                            showtimes.Add(showtimeObject);
-
-                                            movieObject.Showtimes.Add(showtimeObject);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Level 4 Content is null");
-                    }
+                        Id = movie.Id,
+                        Navn = MovieIdAndName[movie.Id],
+                        PremiereDate = movie.Content.FieldPremiere,
+                        AgeRating = movie.Content.FieldCensorshipIcon,
+                        ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
+                        Duration = duration,
+                        Showtimes = new List<Showtime>()
+                    };
+                    movies.Add(movieObject);
                 }
                 else
                 {
-                    Console.WriteLine("Level 3 Content is null");
+                    movieObject = movies.First(m => m.Navn == MovieIdAndName[movie.Id]);
+                }
+
+
+                foreach (var versions in movie.Versions)
+                {
+                    VersionTag versionObject;
+                    if (!versionTags.Any(v => v.Type == versions.Label))
+                    {
+                        versionObject = new VersionTag()
+                        {
+                            
+                            Type = versions.Label
+                        };
+                        versionTags.Add(versionObject);
+                    }
+                    else
+                    {
+                        versionObject = versionTags.First(v => v.Type == versions.Label);
+                    }
+
+
+                    foreach (var showtimeDate in versions.Dates)
+                    {
+                        foreach (var showtimeItem in showtimeDate.Showtimes)
+                        {
+                            Sal salObject;
+                            if (!sals.Any(s => s.Navn == showtimeItem.Room.Label))
+                            {
+                                salObject = new Sal()
+                                {
+                                    Id = showtimeItem.Room.Id,
+                                    Navn = showtimeItem.Room.Label
+                                };
+                                sals.Add(salObject);
+                            }
+                            else
+                            {
+                                salObject = sals.First(s => s.Navn == showtimeItem.Room.Label);
+                            }
+
+                            Playtime playtimeObject;
+                            var dateString = (showtimeDate.Date + " " + showtimeItem.Time);
+                            var commaIndex = dateString.IndexOf(',');
+                            if (commaIndex > 0)
+                            {
+                                dateString = dateString.Substring(commaIndex + 2);
+                            }
+
+                            var dateTimeFormat = "dd/MM HH:mm";
+                            DateTime dateTime;
+
+                            if (DateTime.TryParseExact(dateString, dateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+                            {
+                                // Successfully parsed the date
+                            }
+                            else
+                            {
+                                // Failed to parse the date
+                            }
+
+                            if (!playtimes.Any(p => p.StartTime == dateTime))
+                            {
+                                playtimeObject = new Playtime()
+                                {
+                                    StartTime = dateTime
+                                };
+                                playtimes.Add(playtimeObject);
+                            }
+                            else
+                            {
+                                playtimeObject = playtimes.First(p => p.StartTime == dateTime);
+                            }
+
+                            var showtimeObject = new Showtime()
+                            {
+                                Id = showtimeItem.Id,
+                                Movie = movieObject,
+                                Cinema = cinemaObject,
+                                VersionTag = versionObject,
+                                Sal = salObject,
+                                Playtime = playtimeObject
+                            };
+                            showtimes.Add(showtimeObject);
+
+                            //movieObject.Showtimes.Add(showtimeObject);
+                        }
+                    }
                 }
             }
-            else
-            {
-                Console.WriteLine("Level 2 Content is null");
-            }
         }
-        else
-        {
-            Console.WriteLine("Level 1 Content is null");
-        }
+
 
         PrintCount();
     }
 
+    
+    private async Task OpenDialog()
+    {
+       await  JSRuntime.InvokeVoidAsync("customFunctions.showDialog", "eventDialog");
+    }
+    
+    private async Task CloseDialog()
+    {
+        // Hide the dialog using JavaScript interop
+       await JSRuntime.InvokeVoidAsync("customFunctions.hideDialog", "eventDialog");
+    }
+    
+    private async Task CopyLink()
+    {
+        // Hide the dialog using JavaScript interop
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", "https://localhost:7123/filling/"+_joinEventId);
+    }
+    
+    private async Task finishJoinEvent()
+    { 
+        
+        
+       HttpClient client = new HttpClient();
+       
+       var url = "https://localhost:7123/putJoinEvent";
+
+       var pickedShowtimes = selectedShowtimeIds.Select(id => showtimes.First(s => s.Id == id)).ToList();
+       
+       var joinEvent = new JoinEvent()
+       {
+           Showtimes = pickedShowtimes,
+           Host = new Host(){Username = "per", AuthId = "1"},
+           Title = _eventTitle,
+           Description = _eventDescription,
+           Deadline = _deadline,
+       };
+       
+       Console.WriteLine( "before: "+joinEvent.Id);
+       
+       var response = await client.PutAsJsonAsync(url, joinEvent);
+       var id = await response.Content.ReadAsStringAsync();
+       
+       Console.WriteLine("after: "+id);
+       
+       //get joinEvent from api
+        //var response2 = await client.GetAsync("https://localhost:7123/event/"+id);
+        //var returnedJoinEvent = await response2.Content.ReadFromJsonAsync<JoinEvent>();
+//
+        //foreach (var showtime in returnedJoinEvent .Showtimes)
+        //{
+        //    Console.WriteLine("movieName: "+showtime.Movie.Navn);
+        //}
+        
+        _joinEventId = int.Parse(id);
+        
+        eventCreated = true;
+    }
+    
 
     public class Root
     {
@@ -768,14 +783,27 @@
 
         [JsonProperty("versions")] public object Versions { get; set; } // Replace object with specific type if necessary
 
-        [JsonProperty("genres")] public object Genres { get; set; } // Replace object with specific type if necessary
+        [JsonProperty("genres")] public GenresLookup Genres { get; set; } // Replace object with specific type if necessary
 
         [JsonProperty("date")] public object Date { get; set; } // Replace object with specific type if necessary
     }
 
+    public class GenresLookup
+    {
+        [JsonProperty("options")] public List<GenrerOptions> Options { get; set; }
+    }
+
+    public class GenrerOptions
+    {
+        [JsonProperty("key")] public int Key { get; set; }
+
+        [JsonProperty("value")] public string Value { get; set; }
+    }
+
+
     public class MovieLookup
     {
-        [JsonProperty("options")] public List<MovieOptions> Options { get; set; } // Replace object with specific type if necessary
+        [JsonProperty("options")] public List<MovieOptions> Options { get; set; }
     }
 
     public class MovieOptions
