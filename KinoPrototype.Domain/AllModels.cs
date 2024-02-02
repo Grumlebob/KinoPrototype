@@ -15,9 +15,13 @@ public class Participant
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
+    public int JoinEventId { get; set; }
     public string Nickname { get; set; }
     
     public List<Showtime>? VotedFor { get; set; }
+    //navigation property
+    [ForeignKey("JoinEventId")]
+    public JoinEvent? JoinEvent { get; set; }
 }
 
 public class JoinEvent
