@@ -12,9 +12,16 @@ public class Host
 
 public class Participant
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
+    public int JoinEventId { get; set; }
     public string Nickname { get; set; }
+    
     public List<Showtime>? VotedFor { get; set; }
+    //navigation property
+    [ForeignKey("JoinEventId")]
+    public JoinEvent? JoinEvent { get; set; }
 }
 
 public class JoinEvent
@@ -47,7 +54,6 @@ public class Movie
     public List<Showtime>? Showtimes { get; set; }
     public string ImageUrl { get; set; }
     public int Duration { get; set; }
-    private DateTime _premiereDate;
 
     public string PremiereDate { get; set; }
 
