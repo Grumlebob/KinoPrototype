@@ -311,7 +311,7 @@
     
     private bool _showSnackbar;
    
-    
+    [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
     
 
     List<Cinema> cinemas = new List<Cinema>();
@@ -633,10 +633,35 @@
 
        var pickedShowtimes = selectedShowtimeIds.Select(id => showtimes.First(s => s.Id == id)).ToList();
        
+       
+     
+       
+       var authenticationState = await AuthenticationStateTask;
+       
+       var user = authenticationState.User;
+       if (user.Identity is null || !user.Identity.IsAuthenticated) return;
+       var authorId = user.Claims
+           .FirstOrDefault(c => c.Type == "sub")
+           ?.Value!;
+       
+      
+       
+       var name =user.Claims.FirstOrDefault(c => c.Type == "nickname")?.Value!;
+       
+       
+       Console.WriteLine("authorId: "+authorId);
+       
+       var host = new Host()
+       {
+              AuthId = authorId,
+              Username = name,
+       };
+       
+       
        var joinEvent = new JoinEvent()
        {
            Showtimes = pickedShowtimes,
-           Host = new Host(){Username = "per", AuthId = "1"},
+           Host = host,
            Title = _eventTitle,
            Description = _eventDescription,
            Deadline = _deadline,

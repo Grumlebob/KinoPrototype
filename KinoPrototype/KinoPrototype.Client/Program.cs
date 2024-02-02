@@ -12,5 +12,7 @@ builder.Services.AddOidcAuthentication(options =>
     options.ProviderOptions.ResponseType = "code";
 });
 
+builder.Services.AddCascadingAuthenticationState();
+
 
 await builder.Build().RunAsync();
