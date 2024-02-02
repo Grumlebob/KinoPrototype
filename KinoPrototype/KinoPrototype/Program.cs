@@ -3,7 +3,6 @@ using KinoPrototype;
 using KinoPrototype.Components;
 using KinoPrototype.Domain;
 using Microsoft.EntityFrameworkCore;
-using Host = Microsoft.Extensions.Hosting.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,8 +81,8 @@ using (var scope = app.Services.CreateScope())
         Sal = sal
     };
     
-    var participant1 = new Participant { Id = 1, Nickname = "Alice" };
-    var participant2 = new Participant { Id = 2, Nickname = "Bob" };
+    var participant1 = new Participant {  Nickname = "Alice" };
+    var participant2 = new Participant {  Nickname = "Bob" };
 
     var joinEvent = new JoinEvent
     {

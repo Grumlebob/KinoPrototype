@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KinoPrototype.Domain;
 
@@ -12,8 +13,11 @@ public class Host
 
 public class Participant
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     public string Nickname { get; set; }
+    
     public List<Showtime>? VotedFor { get; set; }
 }
 

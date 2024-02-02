@@ -4,13 +4,229 @@
 @using System.Text
 @using KinoPrototype.Domain
 
+<style>
+/* Base container for each movie */
+.Redbox {
+    display: flex;
+    align-items: flex-start; /* Align the start of the items */
+    margin-bottom: 20px;
+}
+
+/* Styling for the poster image */
+.PosterImage {
+    margin-right: 20px;
+}
+
+/* Container for movie details */
+.MovieDetails {
+    flex-grow: 1; /* Allow the movie details to fill the remaining space */
+}
+
+/* Header for each movie */
+.MovieHeader h2 {
+    margin-top: 0; /* Remove top margin for the movie title */
+    margin-bottom: 0.5em; /* Add a little space below the title */
+}
+
+.MovieHeader p {
+    margin-top: 0; /* Remove top margin for other details */
+    margin-bottom: 0.5em; /* Consistent space below each detail */
+}
+
+/* Styling for cinema location */
+.CinemaLocation {
+    margin-top: 1em; /* Add space above the cinema location */
+    margin-bottom: 0.5em; /* Add space below the cinema location */
+}
+
+/* Styling for versions and showtimes */
+.Version {
+    margin-bottom: 1em; /* Add space below each version */
+}
+
+
+/* Hide the default checkbox input */
+.Showtimes input[type="checkbox"] {
+    display: none;
+}
+
+/* Style when checkbox is checked */
+.Showtimes input[type="checkbox"]:checked + .showtime-label {
+    background-color: #66bb6a;
+}
+
+/* Style when checkbox is not checked */
+.Showtimes input[type="checkbox"]:not(:checked) + .showtime-label {
+    background-color: #eee;
+}
+
+/* Style for checked checkbox text */
+.Showtimes input[type="checkbox"]:checked + .showtime-label .showtime-time {
+    color: white;
+}
+
+/* Style for unchecked checkbox text */
+.Showtimes input[type="checkbox"]:not(:checked) + .showtime-label .showtime-time {
+    color: black;
+}
+
+
+/* Base styles for the showtime labels */
+.Showtimes .showtime-label {
+
+    display: block; /* or inline-block, depending on how you want to handle the layout */
+    padding: 4px; /* Adjust padding as necessary */
+    margin-bottom: 4px;
+    
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    background-color: #eee;
+    border-radius: 4px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    white-space: nowrap; /* Keep text in a single line */
+    width: 100px;
+}
+
+/* Style for the sal name */
+.Showtimes .showtime-sal {
+    font-size: 14px; /* Smaller font size for sal name */
+    margin-bottom: 2px; /* Space between sal name and playtime */
+    overflow: hidden; /* Ensures the content does not expand the container */
+    text-overflow: ellipsis; /* Adds an ellipsis when the text overflows */
+    white-space: nowrap; /* Prevents the text from wrapping to the next line */
+   
+}
+
+/* Style for the playtime */
+.Showtimes .showtime-time {
+    font-weight: bold;
+    font-size: 24px; /* Larger font size for playtime */
+}
+
+.Showtimes .table-container {
+    overflow-x: auto; /* Adds horizontal scrollbar if the table exceeds the container width */
+
+}
+
+.Showtimes table {
+    border-collapse: collapse; /* Collapse borders for a clean look */
+}
+
+/* Style for the table headers and cells to have a fixed width */
+.Showtimes th,
+.Showtimes td {
+    width: 10px; /* Fixed width */
+    text-align: left; /* Align text to the left */
+    padding: 8px; /* Add some padding */
+    white-space: nowrap; /* Keep the content in a single line */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Add an ellipsis to clipped text */
+    border-bottom: 1px solid #ddd; /* Add a bottom border for separation */
+    vertical-align: top; /* Align the content to the top of the cell */
+}
+
+.Showtimes td {
+    padding: 8px; /* Add some padding */
+}
+
+
+.movie-info {
+    background-color: #E0E0E0; /* Light gray background */
+    padding: 5px;
+    border-radius: 5px; /* Optional: rounds the corners of the background */
+    display: inline-flex; /* Places children next to each other */
+    align-items: center; /* Aligns children vertically in the center */
+    justify-content: center; /* Centers children horizontally */
+    gap: 10px; /* Creates space between the children */
+}
+
+.movie-info .premiere,
+.movie-info .duration {
+    color: #333; /* Dark gray text color for better contrast */
+    font-size: 14px; /* Adjust font size as needed */
+}
+</style>
 
 <PageTitle>JoinEvent</PageTitle>
+
 
 @if (_event?.Showtimes is null)
 {
     <h3>Ingen events fundet</h3>
     return;
+}
+
+@if (_event.Showtimes.Count > 0)
+{
+    @foreach (var movieGroup in _event.Showtimes.GroupBy(s => s.Movie, (movie, showtimes) => new { movie, showtimes }))
+    {
+        <div class="Redbox">
+            <div class="PosterImage">
+                <img src="@movieGroup.movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+            </div>
+            <div class="MovieDetails">
+                <div class="MovieHeader">
+                    <h2>@movieGroup.movie.Navn</h2>
+
+                    <div class="movie-info">
+                        <span class="premiere">Premiere @movieGroup.movie.PremiereDate | </span>
+                        <span class="duration">Varighed @movieGroup.movie.Duration min</span>
+                    </div>
+
+                </div>
+                @foreach (var cinemaGroup in movieGroup.showtimes.GroupBy(s => s.Cinema, (cinema, showtimes) => new { cinema, showtimes }))
+                {
+                    <div class="CinemaLocation">
+                        <h2>@cinemaGroup.cinema.Navn</h2>
+                    </div>
+                    @foreach (var versionGroup in cinemaGroup.showtimes.GroupBy(s => s.VersionTag, (version, showtimes) => new { version, showtimes }))
+                    {
+                        <!-- Assuming version is your grouped data object for a particular movie version -->
+
+                        <div class="Version">
+                            <strong>@versionGroup.version.Type</strong>
+                            <div class="Showtimes">
+                                <div class="table-container">
+                                    <table>
+                                        <!-- Create table headers for each grouped date -->
+                                        @foreach (var dateGroup in versionGroup.showtimes.GroupBy(s => s.Playtime.StartTime.ToString("dd/MM"), (date, showtimes) => new { date, showtimes }))
+                                        {
+                                            <tr>
+                                                <th>@dateGroup.date</th>
+
+                                            </tr>
+                                            <tr>
+
+                                                <td>
+                                                    @foreach (var showtime in dateGroup.showtimes)
+                                                    {
+                                                        var checkboxId = "showtime_" + showtime.Id;
+                                                        var isChecked = _votedFor.Contains(showtime);
+
+                                                        <div>
+                                                            <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime" checked="@isChecked" @onclick="() => {if (_votedFor.Contains(showtime)) { _votedFor.Remove(showtime); } else { _votedFor.Add(showtime); }}">
+                                                            <label for="@checkboxId" class="showtime-label">
+                                                                <div class="showtime-sal">@showtime.Sal.Navn</div>
+                                                                <div class="showtime-time">@showtime.Playtime.StartTime.ToString("HH:mm")</div>
+                                                            </label>
+                                                        </div>
+                                                    }
+
+                                                </td>
+                                            </tr>
+                                        }
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
 }
 
 <h1>@_event.Title</h1>
@@ -27,17 +243,7 @@
 {
     <div>
         <input placeholder="Indtast dit navn" @bind="@Nickname"/>
-        <button onclick="@(async () => 
-                            { 
-                                if (Nickname is null or "") { _infoMessage = "Indtast venligst et navn"; return;}
-                                var p = new Participant {Id = 6999, Nickname = Nickname, VotedFor = _votedFor}; 
-                                var jsonP = JsonConvert.SerializeObject(p);
-                                var httpClient = new HttpClient();
-                                var response = await httpClient.PutAsync($"https://localhost:7123/participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); 
-                                if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; }
-                                else { _infoMessage = "Noget gik galt. Prøv igen."; }
-                                 })"
-                >Ok</button>
+        <button onclick="@(async () => { if (Nickname is null or "") { _infoMessage = "Indtast venligst et navn"; return;} var p = new Participant { Nickname = Nickname, VotedFor = _votedFor }; var jsonP = JsonConvert.SerializeObject(p); var httpClient = new HttpClient(); var response = await httpClient.PutAsync($"https://localhost:7123/participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; } else { _infoMessage = "Noget gik galt. Prøv igen."; } })">Ok</button>
     </div>
 }
 
@@ -48,14 +254,16 @@
 
 
 @code {
-    [Parameter] public required string JoinEventId { get; set; }
+
+    [Parameter]
+    public required string JoinEventId { get; set; }
 
     private JoinEvent? _event;
 
-    private List<Showtime> _votedFor;
+    private readonly List<Showtime> _votedFor = new();
 
     private bool _showNickNameField;
-    
+
     private string? Nickname { get; set; }
 
     private string? _infoMessage;

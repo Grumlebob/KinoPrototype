@@ -28,9 +28,6 @@ public class KinoContext : DbContext
         modelBuilder.Entity<Domain.Host>()
             .HasKey(h => h.AuthId);
 
-        modelBuilder.Entity<Participant>()
-            .HasKey(p => p.Id);
-
         modelBuilder.Entity<JoinEvent>()
             .HasKey(je => je.Id);
 

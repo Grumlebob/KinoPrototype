@@ -19,7 +19,7 @@ public static class AllEndpoints
                         Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host,
                         Showtimes = e.Showtimes.Select(s => new Showtime
                         {
-                            Id = s.Id, Movie = s.Movie, Cinema = s.Cinema, Playtime = s.Playtime, Sal = s.Sal,
+                            Id = s.Id, Movie = new Movie(){Id = s.MovieId, AgeRating = s.Movie.AgeRating,PremiereDate = s.Movie.PremiereDate,Navn = s.Movie.Navn,ImageUrl = s.Movie.ImageUrl,Duration = s.Movie.Duration}, Cinema = s.Cinema, Playtime = s.Playtime, Sal = s.Sal,
                             VersionTag = s.VersionTag,
                         }).ToList()
                     })
