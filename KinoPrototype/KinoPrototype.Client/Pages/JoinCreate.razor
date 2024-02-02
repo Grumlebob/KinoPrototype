@@ -177,6 +177,22 @@
 </style>
 
 
+<h1>Plan your movie visit</h1>
+<p> Currently selected movie filter: @selectedMovie</p>
+
+<div class="filter-container">
+    <button @onclick="ToggleDropdown">Choose Movie</button>
+    @if(showDropdown)
+    {
+        <ul>
+            @foreach(var movie in movieStrings)
+            {
+                <li @onclick="() => SelectMovie(movie)">@movie</li>
+            }
+        </ul>
+    }
+</div>
+
 @if (showtimes.Count > 0 && movies.Count > 0 && cinemas.Count > 0)
 {
     <h1>Join Event</h1>
@@ -320,9 +336,23 @@
     List<Playtime> playtimes = new List<Playtime>();
     List<VersionTag> versionTags = new List<VersionTag>();
     List<Sal> sals = new List<Sal>();
-
-
     List<int> selectedShowtimeIds = new List<int>();
+    
+    private bool showDropdown = false;
+    private string selectedMovie;
+    
+    List<string> movieStrings = new();
+
+    private void ToggleDropdown()
+    {
+        showDropdown = !showDropdown;
+    }
+
+    private void SelectMovie(string movie)
+    {
+        selectedMovie = movie;
+        showDropdown = false;
+    }
 
 
     void ToggleCheckedShowtime(int showtimeId)
@@ -428,6 +458,7 @@
         foreach (var movieOptions in myDeserializedClass.Content.Content.Facets.Movies.Options)
         {
             MovieIdAndName.Add(movieOptions.Key, movieOptions.Value);
+            movieStrings.Add(movieOptions.Value);
         }
 
         foreach (var genrerOptions in myDeserializedClass.Content.Content.Facets.Genres.Options)
