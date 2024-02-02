@@ -30,7 +30,9 @@ public static class AllEndpoints
                             },
                             Cinema = s.Cinema, Playtime = s.Playtime, Sal = s.Sal,
                             VersionTag = s.VersionTag,
-                        }).ToList()
+                        }).ToList(),
+                        Participants = e.Participants
+                        
                     })
                 .ToListAsync();
             
