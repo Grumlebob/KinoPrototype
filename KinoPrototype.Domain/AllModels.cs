@@ -79,7 +79,7 @@ public class Showtime
 
     //Foreign Keys
     [ForeignKey("VersionTagId")] public VersionTag VersionTag { get; set; }
-    [ForeignKey("SalId")] public Room Room { get; set; }
+    [ForeignKey("RoomId")] public Room Room { get; set; }
     [ForeignKey("MovieId")] public Movie Movie { get; set; }
     [ForeignKey("CinemaId")] public Cinema Cinema { get; set; }
     [ForeignKey("PlaytimeId")] public Playtime Playtime { get; set; }
