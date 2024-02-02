@@ -26,9 +26,9 @@ public static class AllEndpoints
                             Movie = new Movie()
                             {
                                 Id = s.MovieId, AgeRating = s.Movie.AgeRating, PremiereDate = s.Movie.PremiereDate,
-                                Navn = s.Movie.Navn, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration
+                                Title = s.Movie.Title, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration
                             },
-                            Cinema = s.Cinema, Playtime = s.Playtime, Sal = s.Sal,
+                            Cinema = s.Cinema, Playtime = s.Playtime, Room = s.Room,
                             VersionTag = s.VersionTag,
                         }).ToList(),
                         Participants = e.Participants
