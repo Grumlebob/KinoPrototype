@@ -161,42 +161,42 @@
 
 @if (_event.Showtimes.Count > 0)
 {
-    @foreach (var movieGroup in _event.Showtimes.GroupBy(s => s.Movie, (movie, showtimes) => new { movie, showtimes }))
+    foreach (var showtimesByMovie in _event.Showtimes.GroupBy(s => s.Movie.Id))
     {
+        var movie = showtimesByMovie.First().Movie;
         <div class="Redbox">
             <div class="PosterImage">
-                <img src="@movieGroup.movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+                <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
             </div>
             <div class="MovieDetails">
                 <div class="MovieHeader">
-                    <h2>@movieGroup.movie.Navn</h2>
+                    <h2>@movie.Navn</h2>
 
                     <div class="movie-info">
-                        <span class="premiere">Premiere @movieGroup.movie.PremiereDate | </span>
-                        <span class="duration">Varighed @movieGroup.movie.Duration min</span>
+                        <span class="premiere">Premiere @movie.PremiereDate | </span>
+                        <span class="duration">Varighed @movie.Duration min</span>
                     </div>
 
                 </div>
-                @foreach (var cinemaGroup in movieGroup.showtimes.GroupBy(s => s.Cinema, (cinema, showtimes) => new { cinema, showtimes }))
+                @foreach (var showtimesByCinema in showtimesByMovie.GroupBy(s => s.Cinema.Id))
                 {
+                    var cinema = showtimesByCinema.First().Cinema;
                     <div class="CinemaLocation">
-                        <h2>@cinemaGroup.cinema.Navn</h2>
+                        <h2 id="@cinema.Id">@cinema.Navn</h2>
                     </div>
-                    @foreach (var versionGroup in cinemaGroup.showtimes.GroupBy(s => s.VersionTag, (version, showtimes) => new { version, showtimes }))
+                    @foreach (var showtimesByVersionTag in showtimesByCinema.GroupBy(s => s.VersionTag.Id))
                     {
-                        <!-- Assuming version is your grouped data object for a particular movie version -->
-
+                        var versionTag = showtimesByVersionTag.First().VersionTag;
                         <div class="Version">
-                            <strong>@versionGroup.version.Type</strong>
+                            <strong>@versionTag.Type</strong>
                             <div class="Showtimes">
                                 <div class="table-container">
                                     <table>
                                         <!-- Create table headers for each grouped date -->
-                                        @foreach (var dateGroup in versionGroup.showtimes.GroupBy(s => s.Playtime.StartTime.ToString("dd/MM"), (date, showtimes) => new { date, showtimes }))
+                                        @foreach (var dateGroup in showtimesByVersionTag.GroupBy(s => s.Playtime.StartTime.ToString("dd/MM"), (date, showtimes) => new { date, showtimes }))
                                         {
                                             <tr>
                                                 <th>@dateGroup.date</th>
-
                                             </tr>
                                             <tr>
 
