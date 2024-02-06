@@ -355,7 +355,7 @@
     List<KinoPrototype.Domain.Showtime> showtimes = new();
     List<Playtime> playtimes = new List<Playtime>();
     List<VersionTag> versionTags = new List<VersionTag>();
-    List<Domain.Room> sals = new List<Domain.Room>();
+    List<Domain.Room> rooms = new ();
     List<int> selectedShowtimeIds = new List<int>();
     
     private string selectedMovie;
@@ -577,7 +577,7 @@
         Console.WriteLine("Showtimes: " + showtimes.Count);
         Console.WriteLine("Playtimes: " + playtimes.Count);
         Console.WriteLine("VersionTags: " + versionTags.Count);
-        Console.WriteLine("Sals: " + sals.Count);
+        Console.WriteLine("Sals: " + rooms.Count);
     }
 
 
@@ -761,19 +761,19 @@
                         {
                             
                             
-                            Room roomObject;
-                            if (!sals.Any(s => s.Name == showtimeItem.Room.Label))
+                            Domain.Room roomObject;
+                            if (!rooms.Any(s => s.Name == showtimeItem.Room.Label))
                             {
                                 roomObject = new Domain.Room()
                                 {
                                     Id = showtimeItem.Room.Id,
                                     Name = showtimeItem.Room.Label
                                 };
-                                sals.Add(roomObject);
+                                rooms.Add(roomObject);
                             }
                             else
                             {
-                                roomObject = sals.First(s => s.Name == showtimeItem.Room.Label);
+                                roomObject = rooms.First(s => s.Name == showtimeItem.Room.Label);
                             }
 
                             Playtime playtimeObject;
