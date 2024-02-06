@@ -917,9 +917,8 @@
         var name = user.Claims.FirstOrDefault(c => c.Type == "nickname")?.Value!;
         if (user.Identity is null || !user.Identity.IsAuthenticated)
         {
-            Guid guid = Guid.NewGuid();
-            host.AuthId = guid.ToString();
-            host.Username = "Unknown host";
+            host.AuthId = "1";
+            host.Username = "Ukendt vært";
         }
         else
         {

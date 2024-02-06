@@ -5,7 +5,7 @@
 
 <PageTitle>KinoJoin</PageTitle>
 
-<h2>Quick dev buttons</h2>
+<h2>Test links</h2>
 <a href="@baseUriWithoutTrailingSlash/joinCreate/cinemas=53&cinemas=4&sort=most_purchased"> Med cinema filtre</a>
 <br/>
 <a href="@baseUriWithoutTrailingSlash/joinCreate/movies=76769&movies=35883&sort=most_purchased"> Med movie filtre</a>
@@ -18,16 +18,33 @@
 <br/>
 
 
+<h2>Dine Events</h2>
+<style>
+    
+    .dashboardCard {
+       color: #191c1f;
+       display: inline-block; 
+       margin-right: 10px;
+       border: 1px solid black; 
+       width: 200px; 
+       padding: 5px; 
+       background-color: #c9ebf2;
+       
+    }
+    
+    .dashboardCard:hover {
+        background-color: #a3d7e0;
+        cursor: pointer;
+    }
+    
+    
+</style>
 
-<button @onclick="NavigateToUrl">Go to URL</button>
-
-
-<h2>Events created by logged in user</h2>
 @if (joinEvents != null)
 {
     foreach (var joinEvent in joinEvents)
     {
-        <div style="color: #191c1f;display: inline-block; margin-right: 10px;border: 1px solid black; width: 200px; padding: 5px; background-color: #c9ebf2">
+        <div  onclick="@(()=> {NavManager.NavigateTo("filling/"+joinEvent.Id);})" class="dashboardCard">
             <h5 style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap; max-width: 290px;">@joinEvent.Title</h5>
             <p style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap; max-width: 290px;">
                 @joinEvent.Description
@@ -86,12 +103,13 @@
         var userId = user.FindFirst(c => c.Type == "sub")?.Value;
         if (userId == null)
         {
-            return;
+            userId="1";
         }
+   
 
         var url = $"{NavManager.BaseUri}events/" + userId;
 
-        if(!string.IsNullOrEmpty(userId)) joinEvents = await client.GetFromJsonAsync<List<JoinEvent>>(url);
+         joinEvents = await client.GetFromJsonAsync<List<JoinEvent>>(url);
     }
 
 
