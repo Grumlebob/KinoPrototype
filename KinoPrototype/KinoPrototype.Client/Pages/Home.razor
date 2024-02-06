@@ -32,9 +32,9 @@
             <p style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap; max-width: 290px;">
                 @joinEvent.Description
             </p>
-            <p>Deadline: @joinEvent.Deadline.ToLocalTime().ToString("dd. MMM")</p>
-            <p>Responses: @joinEvent.Participants.Count</p>
-            <button @onclick="() => CopyToClipboard(joinEvent.Id)">📋 Copy link</button>
+            <p>Deadline: @joinEvent.Deadline.ToString("dd. MMM")</p>
+            <p>Besvarelser: @joinEvent.Participants.Count</p>
+            <button @onclick="() => CopyToClipboard(joinEvent.Id)">📋 Kopier link</button>
         </div>
     }
 }
