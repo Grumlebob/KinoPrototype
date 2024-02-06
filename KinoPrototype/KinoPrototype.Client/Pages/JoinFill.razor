@@ -2,6 +2,7 @@
 @using Newtonsoft.Json
 @using System.Text
 @using KinoPrototype.Domain
+@inject NavigationManager NavigationManager
 
 <style>
 /* Base container for each movie */
@@ -264,7 +265,7 @@
 {
     <div>
         <input placeholder="Indtast dit navn" @bind="@Nickname"/>
-        <button onclick="@(async () => { if (Nickname is null or "") { _infoMessage = "Indtast venligst et navn"; return; } var p = new Participant { Nickname = Nickname, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; var jsonP = JsonConvert.SerializeObject(p); var httpClient = new HttpClient(); var response = await httpClient.PutAsync($"http://localhost:5000/participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; _answerSaved = true; _event.Participants.Add(p); StateHasChanged(); }else { _infoMessage = "Noget gik galt. Prøv igen."; } })">
+        <button onclick="@(async () => { if (Nickname is null or "") { _infoMessage = "Indtast venligst et navn"; return; } var p = new Participant { Nickname = Nickname, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; var jsonP = JsonConvert.SerializeObject(p); var httpClient = new HttpClient(); var response = await httpClient.PutAsync($"{baseUrl}participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; _answerSaved = true; _event.Participants.Add(p); StateHasChanged(); }else { _infoMessage = "Noget gik galt. Prøv igen."; } })">
             Send svar
         </button>
     </div>
@@ -357,6 +358,8 @@
 
     private bool _loading = true;
 
+    string baseUrl;
+
     private const string VotesString = "Stemmer";
     private const string TimeString = "Tidspunkt";
 
@@ -364,9 +367,10 @@
 
     protected override async Task OnInitializedAsync()
     {
+        baseUrl = NavigationManager.BaseUri;
         _infoMessage = null;
         var httpClient = new HttpClient();
-        var response = await httpClient.GetAsync($"http://localhost:5000/event/{JoinEventId}");
+        var response = await httpClient.GetAsync($"{baseUrl}event/{JoinEventId}");
         if (response.IsSuccessStatusCode)
         {
             _event = await response.Content.ReadFromJsonAsync<JoinEvent>();
