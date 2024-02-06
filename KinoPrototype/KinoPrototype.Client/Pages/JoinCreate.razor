@@ -894,7 +894,7 @@
     private async Task CopyLink()
     {
         // Hide the dialog using JavaScript interop
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", "http://localhost:5000/filling/" + _joinEventId);
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"{NavigationManager.BaseUri}filling/" + _joinEventId);
     }
 
     private async Task FinishJoinEvent()
