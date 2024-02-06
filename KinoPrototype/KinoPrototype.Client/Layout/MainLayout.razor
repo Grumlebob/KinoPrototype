@@ -2,14 +2,17 @@
 @using KinoPrototype.Client.Pages
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    @* <div class="sidebar"> *@
+    @*     <NavMenu /> *@
+    @* </div> *@
 
     <main>
-        <div class="top-row px-4">
+        <div class="top-row  d-flex justify-content-between">
+            <div class="container-fluid">
+                <a class="navbar-brand text-decoration-none text-black" href="">Kino MVP</a>
+            </div>
+
               <AccessControl />
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
         </div>
 
         <article class="content px-4">
