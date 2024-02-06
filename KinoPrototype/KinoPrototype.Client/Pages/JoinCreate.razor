@@ -263,7 +263,7 @@
             </div>
             <div class="MovieDetails">
                 <div class="MovieHeader">
-                    <h2>@movie.Key.Navn</h2>
+                    <h2>@movie.Key.Title</h2>
 
                     <div class="movie-info">
                         <span class="premiere">Premiere @movie.Key.PremiereDate | </span>
@@ -274,7 +274,7 @@
                 @foreach (var cinema in movie.GroupBy(s => s.Cinema))
                 {
                     <div class="CinemaLocation">
-                        <h4>@cinema.Key.Navn</h4>
+                        <h4>@cinema.Key.Name</h4>
                     </div>
                     @foreach (var version in cinema.GroupBy(s => s.VersionTag))
                     {
@@ -305,7 +305,7 @@
                                                         <div>
                                                             <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime" checked="@isChecked" @onclick="() => ToggleCheckedShowtime(showtimeId)">
                                                             <label for="@checkboxId" class="showtime-label">
-                                                                <div class="showtime-sal">@showtime.Sal.Navn</div>
+                                                                <div class="showtime-sal">@showtime.Room.Name</div>
                                                                 <div class="showtime-time">@showtime.Playtime.StartTime.ToString("HH:mm")</div>
                                                             </label>
                                                         </div>
@@ -355,7 +355,7 @@
     List<KinoPrototype.Domain.Showtime> showtimes = new();
     List<Playtime> playtimes = new List<Playtime>();
     List<VersionTag> versionTags = new List<VersionTag>();
-    List<Sal> sals = new List<Sal>();
+    List<Domain.Room> rooms = new ();
     List<int> selectedShowtimeIds = new List<int>();
     
     private string selectedMovie;
@@ -577,7 +577,7 @@
         Console.WriteLine("Showtimes: " + showtimes.Count);
         Console.WriteLine("Playtimes: " + playtimes.Count);
         Console.WriteLine("VersionTags: " + versionTags.Count);
-        Console.WriteLine("Sals: " + sals.Count);
+        Console.WriteLine("Sals: " + rooms.Count);
     }
 
 
@@ -699,7 +699,7 @@
             var cinemaObject = new Cinema()
             {
                 Id = cinema.Id,
-                Navn = CinemaIdAndName[cinema.Id]
+                Name = CinemaIdAndName[cinema.Id]
             };
             cinemas.Add(cinemaObject);
 
@@ -712,7 +712,7 @@
 
                 KinoPrototype.Domain.Movie movieObject;
 
-                if (!movies.Any(m => m.Navn == MovieIdAndName[movie.Id]))
+                if (!movies.Any(m => m.Title == MovieIdAndName[movie.Id]))
                 {
                     int duration;
 
@@ -722,7 +722,7 @@
                     movieObject = new KinoPrototype.Domain.Movie()
                     {
                         Id = movie.Id,
-                        Navn = MovieIdAndName[movie.Id],
+                        Title = MovieIdAndName[movie.Id],
                         PremiereDate = movie.Content.FieldPremiere,
                         AgeRating = movie.Content.FieldCensorshipIcon,
                         ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
@@ -733,7 +733,7 @@
                 }
                 else
                 {
-                    movieObject = movies.First(m => m.Navn == MovieIdAndName[movie.Id]);
+                    movieObject = movies.First(m => m.Title == MovieIdAndName[movie.Id]);
                 }
 
 
@@ -761,19 +761,19 @@
                         {
                             
                             
-                            Sal salObject;
-                            if (!sals.Any(s => s.Navn == showtimeItem.Room.Label))
+                            Domain.Room roomObject;
+                            if (!rooms.Any(s => s.Name == showtimeItem.Room.Label))
                             {
-                                salObject = new Sal()
+                                roomObject = new Domain.Room()
                                 {
                                     Id = showtimeItem.Room.Id,
-                                    Navn = showtimeItem.Room.Label
+                                    Name = showtimeItem.Room.Label
                                 };
-                                sals.Add(salObject);
+                                rooms.Add(roomObject);
                             }
                             else
                             {
-                                salObject = sals.First(s => s.Navn == showtimeItem.Room.Label);
+                                roomObject = rooms.First(s => s.Name == showtimeItem.Room.Label);
                             }
 
                             Playtime playtimeObject;
@@ -824,7 +824,7 @@
                                 Movie = movieObject,
                                 Cinema = cinemaObject,
                                 VersionTag = versionObject,
-                                Sal = salObject,
+                                Room = roomObject,
                                 Playtime = playtimeObject
                             };
                             showtimes.Add(showtimeObject);

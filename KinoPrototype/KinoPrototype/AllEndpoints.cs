@@ -26,13 +26,12 @@ public static class AllEndpoints
                             Movie = new Movie()
                             {
                                 Id = s.MovieId, AgeRating = s.Movie.AgeRating, PremiereDate = s.Movie.PremiereDate,
-                                Navn = s.Movie.Navn, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration
+                                Title = s.Movie.Title, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration
                             },
-                            Cinema = s.Cinema, Playtime = s.Playtime, Sal = s.Sal,
+                            Cinema = s.Cinema, Playtime = s.Playtime, Room = s.Room,
                             VersionTag = s.VersionTag,
                         }).ToList(),
                         Participants = e.Participants
-                        
                     })
                 .ToListAsync();
             
@@ -40,10 +39,7 @@ public static class AllEndpoints
             //create empty participant lists if they are null
             foreach (var joinEvent in results)
             {
-                if (joinEvent.Participants == null)
-                {
-                    joinEvent.Participants = new List<Participant>();
-                }
+                joinEvent.Participants ??= new List<Participant>();
             }
             
             return Results.Ok(results);
@@ -52,19 +48,24 @@ public static class AllEndpoints
         app.MapGet("/event/{id}", async (int id) =>
         {
             using var scope = app.Services.CreateScope();
+            
             var result = await scope.ServiceProvider.GetRequiredService<KinoContext>().JoinEvents.Select(
                     e => new JoinEvent
                     {
                         Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host,
+                        Participants = e.Participants.Select(p=>new Participant
+                        {
+                            Id = p.Id, Nickname = p.Nickname, VotedFor = p.VotedFor
+                        }).ToList(),
                         Showtimes = e.Showtimes.Select(s => new Showtime
                         {
                             Id = s.Id,
                             Movie = new Movie()
                             {
                                 Id = s.MovieId, AgeRating = s.Movie.AgeRating, PremiereDate = s.Movie.PremiereDate,
-                                Navn = s.Movie.Navn, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration
+                                Title = s.Movie.Title, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration,
                             },
-                            Cinema = s.Cinema, Playtime = s.Playtime, Sal = s.Sal,
+                            Cinema = s.Cinema, Playtime = s.Playtime, Room = s.Room,
                             VersionTag = s.VersionTag,
                         }).ToList()
                     })
@@ -83,8 +84,8 @@ public static class AllEndpoints
                 {
                     // This should only happen if you're sure you want to add new Cinemas
                     var cinemaName = p.VotedFor.FirstOrDefault(st => st.Cinema.Id == cinemaId)?.Cinema
-                        .Navn;
-                    context.Cinemas.Add(new Cinema { Id = cinemaId, Navn = cinemaName });
+                        .Name;
+                    context.Cinemas.Add(new Cinema { Id = cinemaId, Name = cinemaName });
                 }
                 else
                 {
@@ -115,7 +116,7 @@ public static class AllEndpoints
                             AgeRating = movie.AgeRating,
                             Duration = movie.Duration,
                             ImageUrl = movie.ImageUrl,
-                            Navn = movie.Navn,
+                            Title = movie.Title,
                             PremiereDate = movie.PremiereDate
                         }); // Specify other properties
                     }
@@ -128,15 +129,15 @@ public static class AllEndpoints
                         }
                     }
                 }
-                var existingSal = await context.Sals.FindAsync(st.Sal.Id);
-                if (existingSal != null)
+                var existingRoom = await context.Sals.FindAsync(st.Room.Id);
+                if (existingRoom != null)
                 {
-                    context.Sals.Attach(existingSal);
-                    st.Sal = existingSal;
+                    context.Sals.Attach(existingRoom);
+                    st.Room = existingRoom;
                 }
                 else
                 {
-                    context.Sals.Add(st.Sal);
+                    context.Sals.Add(st.Room);
                 }
                 
                 var existingVersionTag = await context.Versions.FirstOrDefaultAsync(v => v.Type == st.VersionTag.Type);
@@ -178,7 +179,7 @@ public static class AllEndpoints
                         CinemaId = st.Cinema.Id,
                         PlaytimeId = st.Playtime.Id,
                         VersionTagId = st.VersionTag.Id,
-                        SalId = st.Sal.Id
+                        RoomId = st.Room.Id
                     };
 
                     context.Showtimes.Add(newShowtime);
@@ -238,8 +239,8 @@ public static class AllEndpoints
                     {
                         // This should only happen if you're sure you want to add new Cinemas
                         var cinemaName = joinEvent.Showtimes.FirstOrDefault(st => st.Cinema.Id == cinemaId)?.Cinema
-                            .Navn;
-                        context.Cinemas.Add(new Cinema { Id = cinemaId, Navn = cinemaName });
+                            .Name;
+                        context.Cinemas.Add(new Cinema { Id = cinemaId, Name = cinemaName });
                     }
                     else
                     {
@@ -278,15 +279,15 @@ public static class AllEndpoints
                 }
 
                 // Handle Sal
-                var existingSal = await context.Sals.FindAsync(st.Sal.Id);
+                var existingSal = await context.Sals.FindAsync(st.Room.Id);
                 if (existingSal != null)
                 {
                     context.Sals.Attach(existingSal);
-                    st.Sal = existingSal;
+                    st.Room = existingSal;
                 }
                 else
                 {
-                    context.Sals.Add(st.Sal);
+                    context.Sals.Add(st.Room);
                 }
 
                 await context.SaveChangesAsync();
@@ -311,7 +312,7 @@ public static class AllEndpoints
                             AgeRating = movie.AgeRating,
                             Duration = movie.Duration,
                             ImageUrl = movie.ImageUrl,
-                            Navn = movie.Navn,
+                            Title = movie.Title,
                             PremiereDate = movie.PremiereDate
                         }); // Specify other properties
                     }
@@ -347,7 +348,7 @@ public static class AllEndpoints
                         CinemaId = showtime.Cinema.Id,
                         PlaytimeId = showtime.Playtime.Id,
                         VersionTagId = showtime.VersionTag.Id,
-                        SalId = showtime.Sal.Id
+                        RoomId = showtime.Room.Id
                     };
 
                     context.Showtimes.Add(newShowtime);
@@ -421,7 +422,7 @@ public static class AllEndpoints
             Console.WriteLine("JoinEvent: " + recentlyAddedJoinEvent.Id);
             Console.WriteLine("Title: " + recentlyAddedJoinEvent.Title);
             Console.WriteLine(
-                "movie of first showtime: " + recentlyAddedJoinEvent.Showtimes.FirstOrDefault().Movie.Navn);
+                "movie of first showtime: " + recentlyAddedJoinEvent.Showtimes.FirstOrDefault().Movie.Title);
 
             return Results.Ok(newJoinEventId);
         });
