@@ -27,15 +27,16 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhostDevelopment",
+    options.AddPolicy("AllowAllOrigins",
         builder =>
         {
             builder.AllowAnyOrigin() // This allows requests from any origin
                 .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials(); 
+                .AllowAnyMethod();
+            // Do not call AllowCredentials() when using AllowAnyOrigin()
         });
 });
+
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
