@@ -182,10 +182,10 @@
 
 <div class="filter-container">
     <button @onclick="ToggleDropdown">Choose Movie</button>
-    @if(showDropdown)
+    @if (showDropdown)
     {
         <ul>
-            @foreach(var movie in movieStrings)
+            @foreach (var movie in movieStrings)
             {
                 <li @onclick="() => SelectMovie(movie)">@movie</li>
             }
@@ -196,44 +196,42 @@
 @if (showtimes.Count > 0 && movies.Count > 0 && cinemas.Count > 0)
 {
     <h1>Join Event</h1>
-    
-    <input style="margin-bottom: 5px; width: 300px" type="text" placeholder="Titel" @bind-value="_eventTitle" />
-    <br />
+
+    <input style="margin-bottom: 5px; width: 300px" type="text" placeholder="Titel" @bind-value="_eventTitle"/>
+    <br/>
     <textarea style="margin-bottom: 5px;width: 300px" type="text"   placeholder="Beskrivelse"  @bind="_eventDescription"></textarea>
-    <br />
-    <p style="margin-bottom: 0px" >Deadline</p>
-    <input style="margin-bottom: 5px; margin-top: 0px;width: 300px" type="date" placeholder="Deadline" @bind="@_deadline" />
-    <br />
+    <br/>
+    <p style="margin-bottom: 0px">Deadline</p>
+    <input style="margin-bottom: 5px; margin-top: 0px;width: 300px" type="date" placeholder="Deadline" @bind="@_deadline"/>
+    <br/>
     <button style="margin-bottom: 5px;width: 200px;height: 50px;bottom: 3rem; right: 3rem; position: fixed; z-index: 999" @onclick="OpenDialog">Opret Event</button>
-    <br />
-    
+    <br/>
+
     <dialog id="eventDialog">
         @if (!eventCreated)
         {
             <h4>Ønsker du at oprette eventet?</h4>
-            <button style="background-color: green; color: white" @onclick="finishJoinEvent">Opret</button>
+            <button style="background-color: green; color: white" @onclick="FinishJoinEvent">Opret</button>
             <button style="background-color: red; color: white" @onclick="CloseDialog">Rediger videre</button>
-
         }
         else
         {
             <h4>Event oprettet</h4>
-            
+
             <p>Send dette link til dine venner</p>
-            <a href="http://localhost:5000/filling/@_joinEventId" >https://localhost:7123/filling/@_joinEventId</a>
+            <a href="http://localhost:5000/filling/@_joinEventId">https://localhost:7123/filling/@_joinEventId</a>
             <button @onclick="CopyLink"> Kopier</button>
         }
-          
-        
+
+
     </dialog>
-    
+
     <div class="snackbar @(_showSnackbar ? "show" : "")">
         @_snackbarMessage
     </div>
-    
-    <h2 style="margin-top: 10px" >Vælg muglige forestillinger</h2>
-    
-    
+
+    <h2 style="margin-top: 10px">Vælg muglige forestillinger</h2>
+
 
     @foreach (var movie in showtimes.GroupBy(s => s.Movie))
     {
@@ -309,26 +307,25 @@
 @code {
 
     [Parameter] public string filterString { get; set; }
-    
-    
+
 
     string json;
-    
+
     private string _eventTitle;
     private string _eventDescription;
-    
+
     private DateTime _deadline = DateTime.Now.AddDays(30);
-    
+
     private bool eventCreated = false;
-    
+
     private int _joinEventId;
-    
+
     private string _snackbarMessage;
-    
+
     private bool _showSnackbar;
-   
+
     [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
-    
+
 
     List<Cinema> cinemas = new List<Cinema>();
     List<KinoPrototype.Domain.Movie> movies = new();
@@ -337,10 +334,10 @@
     List<VersionTag> versionTags = new List<VersionTag>();
     List<Sal> sals = new List<Sal>();
     List<int> selectedShowtimeIds = new List<int>();
-    
+
     private bool showDropdown = false;
     private string selectedMovie;
-    
+
     List<string> movieStrings = new();
 
     private void ToggleDropdown()
@@ -524,7 +521,6 @@
                     {
                         versionObject = new VersionTag()
                         {
-                            
                             Type = versions.Label
                         };
                         versionTags.Add(versionObject);
@@ -609,10 +605,10 @@
         PrintCount();
     }
 
-    
+
     private async Task OpenDialog()
     {
-        if (selectedShowtimeIds.Count <2)
+        if (selectedShowtimeIds.Count < 2)
         {
             _snackbarMessage = "Vælg mindst to muglige forestillinger";
             _showSnackbar = true;
@@ -630,95 +626,79 @@
             _showSnackbar = true;
             await Task.Delay(3000).ContinueWith(_ => _showSnackbar = false);
         }
-        else if (_deadline<DateTime.Now)
+        else if (_deadline < DateTime.Now)
         {
             _snackbarMessage = "Deadline skal være i fremtiden";
             _showSnackbar = true;
             await Task.Delay(3000).ContinueWith(_ => _showSnackbar = false);
-        } 
+        }
         else
         {
             await JSRuntime.InvokeVoidAsync("customFunctions.showDialog", "eventDialog");
         }
     }
-    
+
     private async Task CloseDialog()
     {
         // Hide the dialog using JavaScript interop
-       await JSRuntime.InvokeVoidAsync("customFunctions.hideDialog", "eventDialog");
+        await JSRuntime.InvokeVoidAsync("customFunctions.hideDialog", "eventDialog");
     }
-    
+
     private async Task CopyLink()
     {
         // Hide the dialog using JavaScript interop
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", "http://localhost:5000/filling/"+_joinEventId);
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", "http://localhost:5000/filling/" + _joinEventId);
     }
-    
-    private async Task finishJoinEvent()
-    { 
-        
-        
-       HttpClient client = new HttpClient();
-       
-       var url = "http://localhost:5000/putJoinEvent";
 
-       var pickedShowtimes = selectedShowtimeIds.Select(id => showtimes.First(s => s.Id == id)).ToList();
-       
-       
-     
-       
-       var authenticationState = await AuthenticationStateTask;
-       
-       var user = authenticationState.User;
-       if (user.Identity is null || !user.Identity.IsAuthenticated) return;
-       var authorId = user.Claims
-           .FirstOrDefault(c => c.Type == "sub")
-           ?.Value!;
-       
-      
-       
-       var name =user.Claims.FirstOrDefault(c => c.Type == "nickname")?.Value!;
-       
-       
-       Console.WriteLine("authorId: "+authorId);
-       
-       var host = new Host()
-       {
-              AuthId = authorId,
-              Username = name,
-       };
-       
-       
-       var joinEvent = new JoinEvent()
-       {
-           Showtimes = pickedShowtimes,
-           Host = host,
-           Title = _eventTitle,
-           Description = _eventDescription,
-           Deadline = _deadline,
-       };
-       
-       Console.WriteLine( "before: "+joinEvent.Id);
-       
-       var response = await client.PutAsJsonAsync(url, joinEvent);
-       var id = await response.Content.ReadAsStringAsync();
-       
-       Console.WriteLine("after: "+id);
-       
-       //get joinEvent from api
-        //var response2 = await client.GetAsync("https://localhost:7123/event/"+id);
-        //var returnedJoinEvent = await response2.Content.ReadFromJsonAsync<JoinEvent>();
-//
-        //foreach (var showtime in returnedJoinEvent .Showtimes)
-        //{
-        //    Console.WriteLine("movieName: "+showtime.Movie.Navn);
-        //}
+    private async Task FinishJoinEvent()
+    {
+        HttpClient client = new HttpClient();
+
+        var url = "http://localhost:5000/putJoinEvent";
+
+        var pickedShowtimes = selectedShowtimeIds.Select(id => showtimes.First(s => s.Id == id)).ToList();
+
+        var authenticationState = await AuthenticationStateTask;
+
+        var user = authenticationState.User;
+        var host = new Host() { };
+
+        var authorId = user.Claims
+            .FirstOrDefault(c => c.Type == "sub")
+            ?.Value!;
+        var name = user.Claims.FirstOrDefault(c => c.Type == "nickname")?.Value!;
+        if (user.Identity is null || !user.Identity.IsAuthenticated)
+        {
+            Guid guid = Guid.NewGuid();
+            host.AuthId = guid.ToString();
+            host.Username = "Unknown host";
+        }
+        else
+        {
+            host.AuthId = authorId;
+            host.Username = name;
+        }
+
+
+        var joinEvent = new JoinEvent()
+        {
+            Showtimes = pickedShowtimes,
+            Host = host,
+            Title = _eventTitle,
+            Description = _eventDescription,
+            Deadline = _deadline,
+        };
+
+
+        var response = await client.PutAsJsonAsync(url, joinEvent);
+        var id = await response.Content.ReadAsStringAsync();
         
+
         _joinEventId = int.Parse(id);
-        
+
         eventCreated = true;
     }
-    
+
 
     public class Root
     {
