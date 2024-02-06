@@ -222,7 +222,7 @@
     <h2 style="margin-top: 10px" >Vælg muglige forestillinger</h2>
     
 
-    <p style="margin-bottom: 0px" >Selected Movie</p>
+    <p style="margin-bottom: 0px" >Film</p>
     <select style="margin-bottom: 10px" value="@selectedMovie" @onchange="SelectMovie" >
         <option value="">Alle</option>
         @foreach (var movie in movieStrings)
@@ -233,7 +233,7 @@
 
 
 
-    <p style="margin-bottom: 0px">Selected Cinema</p>
+    <p style="margin-bottom: 0px">Biograf</p>
     <select style="margin-bottom: 10px" value="@selectedCinema" @onchange="SelectCinema" >
         <option value="">Alle</option>
         @foreach (var cinema in cinemaStrings)
@@ -242,10 +242,10 @@
         }
     </select>
     
-    <p style="margin-bottom: 0px">Start Date</p> 
+    <p style="margin-bottom: 0px">Start Dato</p> 
     <input style="margin-bottom: 10px" type="date"   value="@_startDate" onchange="@SelectStartDate" />
     <br />
-    <p style="margin-bottom: 0px">End Date</p>
+    <p style="margin-bottom: 0px">Slut Dato</p>
     <input style="margin-bottom: 10px" type="date"  value="@_endDate" onchange="@SelectEndDate" />
     
  
