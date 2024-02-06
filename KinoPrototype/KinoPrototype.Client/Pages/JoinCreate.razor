@@ -114,8 +114,11 @@
 }
 
 .Showtimes .table-container {
+    width: 60vw;
     overflow-x: auto; /* Adds horizontal scrollbar if the table exceeds the container width */
-
+    -ms-overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Enables smooth scrolling on iOS */
+    scrollbar-width:auto;
 }
 
 .Showtimes table {
@@ -917,9 +920,8 @@
         var name = user.Claims.FirstOrDefault(c => c.Type == "nickname")?.Value!;
         if (user.Identity is null || !user.Identity.IsAuthenticated)
         {
-            Guid guid = Guid.NewGuid();
-            host.AuthId = guid.ToString();
-            host.Username = "Unknown host";
+            host.AuthId = "1";
+            host.Username = "Ukendt vært";
         }
         else
         {
