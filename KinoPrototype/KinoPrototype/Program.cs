@@ -30,10 +30,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowLocalhostDevelopment",
         builder =>
         {
-            builder.WithOrigins("http://localhost:5000", "https://localhost:5001")
+            builder.AllowAnyOrigin() // This allows requests from any origin
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowCredentials(); // Add this if your application needs to handle credentials like cookies or authorization headers
+                .AllowCredentials(); 
         });
 });
 
