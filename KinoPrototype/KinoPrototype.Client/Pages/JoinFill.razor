@@ -357,7 +357,7 @@
                 <td>
                     <div>
                         <button onclick="@(() => {JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank");} )">Bestil billetter</button>
-                        <button>Tilføj til kalender</button>
+                        <button onclick="@(() => { OpenCalender(showtime);})">Tilføj til kalender</button>
                     </div>
                 </td>
             }
@@ -402,6 +402,17 @@
         }
 
         _loading = false;
+    }
+
+    private void OpenCalender(Showtime showtime)
+    {
+        var url = "https://calendar.google.com/calendar/u/0/r/eventedit?"
+            + $"text={_event.Title}"
+            + $"&dates={showtime.Playtime.StartTime.ToLocalTime().ToString("yyyyMMddTHHmmss")}/{showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("yyyyMMddTHHmmss")}"
+            + $"&location={showtime.Cinema.Name}"
+            + $"&details={_event.Description} %0AFilm: {showtime.Movie.Title}, {showtime.Room.Name}, {showtime.VersionTag.Type}";
+        
+        JsRuntime.InvokeVoidAsync("open", url, "_blank");
     }
 
 }
