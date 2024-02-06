@@ -220,7 +220,7 @@
             <h4>Event oprettet</h4>
             
             <p>Send dette link til dine venner</p>
-            <a href="https://localhost:7123/filling/@_joinEventId" >https://localhost:7123/filling/@_joinEventId</a>
+            <a href="http://localhost:5000/filling/@_joinEventId" >https://localhost:7123/filling/@_joinEventId</a>
             <button @onclick="CopyLink"> Kopier</button>
         }
           
@@ -660,7 +660,7 @@
         
        HttpClient client = new HttpClient();
        
-       var url = "https://localhost:7123/putJoinEvent";
+       var url = "http://localhost:5000/putJoinEvent";
 
        var pickedShowtimes = selectedShowtimeIds.Select(id => showtimes.First(s => s.Id == id)).ToList();
        

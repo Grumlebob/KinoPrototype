@@ -7,6 +7,36 @@ using Host = Microsoft.Extensions.Hosting.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//use Kestrel
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    // Listen on port 5000 for HTTP
+    serverOptions.ListenLocalhost(5000);
+
+    // Listen on port 5001 for HTTPS
+    serverOptions.ListenLocalhost(5001, listenOptions => { listenOptions.UseHttps(); });
+
+    // Example: Set limits on request headers and body size
+    serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB
+    serverOptions.Limits.MaxRequestHeaderCount = 50;
+
+    // Example: Set a keep-alive timeout
+    serverOptions.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
+});
+
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhostDevelopment",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:5000", "https://localhost:5001")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials(); // Add this if your application needs to handle credentials like cookies or authorization headers
+        });
+});
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
@@ -21,6 +51,8 @@ builder.Services.AddDbContextFactory<KinoContext>(options =>
 
 var app = builder.Build();
 
+app.UseCors("AllowLocalhostDevelopment");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -33,7 +65,7 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection(); //Disable when hosting, because we haven't setup certificates to handle hosting on HTTPS, only HTTP
 
 app.UseStaticFiles();
 app.UseAntiforgery();
