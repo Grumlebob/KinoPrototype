@@ -162,6 +162,7 @@
     visibility: hidden;
     position: absolute;
     z-index: 1;
+    transform: translateY(-8rem); /* hard coded for now */
     background-color: lightgray;
 }
 
@@ -312,6 +313,11 @@
             {
                 <th style="padding-left:0.5rem; padding-right: 0.5rem">
                     <div class="tooltip-container">
+                        <div class="tooltip-content">
+                            <p>Bio: @showtime.Cinema.Name</p>
+                            <p>Version: @showtime.VersionTag.Type</p>
+                            <p>@showtime.Room.Name</p>
+                        </div>
                         <div class="result-table-header " style="display:flex;flex-direction: column; justify-content: center;align-items: center; gap: 0.33rem">
                             <p class="film-title">
                                 @(showtime.Movie.Title.Length > 20 ? $"{showtime.Movie.Title[..17]}..." : showtime.Movie.Title)
@@ -325,12 +331,6 @@
                             <p class="participants" style="font-size: 10px; font-weight: bold">
                                 Stemmer: @_event.Participants?.Count(p => (p.VotedFor ?? new()).Select(s => s.Id).Contains(showtime.Id))
                             </p>
-                        </div>
-
-                        <div class="tooltip-content">
-                            <p>Bio: @showtime.Cinema.Name</p>
-                            <p>Version: @showtime.VersionTag.Type</p>
-                            <p>@showtime.Room.Name</p>
                         </div>
                     </div>
                 </th>
