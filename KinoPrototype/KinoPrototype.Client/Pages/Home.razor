@@ -4,16 +4,28 @@
 
 <PageTitle>KinoJoin</PageTitle>
 
-<h2>Quick dev buttons</h2>
-<a href="https://localhost:7123/joinCreate/cinemas=53&cinemas=4&sort=most_purchased"> Med cinema filtre</a>
+<h2>Quick dev buttons - HTTP</h2>
+<a href="http://localhost:5000/joinCreate/cinemas=53&cinemas=4&sort=most_purchased"> Med cinema filtre</a>
 <br/>
-<a href="https://localhost:7123/joinCreate/movies=76769&movies=35883&sort=most_purchased"> Med movie filtre</a>
+<a href="http://localhost:5000/joinCreate/movies=76769&movies=35883&sort=most_purchased"> Med movie filtre</a>
 <br/>
-<a href="https://localhost:7123/joinCreate/cinemas=53&cinemas=52&movies=76769&movies=35883&sort=most_purchased"> Med movie og cinema filtre</a>
+<a href="http://localhost:5000/joinCreate/cinemas=53&cinemas=52&movies=76769&movies=35883&sort=most_purchased"> Med movie og cinema filtre</a>
 <br/>
-<a href="https://localhost:7123/joinCreate/cinemas=53&cinemas=4&cinemas=49&genres=96&movies=76769&movies=35883&movies=76769&sort=most_purchased"> Med alle filtre uden tid</a>
+<a href="http://localhost:5000/joinCreate/cinemas=53&cinemas=4&cinemas=49&genres=96&movies=76769&movies=35883&movies=76769&sort=most_purchased"> Med alle filtre uden tid</a>
 <br/>
-<a href="https://localhost:7123/joinCreate/cinemas=53&cinemas=4&cinemas=49&genres=96&movies=76769&movies=35883&movies=76769&sort=most_purchased&date=2024-01-16T10:07:00.000Z&date=2024-02-27T10:07:00.000Z"> Med alle filtre med tid</a>
+<a href="http://localhost:5000/joinCreate/cinemas=53&cinemas=4&cinemas=49&genres=96&movies=76769&movies=35883&movies=76769&sort=most_purchased&date=2024-01-16T10:07:00.000Z&date=2024-02-27T10:07:00.000Z"> Med alle filtre med tid</a>
+<br/>
+
+<h2>Quick dev buttons - HTTPS</h2>
+<a href="https://localhost:5001/joinCreate/cinemas=53&cinemas=4&sort=most_purchased"> Med cinema filtre</a>
+<br/>
+<a href="https://localhost:5001/joinCreate/movies=76769&movies=35883&sort=most_purchased"> Med movie filtre</a>
+<br/>
+<a href="https://localhost:5001/joinCreate/cinemas=53&cinemas=52&movies=76769&movies=35883&sort=most_purchased"> Med movie og cinema filtre</a>
+<br/>
+<a href="https://localhost:5001/joinCreate/cinemas=53&cinemas=4&cinemas=49&genres=96&movies=76769&movies=35883&movies=76769&sort=most_purchased"> Med alle filtre uden tid</a>
+<br/>
+<a href="https://localhost:5001/joinCreate/cinemas=53&cinemas=4&cinemas=49&genres=96&movies=76769&movies=35883&movies=76769&sort=most_purchased&date=2024-01-16T10:07:00.000Z&date=2024-02-27T10:07:00.000Z"> Med alle filtre med tid</a>
 <br/>
 
 <h2>Events created by logged in user</h2>
@@ -50,7 +62,7 @@
 
     private async Task CopyToClipboard(int eventId)
     {
-        var eventUrl = $"https://localhost:7123/filling/{eventId}";
+        var eventUrl = $"http://localhost:5000/filling/{eventId}";
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", eventUrl);
         // Show the popup
         showCopySuccess = true;
@@ -69,8 +81,12 @@
         var authState = await AuthenticationStateTask;
         var user = authState.User;
         var userId = user.FindFirst(c => c.Type == "sub")?.Value;
+        if (userId == null)
+        {
+            return;
+        }
 
-        var url = "https://localhost:7123/events/" + userId;
+        var url = "http://localhost:5000/events/" + userId;
 
         joinEvents = await client.GetFromJsonAsync<List<JoinEvent>>(url);
     }
