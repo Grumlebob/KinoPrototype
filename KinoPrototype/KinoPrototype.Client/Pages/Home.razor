@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using KinoPrototype.Domain
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavManager
 
 <PageTitle>KinoJoin</PageTitle>
 
@@ -27,6 +28,9 @@
 <br/>
 <a href="https://localhost:5001/joinCreate/cinemas=53&cinemas=4&cinemas=49&genres=96&movies=76769&movies=35883&movies=76769&sort=most_purchased&date=2024-01-16T10:07:00.000Z&date=2024-02-27T10:07:00.000Z"> Med alle filtre med tid</a>
 <br/>
+
+<button @onclick="NavigateToUrl">Go to URL</button>
+
 
 <h2>Events created by logged in user</h2>
 @if (joinEvents != null)
@@ -59,6 +63,12 @@
     [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
     List<JoinEvent> joinEvents = new List<JoinEvent>();
     private bool showCopySuccess = false;
+    
+    void NavigateToUrl()
+    {
+        var url = "joinCreate/cinemas=53&cinemas=52&movies=76769&movies=35883&sort=most_purchased";
+        NavManager.NavigateTo(url);
+    }
 
     private async Task CopyToClipboard(int eventId)
     {
