@@ -32,7 +32,6 @@ public static class AllEndpoints
                             VersionTag = s.VersionTag,
                         }).ToList(),
                         Participants = e.Participants
-                        
                     })
                 .ToListAsync();
             
@@ -40,10 +39,7 @@ public static class AllEndpoints
             //create empty participant lists if they are null
             foreach (var joinEvent in results)
             {
-                if (joinEvent.Participants == null)
-                {
-                    joinEvent.Participants = new List<Participant>();
-                }
+                joinEvent.Participants ??= new List<Participant>();
             }
             
             return Results.Ok(results);

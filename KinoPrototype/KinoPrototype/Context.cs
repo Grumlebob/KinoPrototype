@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using KinoPrototype.Domain;
+﻿using KinoPrototype.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace KinoPrototype;

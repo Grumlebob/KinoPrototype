@@ -1,6 +1,5 @@
 ﻿@page "/filling/{JoinEventId}"
 @using Newtonsoft.Json
-@using System.Net
 @using System.Text
 @using KinoPrototype.Domain
 
@@ -148,6 +147,22 @@
     color: #333; /* Dark gray text color for better contrast */
     font-size: 14px; /* Adjust font size as needed */
 }
+
+.tooltip-container:hover {
+    background-color: grey;
+}
+
+.tooltip-container:hover .tooltip-content {
+    visibility: visible;
+}
+
+.tooltip-content {
+    visibility: hidden;
+    position: absolute;
+    z-index: 1;
+    background-color: lightgray;
+}
+
 </style>
 
 <PageTitle>JoinEvent</PageTitle>
@@ -155,7 +170,7 @@
 
 @if (_loading)
 {
-    <h3>Indlæser</h3>
+    <h3>Indlæser...</h3>
     return;
 }
 @if (_event is null)
@@ -249,7 +264,9 @@
 {
     <div>
         <input placeholder="Indtast dit navn" @bind="@Nickname"/>
-        <button onclick="@(async () => {  if (Nickname is null or "") { _infoMessage = "Indtast venligst et navn"; return; } var p = new Participant { Nickname = Nickname, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; var jsonP = JsonConvert.SerializeObject(p); var httpClient = new HttpClient(); var response = await httpClient.PutAsync($"https://localhost:7123/participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt";_answerSaved = true; }else { _infoMessage = "Noget gik galt. Prøv igen."; } })">Send svar</button>
+        <button onclick="@(async () => { if (Nickname is null or "") { _infoMessage = "Indtast venligst et navn"; return; } var p = new Participant { Nickname = Nickname, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; var jsonP = JsonConvert.SerializeObject(p); var httpClient = new HttpClient(); var response = await httpClient.PutAsync($"https://localhost:7123/participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; _answerSaved = true; _event.Participants.Add(p); StateHasChanged(); }else { _infoMessage = "Noget gik galt. Prøv igen."; } })">
+            Send svar
+        </button>
     </div>
 }
 
@@ -262,51 +279,71 @@
 <br/>
 <br/>
 <h2>Andres svar</h2>
+<label>
+    Sortér efter: 
+    <select @bind="_sortedAfter">
+        <option value="@VotesString">@VotesString</option>
+        <option value="@TimeString">@TimeString</option>
+    </select>
+</label>
 
-<table style="border-spacing:0.5rem">
+@{
+    var orderedShowtimes = _sortedAfter == VotesString
+        ? _event.Showtimes.OrderByDescending(s => { return _event.Participants?.Count(p => (p.VotedFor ?? new()).Select(voted => voted.Id).Contains(s.Id)); }).ThenBy(s => s.Playtime.StartTime).ToList()
+        : _event.Showtimes.OrderBy(s => s.Playtime.StartTime).ToList();
+}
+<div style="overflow-x: auto; width: 60vw; visibility: hidden">
+<table style="border-spacing:0.5rem;">
     <tr>
-        <th>Navn</th>
-        @foreach (var showtime in _event.Showtimes)
+        <th style="vertical-align: bottom">Navn</th>
+        @foreach (var showtime in orderedShowtimes)
         {
-            <th style="padding-left:0.5rem;padding-right: 0.5rem">
-                <div class="result-table-header " style="display:flex;flex-direction: column; justify-content: center;align-items: center; gap: 0.33rem">
-                    <p class="film-title">
-                        @(showtime.Movie.Title.Length > 20 ? $"{showtime.Movie.Title[..17]}..." : showtime.Movie.Title)
-                    </p>
-                    <p class="date">
-                        @showtime.Playtime.StartTime.ToString("dd. MMM")
-                    </p>
-                    <p class="playtime" style="font-size: 12px">
-                        @showtime.Playtime.StartTime.ToString("HH:mm") - @showtime.Playtime.StartTime.AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
-                    </p>
-                    <p class="participants" style="font-size: 10px; font-weight: bold">
-                        @_event.Participants?.Count(p => (p.VotedFor ?? new()).Select(s => s.Id).Contains(showtime.Id))
-                    </p>
+            <th style="padding-left:0.5rem; padding-right: 0.5rem">
+                <div class="tooltip-container">
+                    <div class="result-table-header " style="display:flex;flex-direction: column; justify-content: center;align-items: center; gap: 0.33rem">
+                        <p class="film-title">
+                            @(showtime.Movie.Title.Length > 20 ? $"{showtime.Movie.Title[..17]}..." : showtime.Movie.Title)
+                        </p>
+                        <p class="date">
+                            @showtime.Playtime.StartTime.ToString("dd. MMM")
+                        </p>
+                        <p class="playtime" style="font-size: 12px">
+                            Kl. @showtime.Playtime.StartTime.ToString("HH:mm") - @showtime.Playtime.StartTime.AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
+                        </p>
+                        <p class="participants" style="font-size: 10px; font-weight: bold">
+                            Stemmer: @_event.Participants?.Count(p => (p.VotedFor ?? new()).Select(s => s.Id).Contains(showtime.Id))
+                        </p>
+                    </div>
+
+                    <div class="tooltip-content">
+                        <p>Bio: @showtime.Cinema.Name</p>
+                        <p>Version: @showtime.VersionTag.Type</p>
+                        <p>@showtime.Room.Name</p>
+                    </div>
                 </div>
             </th>
         }
     </tr>
-    
-        @foreach (var participant in _event.Participants ?? new())
-        {
-            <tr>
-                <td>@participant.Nickname</td>
-                @foreach (var showtime in _event.Showtimes)
-                {
-                    <td>
-                        <div style="height:2rem; background: @(participant.VotedFor.Select(s => s.Id).Contains(showtime.Id) ? "green" : "red")">
-                        </div>
-                    </td>
-                }
-            </tr>
-        }
-</table>
 
+    @foreach (var participant in _event.Participants ?? new())
+    {
+        <tr>
+            <td>@participant.Nickname</td>
+            @foreach (var showtime in orderedShowtimes)
+            {
+                <td>
+                    <div style="height:2rem; background: @(participant.VotedFor.Select(s => s.Id).Contains(showtime.Id) ? "green" : "red")">
+                    </div>
+                </td>
+            }
+        </tr>
+    }
+</table>
+</div>
 
 @code {
 
-    [Parameter]
-    public required string JoinEventId { get; set; }
+    [Parameter] public required string JoinEventId { get; set; }
 
     private JoinEvent? _event;
 
@@ -319,6 +356,11 @@
     private string? _infoMessage;
 
     private bool _loading = true;
+
+    private const string VotesString = "Stemmer";
+    private const string TimeString = "Tidspunkt";
+
+    private string _sortedAfter = VotesString;
 
     protected override async Task OnInitializedAsync()
     {
@@ -334,4 +376,3 @@
     }
 
 }
-
