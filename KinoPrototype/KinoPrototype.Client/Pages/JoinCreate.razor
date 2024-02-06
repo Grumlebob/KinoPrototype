@@ -286,14 +286,14 @@
                                     <table>
                                         <tr>
                                             <!-- Create table headers for each grouped date -->
-                                            @foreach (var date in version.GroupBy(s => s.Playtime.StartTime.ToString("dd/MM")))
+                                            @foreach (var date in version.GroupBy(s => s.Playtime.StartTime.ToLocalTime().ToString("dd. MMM")))
                                             {
                                                 <th>@date.Key</th>
                                             }
                                         </tr>
                                         <tr>
                                             <!-- Create table data for each showtime within the grouped date -->
-                                            @foreach (var date in version.GroupBy(s => s.Playtime.StartTime.ToString("dd/MM")))
+                                            @foreach (var date in version.GroupBy(s => s.Playtime.StartTime.ToLocalTime().ToString("dd. MMM")))
                                             {
                                                 <td>
                                                     @foreach (var showtime in date)
@@ -303,10 +303,10 @@
                                                         var isChecked = selectedShowtimeIds.Contains(showtimeId);
 
                                                         <div>
-                                                            <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime" checked="@isChecked" @onclick="() => ToggleCheckedShowtime(showtimeId)">
+                                                            <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime.ToLocalTime()" checked="@isChecked" @onclick="() => ToggleCheckedShowtime(showtimeId)">
                                                             <label for="@checkboxId" class="showtime-label">
                                                                 <div class="showtime-sal">@showtime.Room.Name</div>
-                                                                <div class="showtime-time">@showtime.Playtime.StartTime.ToString("HH:mm")</div>
+                                                                <div class="showtime-time">@showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm")</div>
                                                             </label>
                                                         </div>
                                                     }

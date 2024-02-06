@@ -3,6 +3,7 @@
 @using System.Text
 @using KinoPrototype.Domain
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
 
 <style>
 /* Base container for each movie */
@@ -183,8 +184,8 @@
 
 <h1>@_event.Title</h1>
 <p>@_event.Description</p>
-<p>Deadline for tilmelding: @_event.Deadline</p>
-<p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime) - @_event.Showtimes.Max(s => s.Playtime.StartTime)</p>
+<p>Deadline for tilmelding: @_event.Deadline.ToLocalTime().ToString("dd. MMM")</p>
+<p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM") - @_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM")</p>
 
 @if (_event.Showtimes.Count == 0)
 {
@@ -225,14 +226,14 @@
                                 <table>
                                     <tr>
                                         <!-- Create table headers for each grouped date -->
-                                        @foreach (var date in showtimesByVersionTag.GroupBy(s => s.Playtime.StartTime.ToString("dd/MM")))
+                                        @foreach (var date in showtimesByVersionTag.GroupBy(s => s.Playtime.StartTime.ToLocalTime().ToString("dd. MMM")))
                                         {
                                             <th>@date.Key</th>
                                         }
                                     </tr>
                                     <tr>
                                         <!-- Create table headers for each grouped date -->
-                                        @foreach (var dateGroup in showtimesByVersionTag.GroupBy(s => s.Playtime.StartTime.ToString("dd/MM"), (date, showtimes) => new { date, showtimes }))
+                                        @foreach (var dateGroup in showtimesByVersionTag.GroupBy(s => s.Playtime.StartTime.ToLocalTime().ToString("dd. MMM"), (date, showtimes) => new { date, showtimes }))
                                         {
                                             <td>
                                                 @foreach (var showtime in dateGroup.showtimes)
@@ -241,10 +242,10 @@
                                                     var isChecked = _votedFor.Contains(showtime);
 
                                                     <div>
-                                                        <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime" checked="@isChecked" @onclick="() => { if (_votedFor.Contains(showtime)) { _votedFor.Remove(showtime); }else { _votedFor.Add(showtime); } }">
+                                                        <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime.ToLocalTime()" checked="@isChecked" @onclick="() => { if (_votedFor.Contains(showtime)) { _votedFor.Remove(showtime); }else { _votedFor.Add(showtime); } }">
                                                         <label for="@checkboxId" class="showtime-label">
                                                             <div class="showtime-sal">@showtime.Room.Name</div>
-                                                            <div class="showtime-time">@showtime.Playtime.StartTime.ToString("HH:mm")</div>
+                                                            <div class="showtime-time">@showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm")</div>
                                                         </label>
                                                     </div>
                                                 }
@@ -300,10 +301,10 @@
 
 @{
     var orderedShowtimes = _sortedAfter == VotesString
-        ? _event.Showtimes.OrderByDescending(s => { return _event.Participants?.Count(p => (p.VotedFor ?? new()).Select(voted => voted.Id).Contains(s.Id)); }).ThenBy(s => s.Playtime.StartTime).ToList()
-        : _event.Showtimes.OrderBy(s => s.Playtime.StartTime).ToList();
+        ? _event.Showtimes.OrderByDescending(s => { return _event.Participants?.Count(p => (p.VotedFor ?? new()).Select(voted => voted.Id).Contains(s.Id)); }).ThenBy(s => s.Playtime.StartTime.ToLocalTime()).ToList()
+        : _event.Showtimes.OrderBy(s => s.Playtime.StartTime.ToLocalTime()).ToList();
 }
-<div style="overflow-x: auto; width: 60vw">
+<div style="max-width: 60vw; overflow-x: scroll">
     <table style="border-spacing:0.5rem;">
         <tr>
             <th style="vertical-align: bottom">Navn</th>
@@ -316,10 +317,10 @@
                                 @(showtime.Movie.Title.Length > 20 ? $"{showtime.Movie.Title[..17]}..." : showtime.Movie.Title)
                             </p>
                             <p class="date">
-                                @showtime.Playtime.StartTime.ToString("dd. MMM")
+                                @showtime.Playtime.StartTime.ToLocalTime().ToString("dd. MMM")
                             </p>
                             <p class="playtime" style="font-size: 12px">
-                                Kl. @showtime.Playtime.StartTime.ToString("HH:mm") - @showtime.Playtime.StartTime.AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
+                                Kl. @showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm") - @showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
                             </p>
                             <p class="participants" style="font-size: 10px; font-weight: bold">
                                 Stemmer: @_event.Participants?.Count(p => (p.VotedFor ?? new()).Select(s => s.Id).Contains(showtime.Id))
@@ -349,6 +350,18 @@
                 }
             </tr>
         }
+        <tr>
+            <td/>
+            @foreach (var showtime in orderedShowtimes)
+            {
+                <td>
+                    <div>
+                        <button onclick="@(() => {JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank");} )">Bestil billetter</button>
+                        <button>Tilføj til kalender</button>
+                    </div>
+                </td>
+            }
+        </tr>
     </table>
 </div>
 
