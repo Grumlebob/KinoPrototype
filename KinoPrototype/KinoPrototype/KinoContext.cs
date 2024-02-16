@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using KinoPrototype.Domain;
+﻿using KinoPrototype.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace KinoPrototype;
@@ -17,7 +16,7 @@ public class KinoContext : DbContext
     public DbSet<Playtime> Playtimes { get; set; }
     public DbSet<VersionTag> Versions { get; set; }
     public DbSet<Cinema> Cinemas { get; set; }
-    public DbSet<Sal> Sals { get; set; }
+    public DbSet<Room> Sals { get; set; }
 
     public KinoContext(DbContextOptions<KinoContext> options) : base(options)
     {
@@ -34,6 +33,8 @@ public class KinoContext : DbContext
         modelBuilder.Entity<JoinEvent>()
             .HasMany(je => je.Showtimes)
             .WithMany(s => s.JoinEvents);
+        
+        modelBuilder.Entity<JoinEvent>().HasMany(je=>je.Participants).WithOne(p=>p.JoinEvent);
 
         modelBuilder.Entity<Participant>().HasMany(s => s.VotedFor).WithMany(je => je.Participants);
         
@@ -43,7 +44,7 @@ public class KinoContext : DbContext
         modelBuilder.Entity<Playtime>().HasKey(p => p.Id);
         modelBuilder.Entity<VersionTag>().HasKey(v => v.Id);
         modelBuilder.Entity<Cinema>().HasKey(c => c.Id);
-        modelBuilder.Entity<Sal>().HasKey(s => s.Id);
+        modelBuilder.Entity<Room>().HasKey(s => s.Id);
 
         // Configure relationships for Movie and Showtime
         modelBuilder.Entity<Movie>()
