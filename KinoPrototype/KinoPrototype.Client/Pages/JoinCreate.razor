@@ -1,13 +1,10 @@
 ﻿@using Newtonsoft.Json;
-@using System.Collections.Generic;
 @using System.Globalization;
 @using System.Web
-@using KinoPrototype
 @using KinoPrototype.Client.ExternalAPI
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @using KinoPrototype.Domain
-@using Microsoft.AspNetCore.Authorization
 
 @page "/JoinCreate/{filterString}"
 
@@ -532,7 +529,7 @@
             newFilterstring += "&movies=" + movieId;
         }
 
-        if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue )
+        if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue)
         {
             newFilterstring += "&date=" + _startDate.ToString();
         }
@@ -784,6 +781,10 @@
 
                     int.TryParse(movie.Content.FieldPlayingTime, out duration);
 
+                    if (movie.Content.URL == null)
+                    {
+                        Console.WriteLine("KINO URL NULL, BØR IKKE SKE");
+                    }
 
                     movieObject = new KinoPrototype.Domain.Movie()
                     {
@@ -967,6 +968,12 @@
         var url = $"{baseUrl}putJoinEvent";
 
         var pickedShowtimes = selectedShowtimeIds.Select(id => showtimes.First(s => s.Id == id)).ToList();
+
+        var movieId = pickedShowtimes.FirstOrDefault().Movie.Id;
+        
+        var movieFromTheMovieList = movies.FirstOrDefault(m => m.Id == movieId);
+        Console.WriteLine("url from showtime path: " + pickedShowtimes.FirstOrDefault().Movie.KinoURL);
+        Console.WriteLine("url from movie list: " + movieFromTheMovieList.KinoURL);
 
         var authenticationState = await AuthenticationStateTask;
 

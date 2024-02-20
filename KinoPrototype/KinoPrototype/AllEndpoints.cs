@@ -310,6 +310,7 @@ public static class AllEndpoints
                         context.Movies.Add(new Movie
                         {
                             Id = movieId, //insert all properties
+                            KinoURL = movie.KinoURL,
                             AgeRating = movie.AgeRating,
                             Duration = movie.Duration,
                             ImageUrl = movie.ImageUrl,
