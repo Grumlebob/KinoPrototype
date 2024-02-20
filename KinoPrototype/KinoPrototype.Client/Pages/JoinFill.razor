@@ -3,6 +3,8 @@
 @using System.Text
 @using KinoPrototype.Domain
 @using System.Net
+@using System.ComponentModel.DataAnnotations
+@using System.Text.RegularExpressions
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
 
@@ -270,7 +272,7 @@
 {
     <div>
         <input placeholder="Indtast dit navn" @bind="@Nickname"/>
-        <input placeholder="Skriv din email" @bind="@Email"/>
+        <input placeholder="Skriv din email" type="email" @bind="@Email"/>
         <button onclick="@(async () => {
                                            _infoMessage = ""; 
                                            if (Nickname is null or "") 
@@ -282,11 +284,23 @@
                                            { 
                                                _confirmSubmit = true; 
                                                return; 
-                                           } if (_event.Participants is not null && _event.Participants.Any(p => p.Email == Email))
+                                           } 
+                                           if(Email is not null or ""){ Console.WriteLine("Email is not null or empty");
+                                            var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$");
+                                            var emailMatch = emailRegex.Match(Email);
+                                           if(!emailMatch.Success )
                                            {
+                                               _infoMessage = "Indtast venligst en gyldig email";
+                                               return;
+                                           }
+                                           
+                                           if (_event.Participants is not null && _event.Participants.Any(p => p.Email == Email))
+                                           {
+                                               
                                                   _infoMessage = "Du har allerede svaret";
                                                   return;
                                            }
+                                               }
                                            
                                            var p = new Participant { Nickname = Nickname,Email=Email, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; 
                                            var jsonP = JsonConvert.SerializeObject(p); 

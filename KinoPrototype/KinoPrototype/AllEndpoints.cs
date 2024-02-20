@@ -54,7 +54,7 @@ public static class AllEndpoints
                         Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host,
                         Participants = e.Participants.Select(p => new Participant
                         {
-                            Id = p.Id, Nickname = p.Nickname, VotedFor = p.VotedFor
+                            Id = p.Id, Nickname = p.Nickname, VotedFor = p.VotedFor,Email = p.Email
                         }).ToList(),
                         Showtimes = e.Showtimes.Select(s => new Showtime
                         {
@@ -206,6 +206,7 @@ public static class AllEndpoints
                 Id = p.Id,
                 JoinEventId = p.JoinEventId,
                 Nickname = p.Nickname,
+                Email = p.Email,
                 VotedFor = ShowtimesToAttach
             };
 
