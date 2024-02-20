@@ -444,7 +444,7 @@
             newFilterstring += "&cinemas=" + cinemaId;
         }
 
-        if (_startDate != DateTime.MinValue)
+        if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue)
         {
             newFilterstring += "&date=" + _startDate.ToString();
         }
@@ -490,7 +490,7 @@
             newFilterstring += "&movies=" + movieId;
         }
 
-        if (_startDate != DateTime.MinValue)
+        if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue)
         {
             newFilterstring += "&date=" + _startDate.ToString();
         }
@@ -532,7 +532,7 @@
             newFilterstring += "&movies=" + movieId;
         }
 
-        if (_startDate != DateTime.MinValue)
+        if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue )
         {
             newFilterstring += "&date=" + _startDate.ToString();
         }
@@ -574,7 +574,7 @@
             newFilterstring += "&movies=" + movieId;
         }
 
-        if (_startDate != DateTime.MinValue)
+        if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue)
         {
             newFilterstring += "&date=" + _startDate.ToString();
         }

@@ -2,6 +2,7 @@
 @using Newtonsoft.Json
 @using System.Text
 @using KinoPrototype.Domain
+@using System.Net
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
 
@@ -356,8 +357,8 @@
             {
                 <td>
                     <div>
-                        <button onclick="@(() => {JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank");} )">Bestil billetter</button>
-                        <button onclick="@(() => { OpenCalender(showtime);})">Tilføj til kalender</button>
+                        <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank"); })">Bestil billetter</button>
+                        <button onclick="@(async () => { _showtimeToCalendar = showtime;await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til kalender</button>
                     </div>
                 </td>
             }
@@ -365,13 +366,24 @@
     </table>
 </div>
 
+<dialog id="calendar-dialog">
+    <div style="display: flex">
+        <button onclick="@(() => { OpenGoogleCalendar(_showtimeToCalendar); })">Tilføj til kalender</button>
+        <button onclick="@(() => { DownloadCalendarFile(_showtimeToCalendar); })">Download til andre kalendre</button>
+    </div>
+    <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
+</dialog>
+
 @code {
 
-    [Parameter] public required string JoinEventId { get; set; }
+    [Parameter]
+    public required string JoinEventId { get; set; }
 
     private JoinEvent? _event;
 
     private readonly List<Showtime> _votedFor = new();
+
+    private Showtime? _showtimeToCalendar = null;
 
     private bool _answerSaved = false;
 
@@ -385,8 +397,8 @@
 
     private bool _confirmSubmit;
 
-    private const string VotesString = "Stemmer";
-    private const string TimeString = "Tidspunkt";
+        private const string VotesString = "Stemmer";
+        private const string TimeString = "Tidspunkt";
 
     private string _sortedAfter = VotesString;
 
@@ -404,15 +416,97 @@
         _loading = false;
     }
 
-    private void OpenCalender(Showtime showtime)
+    private async Task OpenGoogleCalendar(Showtime showtime)
     {
         var url = "https://calendar.google.com/calendar/u/0/r/eventedit?"
-            + $"text={_event.Title}"
-            + $"&dates={showtime.Playtime.StartTime.ToLocalTime().ToString("yyyyMMddTHHmmss")}/{showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("yyyyMMddTHHmmss")}"
-            + $"&location={showtime.Cinema.Name}"
-            + $"&details={_event.Description} %0AFilm: {showtime.Movie.Title}, {showtime.Room.Name}, {showtime.VersionTag.Type}";
+                  + $"text={_event.Title}"
+                  + $"&dates={showtime.Playtime.StartTime.ToLocalTime().ToString("yyyyMMddTHHmmss")}/{showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("yyyyMMddTHHmmss")}"
+                  + $"&location={showtime.Cinema.Name}"
+                  + $"&details={_event.Description} %0AFilm: {showtime.Movie.Title}, {showtime.Room.Name}, {showtime.VersionTag.Type}";
+
+        await JsRuntime.InvokeVoidAsync("open", url, "_blank");
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog");        
+    }
+
+    private async Task DownloadCalendarFile(Showtime showtimeToCalendar)
+    {
+
+        var DateStart = showtimeToCalendar.Playtime.StartTime;
+        var DateEnd = showtimeToCalendar.Playtime.StartTime.AddMinutes(showtimeToCalendar.Movie.Duration);
+        var Summary = _event.Title;
+        var Location = showtimeToCalendar.Cinema.Name;
+        var Description = _event.Description + "\n Film: " + showtimeToCalendar.Movie.Title + ", " + showtimeToCalendar.Room.Name + ", " + showtimeToCalendar.VersionTag.Type;
         
-        JsRuntime.InvokeVoidAsync("open", url, "_blank");
+    //create a new stringbuilder instance
+        StringBuilder sb = new StringBuilder();
+
+    //start the calendar item
+        sb.AppendLine("BEGIN:VCALENDAR");
+        sb.AppendLine("VERSION:2.0");
+        sb.AppendLine("PRODID:stackoverflow.com");
+        sb.AppendLine("CALSCALE:GREGORIAN");
+        sb.AppendLine("METHOD:PUBLISH");
+
+    //create a time zone if needed, TZID to be used in the event itself
+        sb.AppendLine("BEGIN:VTIMEZONE");
+        sb.AppendLine("TZID:Europe/Amsterdam");
+        sb.AppendLine("BEGIN:STANDARD");
+        sb.AppendLine("TZOFFSETTO:+0100");
+        sb.AppendLine("TZOFFSETFROM:+0100");
+        sb.AppendLine("END:STANDARD");
+        sb.AppendLine("END:VTIMEZONE");
+
+    //add the event
+        sb.AppendLine("BEGIN:VEVENT");
+
+    //with time zone specified
+        sb.AppendLine("DTSTART;TZID=Europe/Amsterdam:" + DateStart.ToString("yyyyMMddTHHmm00"));
+        sb.AppendLine("DTEND;TZID=Europe/Amsterdam:" + DateEnd.ToString("yyyyMMddTHHmm00"));
+    //or without
+        sb.AppendLine("DTSTART:" + DateStart.ToString("yyyyMMddTHHmm00"));
+        sb.AppendLine("DTEND:" + DateEnd.ToString("yyyyMMddTHHmm00"));
+
+        sb.AppendLine("SUMMARY:" + Summary + "");
+        sb.AppendLine("LOCATION:" + Location + "");
+        sb.AppendLine("DESCRIPTION:" + Description + "");
+        sb.AppendLine("PRIORITY:3");
+        sb.AppendLine("END:VEVENT");
+
+    //end calendar item
+        sb.AppendLine("END:VCALENDAR");
+
+    //create a string from the stringbuilder
+        string CalendarItem = sb.ToString();
+        
+        
+        var fileName = "event.ics";
+        
+        var bytes = Encoding.UTF8.GetBytes(CalendarItem);
+        var stream = new MemoryStream(bytes);
+        using var streamRef = new DotNetStreamReference(stream: stream);
+        await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog");        
+        
+        
+        
+        
+        
+        
+
+
+        
+    /*
+//send the calendar item to the browser
+Response.ClearHeaders();
+Response.Clear();
+Response.Buffer = true;
+Response.ContentType = "text/calendar";
+Response.AddHeader("content-length", CalendarItem.Length.ToString());
+Response.AddHeader("content-disposition", "attachment; filename=\"" + FileName + ".ics\"");
+Response.Write(CalendarItem);
+Response.Flush();
+HttpContext.Current.ApplicationInstance.CompleteRequest(); 
+*/
     }
 
 }
