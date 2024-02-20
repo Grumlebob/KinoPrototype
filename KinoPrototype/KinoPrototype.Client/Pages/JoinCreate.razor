@@ -276,7 +276,7 @@
             <div class="PosterImage">
                 <img src="@movie.Key.ImageUrl" alt="Movie Poster" width="200" height="300"/>
 
-                <a href=@($"https://kino.dk{movie.Key.KinoURL}")>
+                <a href=@($"https://kino.dk{movie.Key.KinoURL}") target="_blank">
                     <button style="margin-top: 3px">Læs mere</button>
                 </a>
 
@@ -972,7 +972,7 @@
         var pickedShowtimes = selectedShowtimeIds.Select(id => showtimes.First(s => s.Id == id)).ToList();
 
         var movieId = pickedShowtimes.FirstOrDefault().Movie.Id;
-        
+
         var movieFromTheMovieList = movies.FirstOrDefault(m => m.Id == movieId);
         Console.WriteLine("url from showtime path: " + pickedShowtimes.FirstOrDefault().Movie.KinoURL);
         Console.WriteLine("url from movie list: " + movieFromTheMovieList.KinoURL);
