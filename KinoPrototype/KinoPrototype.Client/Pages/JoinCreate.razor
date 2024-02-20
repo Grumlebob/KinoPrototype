@@ -181,11 +181,20 @@
 
 
 .empty-showtime {
-    visibility: hidden;
     width: 84px;
-    height: 10px;
+    height: 67px;
     padding: 12px;
-    margin: 8px;
+    margin-top: 0px;
+    margin-bottom: 4px;
+    
+    border-radius: 4px;
+    background-image: repeating-linear-gradient(
+        +45deg,
+        #ffffff, /* Lighter shade of gray for the streak */
+        #ffffff 10px,
+        #d5d5d5 10px, /* Darker shade of gray for the space between streaks */
+        #d5d5d5 20px
+    );
 }
 
 </style>
