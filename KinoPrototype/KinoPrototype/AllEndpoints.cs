@@ -13,10 +13,10 @@ public static class AllEndpoints
         app.MapGet("events/{hostId}", async (string hostId) =>
         {
             using var scope = app.Services.CreateScope();
-            
+
             await using var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<KinoContext>();
-            
-            var results =await  context.JoinEvents.Where(j => j.HostId==hostId).Select(
+
+            var results = await context.JoinEvents.Where(j => j.HostId == hostId).Select(
                     e => new JoinEvent
                     {
                         Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host,
@@ -34,26 +34,25 @@ public static class AllEndpoints
                         Participants = e.Participants
                     })
                 .ToListAsync();
-            
-            
+
+
             //create empty participant lists if they are null
             foreach (var joinEvent in results)
             {
                 joinEvent.Participants ??= new List<Participant>();
             }
-            
-            return Results.Ok(results);
 
+            return Results.Ok(results);
         });
         app.MapGet("/event/{id}", async (int id) =>
         {
             using var scope = app.Services.CreateScope();
-            
+
             var result = await scope.ServiceProvider.GetRequiredService<KinoContext>().JoinEvents.Select(
                     e => new JoinEvent
                     {
                         Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host,
-                        Participants = e.Participants.Select(p=>new Participant
+                        Participants = e.Participants.Select(p => new Participant
                         {
                             Id = p.Id, Nickname = p.Nickname, VotedFor = p.VotedFor
                         }).ToList(),
@@ -75,7 +74,7 @@ public static class AllEndpoints
         app.MapPut("/participate/{eventId}", async (int eventId, [FromBody] Participant p) =>
         {
             await using var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<KinoContext>();
-            
+
             var cinemaIds = p.VotedFor.Select(st => st.Cinema.Id).Distinct();
             foreach (var cinemaId in cinemaIds)
             {
@@ -95,9 +94,8 @@ public static class AllEndpoints
                         showtime.Cinema = existingCinema;
                     }
                 }
-
             }
-            
+
             foreach (var st in p.VotedFor)
             {
                 var movieIds = p.VotedFor.Select(st => st.Movie.Id).Distinct();
@@ -129,6 +127,7 @@ public static class AllEndpoints
                         }
                     }
                 }
+
                 var existingRoom = await context.Sals.FindAsync(st.Room.Id);
                 if (existingRoom != null)
                 {
@@ -139,7 +138,7 @@ public static class AllEndpoints
                 {
                     context.Sals.Add(st.Room);
                 }
-                
+
                 var existingVersionTag = await context.Versions.FirstOrDefaultAsync(v => v.Type == st.VersionTag.Type);
                 if (existingVersionTag != null)
                 {
@@ -151,6 +150,7 @@ public static class AllEndpoints
                 {
                     context.Versions.Add(st.VersionTag);
                 }
+
                 // Handle Playtime
                 var existingPlaytime =
                     await context.Playtimes.FirstOrDefaultAsync(p => p.StartTime == st.Playtime.StartTime);
@@ -163,6 +163,7 @@ public static class AllEndpoints
                 {
                     context.Playtimes.Add(st.Playtime);
                 }
+
                 var existingShowtime = await context.Showtimes.FindAsync(st.Id);
                 if (existingShowtime != null)
                 {
@@ -185,7 +186,7 @@ public static class AllEndpoints
                     context.Showtimes.Add(newShowtime);
                 }
             }
-            
+
             var ShowtimesToAttach = new List<Showtime>();
             foreach (var showtime in p.VotedFor)
             {
@@ -199,7 +200,7 @@ public static class AllEndpoints
                     ShowtimesToAttach.Add(showtime);
                 }
             }
-            
+
             var participant = new Participant
             {
                 Id = p.Id,
