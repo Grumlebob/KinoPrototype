@@ -21,15 +21,18 @@
 <h2>Dine Events</h2>
 <style>
     
-    .dashboardCard {
-       color: #191c1f;
+    .dashboardCardWithButton {
+       
        display: inline-block; 
        margin-right: 10px;
-       border: 1px solid black; 
        width: 200px; 
-       padding: 5px; 
-       background-color: #c9ebf2;
-       
+    }
+    
+    .dashboardCard {
+        border: 1px solid black; 
+        padding: 5px; 
+        color: #191c1f;
+        background-color: #c9ebf2;
     }
     
     .dashboardCard:hover {
@@ -44,14 +47,16 @@
 {
     foreach (var joinEvent in joinEvents)
     {
-        <div  onclick="@(()=> {NavManager.NavigateTo("filling/"+joinEvent.Id);})" class="dashboardCard">
-            <h5 style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap; max-width: 290px;">@joinEvent.Title</h5>
-            <p style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap; max-width: 290px;">
-                @joinEvent.Description
-            </p>
-            <p>Deadline: @joinEvent.Deadline.ToString("dd. MMM")</p>
-            <p>Besvarelser: @joinEvent.Participants.Count</p>
-            <button @onclick="() => CopyToClipboard(joinEvent.Id)">📋 Kopier link</button>
+        <div class="dashboardCardWithButton">
+            <div onclick="@(() => { NavManager.NavigateTo("filling/" + joinEvent.Id); })" class="dashboardCard">
+                <h5 style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap; max-width: 290px;">@joinEvent.Title</h5>
+                <p style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap; max-width: 290px;">
+                    @joinEvent.Description
+                </p>
+                <p>Deadline: @joinEvent.Deadline.ToString("dd. MMM")</p>
+                <p>Besvarelser: @joinEvent.Participants.Count</p>
+            </div>
+            <button @onclick="() => ShareEvent(joinEvent)">Del</button>
         </div>
     }
 }
@@ -71,7 +76,20 @@
     [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
     List<JoinEvent> joinEvents = new List<JoinEvent>();
     private bool showCopySuccess = false;
-    
+
+
+    private async Task ShareEvent(JoinEvent joinEvent)
+    {
+        var data = new
+        {
+            title = joinEvent.Title,
+            text = joinEvent.Description,
+            url = $"{NavManager.BaseUri}filling/{joinEvent.Id}"
+        };
+
+        await JSRuntime.InvokeVoidAsync("navigator.share", data);
+    }
+
     void NavigateToUrl()
     {
         var url = "joinCreate/cinemas=53&cinemas=52&movies=76769&movies=35883&sort=most_purchased";
@@ -89,13 +107,12 @@
         await Task.Delay(3000);
         showCopySuccess = false;
         StateHasChanged(); // Notify Blazor that the state has changed
-        
     }
 
     protected override async Task OnInitializedAsync()
     {
         var client = new HttpClient();
-        
+
         baseUriWithoutTrailingSlash = NavManager.BaseUri.TrimEnd('/');
 
         var authState = await AuthenticationStateTask;
@@ -103,13 +120,13 @@
         var userId = user.FindFirst(c => c.Type == "sub")?.Value;
         if (userId == null)
         {
-            userId="1";
+            userId = "1";
         }
-   
+
 
         var url = $"{NavManager.BaseUri}events/" + userId;
 
-         joinEvents = await client.GetFromJsonAsync<List<JoinEvent>>(url);
+        joinEvents = await client.GetFromJsonAsync<List<JoinEvent>>(url);
     }
 
 
