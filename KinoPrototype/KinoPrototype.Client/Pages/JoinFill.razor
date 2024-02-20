@@ -2,6 +2,7 @@
 @using Newtonsoft.Json
 @using System.Text
 @using KinoPrototype.Domain
+@using System.Net
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
 
@@ -370,9 +371,9 @@
 <dialog id="calendar-dialog">
     <div style="display: flex">
         <button onclick="@(() => { OpenGoogleCalendar(_showtimeToCalendar); })">Tilføj til kalender</button>
-        <button onclick="@(() => { DownloadCalendarFile(_showtimeToCalendar); })">download til andre kalendre</button>
+        <button onclick="@(() => { DownloadCalendarFile(_showtimeToCalendar); })">Download til andre kalendre</button>
     </div>
-    <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })">Close</button>
+    <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
 </dialog>
 
 @code {
@@ -417,7 +418,7 @@
         _loading = false;
     }
 
-    private void OpenGoogleCalendar(Showtime showtime)
+    private async Task OpenGoogleCalendar(Showtime showtime)
     {
         var url = "https://calendar.google.com/calendar/u/0/r/eventedit?"
                   + $"text={_event.Title}"
@@ -425,19 +426,19 @@
                   + $"&location={showtime.Cinema.Name}"
                   + $"&details={_event.Description} %0AFilm: {showtime.Movie.Title}, {showtime.Room.Name}, {showtime.VersionTag.Type}";
 
-        JsRuntime.InvokeVoidAsync("open", url, "_blank");
+        await JsRuntime.InvokeVoidAsync("open", url, "_blank");
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog");        
     }
 
     private async Task DownloadCalendarFile(Showtime showtimeToCalendar)
     {
-    //some variables for demo purposes
-        DateTime DateStart = DateTime.Now;
-        DateTime DateEnd = DateStart.AddMinutes(105);
-        string Summary = "Small summary text";
-        string Location = "Event location";
-        string Description = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit.";
-        string FileName = "CalendarItem";
 
+        var DateStart = showtimeToCalendar.Playtime.StartTime;
+        var DateEnd = showtimeToCalendar.Playtime.StartTime.AddMinutes(showtimeToCalendar.Movie.Duration);
+        var Summary = _event.Title;
+        var Location = showtimeToCalendar.Cinema.Name;
+        var Description = _event.Description + "\n Film: " + showtimeToCalendar.Movie.Title + ", " + showtimeToCalendar.Room.Name + ", " + showtimeToCalendar.VersionTag.Type;
+        
     //create a new stringbuilder instance
         StringBuilder sb = new StringBuilder();
 
@@ -478,7 +479,24 @@
 
     //create a string from the stringbuilder
         string CalendarItem = sb.ToString();
+        
+        
+        var fileName = "event.ics";
+        
+        var bytes = Encoding.UTF8.GetBytes(CalendarItem);
+        var stream = new MemoryStream(bytes);
+        using var streamRef = new DotNetStreamReference(stream: stream);
+        await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog");        
+        
+        
+        
+        
+        
+        
 
+
+        
     /*
 //send the calendar item to the browser
 Response.ClearHeaders();
