@@ -358,9 +358,7 @@
                 <td>
                     <div>
                         <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank"); })">Bestil billetter</button>
-                        <button onclick="@(() => { OpenGoogleCalendar(showtime); })">Tilføj til kalender</button>
                         <button onclick="@(async () => { _showtimeToCalendar = showtime;await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til kalender</button>
-
                     </div>
                 </td>
             }
