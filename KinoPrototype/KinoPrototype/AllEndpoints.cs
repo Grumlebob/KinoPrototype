@@ -128,15 +128,15 @@ public static class AllEndpoints
                     }
                 }
 
-                var existingRoom = await context.Sals.FindAsync(st.Room.Id);
+                var existingRoom = await context.Rooms.FindAsync(st.Room.Id);
                 if (existingRoom != null)
                 {
-                    context.Sals.Attach(existingRoom);
+                    context.Rooms.Attach(existingRoom);
                     st.Room = existingRoom;
                 }
                 else
                 {
-                    context.Sals.Add(st.Room);
+                    context.Rooms.Add(st.Room);
                 }
 
                 var existingVersionTag = await context.Versions.FirstOrDefaultAsync(v => v.Type == st.VersionTag.Type);
@@ -280,15 +280,15 @@ public static class AllEndpoints
                 }
 
                 // Handle Sal
-                var existingSal = await context.Sals.FindAsync(st.Room.Id);
+                var existingSal = await context.Rooms.FindAsync(st.Room.Id);
                 if (existingSal != null)
                 {
-                    context.Sals.Attach(existingSal);
+                    context.Rooms.Attach(existingSal);
                     st.Room = existingSal;
                 }
                 else
                 {
-                    context.Sals.Add(st.Room);
+                    context.Rooms.Add(st.Room);
                 }
 
                 await context.SaveChangesAsync();

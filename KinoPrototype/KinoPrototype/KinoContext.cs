@@ -16,7 +16,7 @@ public class KinoContext : DbContext
     public DbSet<Playtime> Playtimes { get; set; }
     public DbSet<VersionTag> Versions { get; set; }
     public DbSet<Cinema> Cinemas { get; set; }
-    public DbSet<Room> Sals { get; set; }
+    public DbSet<Room> Rooms { get; set; }
 
     public KinoContext(DbContextOptions<KinoContext> options) : base(options)
     {
