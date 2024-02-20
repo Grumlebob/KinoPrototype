@@ -17,6 +17,7 @@ public class Participant
     public int Id { get; set; }
     public int JoinEventId { get; set; }
     public string Nickname { get; set; }
+    public string? Email { get; set; }
     
     public List<Showtime>? VotedFor { get; set; }
     //navigation property
