@@ -225,7 +225,7 @@
 
             <p>Send dette link til dine venner</p>
             <a href="@(baseUrl + "filling/" + @_joinEventId)">@(baseUrl + "filling/" + @_joinEventId)</a>
-            <button @onclick="CopyLink"> Kopier</button>
+            <button @onclick="ShareEvent">Del</button>
         }
 
 
@@ -274,7 +274,9 @@
     {
         <div class="Redbox">
             <div class="PosterImage">
-                <img src="@movie.Key.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+                <a href=@($"https://kino.dk{movie.Key.KinoURL}") target="_blank">
+                    <img src="@movie.Key.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+                </a>
 
                 <a href=@($"https://kino.dk{movie.Key.KinoURL}") target="_blank">
                     <button style="margin-top: 3px">Læs mere</button>
@@ -285,7 +287,9 @@
             </div>
             <div class="MovieDetails">
                 <div class="MovieHeader">
-                    <h2>@movie.Key.Title</h2>
+                    <a href=@($"https://kino.dk{movie.Key.KinoURL}") target="_blank" style="text-decoration: none; color: black">
+                        <h2>@movie.Key.Title</h2>
+                    </a>
 
                     <div class="movie-info">
                         <span class="premiere">Premiere @movie.Key.PremiereDate | </span>
@@ -421,6 +425,19 @@
     Dictionary<int, string> MovieIdAndName = new Dictionary<int, string>();
     Dictionary<int, string> CinemaIdAndName = new Dictionary<int, string>();
     Dictionary<int, string> GenrerIdAndName = new Dictionary<int, string>();
+
+
+    private async Task ShareEvent()
+    {
+        var data = new
+        {
+            title = _eventTitle,
+            text = _eventDescription,
+            url = baseUrl + "filling/" + _joinEventId
+        };
+
+        await JSRuntime.InvokeVoidAsync("navigator.share", data);
+    }
 
 
     private async Task SelectMovie(ChangeEventArgs e)
