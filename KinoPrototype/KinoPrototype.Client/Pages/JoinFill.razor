@@ -282,7 +282,12 @@
                                            { 
                                                _confirmSubmit = true; 
                                                return; 
-                                           } 
+                                           } if (_event.Participants is not null && _event.Participants.Any(p => p.Email == Email))
+                                           {
+                                                  _infoMessage = "Du har allerede svaret";
+                                                  return;
+                                           }
+                                           
                                            var p = new Participant { Nickname = Nickname,Email=Email, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; 
                                            var jsonP = JsonConvert.SerializeObject(p); 
                                            var httpClient = new HttpClient(); 
