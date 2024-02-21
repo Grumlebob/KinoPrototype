@@ -31,12 +31,12 @@ public class JoinEvent
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
-
     public string? HostId { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
     public List<Showtime>? Showtimes { get; set; }
 
+    public int? ChosenShowtimeId { get; set; }
     public List<Participant>? Participants { get; set; }
     private DateTime _deadline;
 

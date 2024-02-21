@@ -33,6 +33,29 @@
             if (dialog) {
                 dialog.close();
             }
+        },
+        
+        scrollToBottom: function() {
+               window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: 'smooth'
+                });
+        },
+        
+        scrollToBottomIncrementally: function() {
+            const totalHeight = document.body.scrollHeight;
+            let currentScroll = window.scrollY;
+            const step = 50; // Adjust the step size as needed
+        
+            function scrollStep() {
+                if (currentScroll < totalHeight) {
+                    window.scrollTo(0, currentScroll);
+                    currentScroll += step;
+                    requestAnimationFrame(scrollStep);
+                }
+            }
+        
+            scrollStep();
         }
         
     }
