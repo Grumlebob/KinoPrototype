@@ -214,6 +214,11 @@
 <p>Deadline for tilmelding: @_event.Deadline.ToLocalTime().ToString("dd. MMM")</p>
 <p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM") - @_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM")</p>
 
+@if (_event.ChosenShowtimeId != null)
+{
+    <p>Låste event id: @_event.ChosenShowtimeId</p>
+}
+
 @if (_event.Showtimes.Count == 0)
 {
     <p>Ingen showtimes fundet</p>
@@ -409,10 +414,24 @@
             <td/>
             @foreach (var showtime in orderedShowtimes)
             {
+                //TODO DEN SENDER IKKE RIGTIGE ID VIDERE, TAGER ALTID SAMME INDEX}
+                var localShowtime = showtime;
                 <td>
                     <div>
-                        <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank"); })">Bestil billetter</button>
-                        <button onclick="@(async () => { _showtimeToCalendar = showtime; await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til kalender</button>
+                        <button @onclick="OpenConfirmationDialog">Bekræft event</button>
+                        <dialog id="confirmEvent">
+                            <h4>Ønsker du at låse denne event?</h4>
+                            @{ Console.WriteLine("Showtime ID is:" + localShowtime.Id); }
+                            <button @onclick="() => OpenDetailsDialog(localShowtime.Id)">Ja</button>
+                            <button @onclick="CloseDialog">Nej</button>
+                            <dialog id="confirmDetails">
+                                <h4>Event valgt</h4>
+                                <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{localShowtime.Id}", "_blank"); })">Bestil billetter</button>
+                                <button onclick="@(async () => { _showtimeToCalendar = showtime; await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til egen kalender</button>
+                                <button @onclick="ShareEvent">Del</button>
+                                <button @onclick="CloseDialog">Luk</button>
+                            </dialog>
+                        </dialog>
                     </div>
                 </td>
             }
@@ -456,6 +475,7 @@
 
     private string _sortedAfter = VotesString;
 
+
     protected override async Task OnInitializedAsync()
     {
         baseUrl = NavigationManager.BaseUri;
@@ -473,6 +493,37 @@
     private async Task ScrollToBottom()
     {
         await JsRuntime.InvokeVoidAsync("customFunctions.scrollToBottom");
+    }
+
+    private async Task OpenDetailsDialog(int showtimeId)
+    {
+        Console.WriteLine("Showtime ID passed:" + showtimeId);
+        _event.ChosenShowtimeId = showtimeId;
+        await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirmDetails");
+    }
+
+
+    private async Task OpenConfirmationDialog()
+    {
+        await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirmEvent");
+    }
+
+    private async Task CloseDialog()
+    {
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "confirmEvent");
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "confirmDetails");
+    }
+
+    private async Task ShareEvent()
+    {
+        var data = new
+        {
+            title = _event.Title,
+            text = _event.Description,
+            url = baseUrl + "filling/" + "fix this"
+        };
+
+        await JsRuntime.InvokeVoidAsync("navigator.share", data);
     }
 
     private async Task OpenGoogleCalendar(Showtime showtime)
