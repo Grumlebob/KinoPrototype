@@ -19,7 +19,6 @@ public class Participant
     public string Nickname { get; set; }
     public string? Email { get; set; }
     
-    public List<Showtime>? VotedFor { get; set; }
     //navigation property
     [ForeignKey("JoinEventId")]
     public JoinEvent? JoinEvent { get; set; }
@@ -75,9 +74,6 @@ public class Showtime
     //Many to many to JoinEvent
     public List<JoinEvent> JoinEvents { get; set; }
 
-    //Many to many to Participant
-    public List<Participant> Participants { get; set; }
-
     //Foreign Keys
     [ForeignKey("VersionTagId")] public VersionTag VersionTag { get; set; }
     [ForeignKey("RoomId")] public Room Room { get; set; }
@@ -85,6 +81,18 @@ public class Showtime
     [ForeignKey("CinemaId")] public Cinema Cinema { get; set; }
     [ForeignKey("PlaytimeId")] public Playtime Playtime { get; set; }
 }
+
+public class ParticipantVote
+{
+    public int ParticipantId { get; set; }
+    public int ShowtimeId { get; set; }
+    
+    [ForeignKey("ParticipantId")]public Participant Participant { get; set; }
+    [ForeignKey("ShowtimeId")]public Showtime Showtime { get; set; }
+    public Vote Vote { get; set; }
+    
+}
+
 
 public class Playtime
 {
@@ -122,4 +130,9 @@ public class Room
     public int Id { get; set; }
 
     public string Name { get; set; }
+}
+
+public enum Vote
+{
+    Yes, No, IfNeedBe
 }

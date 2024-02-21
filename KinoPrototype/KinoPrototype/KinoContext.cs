@@ -9,6 +9,7 @@ public class KinoContext : DbContext
     public DbSet<Domain.Host> Hosts { get; set; }
     public DbSet<Participant> Participants { get; set; }
     public DbSet<JoinEvent> JoinEvents { get; set; }
+    public DbSet<ParticipantVote> ParticipantVotes { get; set; }
 
     //For basedata from Kino
     public DbSet<Movie> Movies { get; set; }
@@ -30,14 +31,15 @@ public class KinoContext : DbContext
         modelBuilder.Entity<JoinEvent>()
             .HasKey(je => je.Id);
 
+        modelBuilder.Entity<ParticipantVote>().HasKey(pv => new { pv.Participant, pv.Showtime });
+
         modelBuilder.Entity<JoinEvent>()
             .HasMany(je => je.Showtimes)
             .WithMany(s => s.JoinEvents);
-        
-        modelBuilder.Entity<JoinEvent>().HasMany(je=>je.Participants).WithOne(p=>p.JoinEvent);
 
-        modelBuilder.Entity<Participant>().HasMany(s => s.VotedFor).WithMany(je => je.Participants);
-        
+        modelBuilder.Entity<JoinEvent>().HasMany(je => je.Participants).WithOne(p => p.JoinEvent);
+
+
         // Configure primary keys
         modelBuilder.Entity<Movie>().HasKey(m => m.Id);
         modelBuilder.Entity<Showtime>().HasKey(s => s.Id);
