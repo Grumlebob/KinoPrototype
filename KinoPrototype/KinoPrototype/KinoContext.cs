@@ -68,6 +68,11 @@ public class KinoContext : DbContext
             .HasOne(pv => pv.Showtime)
             .WithMany()
             .HasForeignKey(pv => pv.ShowtimeId);
+        
+        modelBuilder.Entity<ParticipantVote>().Property(pv => pv.Vote)
+            .HasConversion(
+                v => v.ToString(),
+                v => (Vote) Enum.Parse(typeof(Vote), v));
 
         // Call the base method to ensure any configuration from the base class is applied
         base.OnModelCreating(modelBuilder);

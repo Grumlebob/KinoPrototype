@@ -280,7 +280,7 @@
     <div>
         <input placeholder="Indtast dit navn" @bind="@Nickname"/>
         <input placeholder="Skriv din email" type="email" @bind="@Email"/>
-        <button onclick="@SaveParticipantAnswer()">
+        <button onclick="@SaveParticipantAnswer(false)">
             Send svar
         </button>
         @if (_confirmSubmit)
@@ -288,7 +288,7 @@
             <div>
                 <p>Du har ikke valgt nogen tider. Vil du indsende dit svar alligevel?</p>
                 <div style="display: inline-block">
-                    <button onclick="@(async () => { if (Email is not null or "") { Console.WriteLine("Email is not null or empty"); var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$"); var emailMatch = emailRegex.Match(Email); if (!emailMatch.Success) { _infoMessage = "Indtast venligst en gyldig email"; return; } if (_event.Participants is not null && _event.Participants.Any(p => p.Email == Email)) { _infoMessage = "Du har allerede svaret"; return; } } _confirmSubmit = false; var p = new Participant { Nickname = Nickname, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; var jsonP = JsonConvert.SerializeObject(p); var httpClient = new HttpClient(); var response = await httpClient.PutAsync($"{baseUrl}participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; _answerSaved = true; _event.Participants.Add(p); StateHasChanged(); }else { _infoMessage = "Noget gik galt. Prøv igen."; } })">
+                    <button onclick="@SaveParticipantAnswer(true)">
                         Ja
                     </button>
                     <button onclick="@(() => { _confirmSubmit = false; })">Nej</button>
@@ -317,7 +317,8 @@
 
 @{
     var orderedShowtimes = _sortedAfter == VotesString
-        ? _event.Showtimes.OrderByDescending(showtime => (_event.Participants ?? []).Sum(p => (p.VotedFor ?? []).Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No) ? 1 : 0)) //take sum of yes votes
+        ? _event.Showtimes.OrderByDescending(showtime => (_event.Participants ?? []).Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No))) //take sum of Non-no votes
+            .ThenByDescending(showtime => (_event.Participants ?? []).Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote == Vote.Yes))) //take sum of yes votes as tie breaker
             .ThenBy(s => s.Playtime.StartTime.ToLocalTime()).ToList()
         : _event.Showtimes.OrderBy(s => s.Playtime.StartTime.ToLocalTime()).ToList();
 }
@@ -334,7 +335,7 @@
                             <p>Version: @showtime.VersionTag.Type</p>
                             <p>@showtime.Room.Name</p>
                         </div>
-                        <div class="result-table-header " style="display:flex;flex-direction: column; justify-content: center;align-items: center; gap: 0.33rem; background-color: @(_event.ChosenShowtimeId == showtime.Id ? "green" : "lightgray")">
+                        <div class="result-table-header" style="display:flex;flex-direction: column; justify-content: center;align-items: center; gap: 0.33rem; background-color: @(_event.ChosenShowtimeId == showtime.Id ? "green" : "lightgray")">
                             <p class="film-title">
                                 @(showtime.Movie.Title.Length > 20 ? $"{showtime.Movie.Title[..17]}..." : showtime.Movie.Title)
                             </p>
@@ -345,7 +346,7 @@
                                 Kl. @showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm") - @showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
                             </p>
                             <p class="participants" style="font-size: 10px; font-weight: bold">
-                                Stemmer: @_event.Participants?.Sum(p => (p.VotedFor ?? []).Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No) ? 1 : 0);
+                                Stemmer: @_event.Participants?.Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No));
                             </p>
                         </div>
                     </div>
@@ -355,13 +356,15 @@
 
         @foreach (var participant in _event.Participants ?? new())
         {
-            <tr>
-                <td>@participant.Nickname</td>
+            Console.WriteLine(string.Join(", ", orderedShowtimes.Select(s => s.Id)));
+            Console.WriteLine(string.Join(", ", participant.VotedFor.Select(s => s.Vote.ToString())));
+            <tr>    
+            <td>@participant.Nickname</td>
                 @foreach (var showtime in orderedShowtimes)
                 {
                     <td>
-                        <!--<div style="height:2rem; background: @(participant.VotedFor.First(v => v.Showtime.Id == showtime.Id).Vote switch{ Vote.No => "red", Vote.Yes => "green", Vote.IfNeedBe => "orange", _ => "" })">
-                        </div>-->
+                        <div style="height:2rem; background: @(participant.VotedFor.First(v => v.Showtime.Id == showtime.Id).Vote switch{ Vote.No => "red", Vote.Yes => "green", Vote.IfNeedBe => "orange", _ => "" })">
+                        </div>
                     </td>
                 }
             </tr>
@@ -473,19 +476,22 @@
         await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirmDetails" + index);
     }
 
-    private async Task SaveParticipantAnswer()
+    private async Task SaveParticipantAnswer(bool confirmed)
     {
-        _infoMessage = "";
-        if (Nickname is null or "")
+        if (!confirmed)
         {
-            _infoMessage = "Indtast venligst et navn";
-            return;
-        }
+            _infoMessage = "";
+            if (Nickname is null or "")
+            {
+                _infoMessage = "Indtast venligst et navn";
+                return;
+            }
 
-        if (_votedFor.All(v => v.Vote == Vote.No))
-        {
-            _confirmSubmit = true;
-            return;
+            if (_votedFor.All(v => v.Vote == Vote.No))
+            {
+                _confirmSubmit = true;
+                return;
+            }
         }
 
         if (Email is not null or "")
@@ -507,9 +513,8 @@
         }
 
         var p = new Participant { Nickname = Nickname, Email = Email, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) };
-        var jsonP = JsonConvert.SerializeObject(p);
         var httpClient = new HttpClient();
-        var response = await httpClient.PutAsJsonAsync($"{baseUrl}participate/{JoinEventId}", jsonP);
+        var response = await httpClient.PutAsJsonAsync($"{baseUrl}participate/{JoinEventId}", p);
         if (response.IsSuccessStatusCode)
         {
             _infoMessage = "Svar gemt";
