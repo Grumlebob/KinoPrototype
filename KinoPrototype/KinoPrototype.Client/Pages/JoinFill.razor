@@ -186,11 +186,6 @@
 <p>Deadline for tilmelding: @_event.Deadline.ToLocalTime().ToString("dd. MMM")</p>
 <p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM") - @_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM")</p>
 
-@if (_event.ChosenShowtimeId != null)
-{
-    <p>Låste event id: @_event.ChosenShowtimeId</p>
-}
-
 @if (_event.Showtimes.Count == 0)
 {
     <p>Ingen showtimes fundet</p>
@@ -374,28 +369,30 @@
         }
         <tr>
             <td/>
-            @foreach (var showtime in orderedShowtimes)
+            @for(var i = 0; i < orderedShowtimes.Count; i++)
             {
-                //TODO DEN SENDER IKKE RIGTIGE ID VIDERE, TAGER ALTID SAMME INDEX}
-                var localShowtime = showtime;
+                //var index = orderedShowtimes.IndexOf(showtime);
+                //var localShowtime = orderedShowtimes[index];
+                var index = i;
+                var showtime = orderedShowtimes[index];
                 <td>
-                    <div>
-                        <button @onclick="OpenConfirmationDialog">Bekræft event</button>
-                        <dialog id="confirmEvent">
+                <div>
+                        <button @onclick="() => OpenConfirmationDialog(index)">Bekræft event</button>
+                        <dialog id="@("confirmEvent" + index)">
                             <h4>Ønsker du at låse dette event?</h4>
-                            @{ Console.WriteLine("Showtime ID is:" + localShowtime.Id); }
-                            <button @onclick="() => { _chosenShowTimeId =localShowtime.Id; OpenDetailsDialog(_chosenShowTimeId); }">Ja</button>
-                            <button @onclick="CloseDialog">Nej</button>
-                            <dialog id="confirmDetails">
+                            <button @onclick="async () => { await OpenDetailsDialog(showtime, index); }">Ja</button>
+                            <button @onclick="() => CloseDialog(index)">Nej</button>
+                            <dialog id="@("confirmDetails" + index)">
                                 <h4>Event valgt</h4>
-                                <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{localShowtime.Id}", "_blank"); })">Bestil billetter</button>
+                                <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank"); })">Bestil billetter</button>
                                 <button onclick="@(async () => { _showtimeToCalendar = showtime; await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til egen kalender</button>
                                 <button @onclick="ShareEvent">Del</button>
-                                <button @onclick="CloseDialog">Luk</button>
+                                <button @onclick="() => CloseDialog(index)">Luk</button>
                             </dialog>
                         </dialog>
                     </div>
                 </td>
+                
             }
         </tr>
     </table>
@@ -409,6 +406,11 @@
     <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
 </dialog>
 
+@if (_event.ChosenShowtimeId != null)
+{
+    <p>Låste event id: @_event.ChosenShowtimeId</p>
+}
+
 @code {
 
     [Parameter] public required string JoinEventId { get; set; }
@@ -418,8 +420,6 @@
     private List<ParticipantVote> _votedFor = [];
 
     private Showtime? _showtimeToCalendar = null;
-
-    private int? _chosenShowTimeId;
 
     private bool _answerSaved = false;
 
@@ -453,7 +453,7 @@
 
         if (_event is { Showtimes: not null })
         {
-            _votedFor = _event.Showtimes.Select(st => new ParticipantVote {ShowtimeId = st.Id, Showtime = st, Vote = Vote.No }).ToList(); // a vote for each showtime
+            _votedFor = _event.Showtimes.Select(st => new ParticipantVote { ShowtimeId = st.Id, Showtime = st, Vote = Vote.No }).ToList(); // a vote for each showtime
         }
 
         _loading = false;
@@ -464,24 +464,22 @@
         await JsRuntime.InvokeVoidAsync("customFunctions.scrollToBottom");
     }
 
-    private async Task OpenDetailsDialog(int? showtimeId)
+    private async Task OpenDetailsDialog(Showtime showtime, int index)
     {
-        Console.WriteLine("Showtime ID passed:" + showtimeId);
-        Console.WriteLine("chosenShowtime id:" + _chosenShowTimeId);
-        _event.ChosenShowtimeId = _chosenShowTimeId;
-        await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirmDetails");
+        _event.ChosenShowtimeId = showtime.Id;
+        await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirmDetails" + index);
     }
 
 
-    private async Task OpenConfirmationDialog()
+    private async Task OpenConfirmationDialog(int index)
     {
-        await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirmEvent");
+        await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirmEvent" + index);
     }
 
-    private async Task CloseDialog()
+    private async Task CloseDialog(int index)
     {
-        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "confirmEvent");
-        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "confirmDetails");
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "confirmEvent" + index);
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "confirmDetails" + index);
     }
 
     private async Task ShareEvent()
