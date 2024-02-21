@@ -242,8 +242,7 @@
 
 
     <p style="margin-bottom: 0px">Film</p>
-    <select style="margin-bottom: 10px" value="@selectedMovies" @onchange="SelectMovie">
-        <option value="">Alle</option>
+    <select style="margin-bottom: 10px" @onchange="SelectMovie" multiple>
         @foreach (var movie in movieStrings)
         {
             <option value="@movie">@movie</option>
@@ -449,7 +448,7 @@
             {
                 if (!string.IsNullOrWhiteSpace(selectedMovie))
                 {
-                    selectedMovies.Add(selectedMovie); 
+                    selectedMovies.Add(selectedMovie);
                 }
             }
         }
@@ -507,7 +506,6 @@
 
     private async Task SelectCinema(ChangeEventArgs e)
     {
-
         var selectedOptions = e.Value as IEnumerable<string>; // Cast the value to IEnumerable<string>
         if (selectedOptions != null)
         {
@@ -521,7 +519,7 @@
         }
 
         var newFilterstring = "";
-        
+
         var cinemaIndex = 0;
 
         foreach (var selectedCinema in selectedCinemas)
@@ -533,7 +531,7 @@
                 cinemaIndex++;
             }
         }
-        
+
         var movieIndex = 0;
         foreach (var selectedMovie in selectedMovies)
         {
@@ -666,7 +664,7 @@
         showtimes = new List<Showtime>();
         movieStrings = new List<string>();
         cinemaStrings = new List<string>();
-        
+
         await OnInitializedAsync();
 
         selectedShowtimeIds = selectedShowtimeIds.Where(id => showtimes.Any(s => s.Id == id)).ToList();
@@ -686,7 +684,7 @@
             selectedShowtimeIds.Add(showtimeId);
         }
     }
-    
+
 
     public async Task GetMovieTrailer(Movie movie)
     {
@@ -740,6 +738,7 @@
                 }
             }
         }
+
         //case: url is cinemas[0]=1&cinemas[1]=2
         foreach (var key in queryParams.AllKeys)
         {
@@ -752,6 +751,7 @@
                 }
             }
         }
+
         //case: url is movies=1&movies=2
         var moviesFilter = new HashSet<int>();
         var movieValues = queryParams.GetValues("movies");
@@ -766,6 +766,7 @@
                 }
             }
         }
+
         //case: url is movies[0]=1&movies[1]=2
         foreach (var key in queryParams.AllKeys)
         {
@@ -778,13 +779,13 @@
                 }
             }
         }
- 
+
         var datesFilter = queryParams.GetValues("date")?.ToList() ?? new List<string>();
 
         string MovieApiString = "";
         string CinemaApiString = "";
         var dateApiString = "";
-       
+
         Console.WriteLine("cinemasFilter: " + cinemasFilter.Count);
         Console.WriteLine("moviesFilter: " + moviesFilter.Count);
         Console.WriteLine("movie filters are: " + string.Join(", ", moviesFilter));
@@ -798,7 +799,6 @@
                 CinemaApiString += "&cinemas[" + cinema.i + "]=" + cinema.value;
                 cinemaIndex++;
             }
- 
         }
 
         if (moviesFilter.Count >= 1)
@@ -811,7 +811,7 @@
                 movieIndex++;
             }
         }
-        
+
         var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
                         MovieApiString + CinemaApiString + dateApiString + "&?region=content&format=json";
 
@@ -833,7 +833,7 @@
             endDate = DateTime.Parse(datesFilter.Last()).Date.AddHours(23).AddMinutes(59);
             _endDate = endDate;
         }
-        
+
 
         CinemaIdAndName = new Dictionary<int, string>();
         MovieIdAndName = new Dictionary<int, string>();
@@ -1011,7 +1011,6 @@
                 selectedCinemas.Add(CinemaIdAndName[cinemaFilter]);
             }
         }
-
     }
 
 
@@ -1111,5 +1110,4 @@
 
         eventCreated = true;
     }
-
 }
