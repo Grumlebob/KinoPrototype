@@ -420,9 +420,9 @@
                     <div>
                         <button @onclick="OpenConfirmationDialog">Bekræft event</button>
                         <dialog id="confirmEvent">
-                            <h4>Ønsker du at låse denne event?</h4>
+                            <h4>Ønsker du at låse dette event?</h4>
                             @{ Console.WriteLine("Showtime ID is:" + localShowtime.Id); }
-                            <button @onclick="() => OpenDetailsDialog(localShowtime.Id)">Ja</button>
+                            <button @onclick="() => { _chosenShowTimeId =localShowtime.Id; OpenDetailsDialog(_chosenShowTimeId); }">Ja</button>
                             <button @onclick="CloseDialog">Nej</button>
                             <dialog id="confirmDetails">
                                 <h4>Event valgt</h4>
@@ -456,6 +456,8 @@
     private readonly List<Showtime> _votedFor = new();
 
     private Showtime? _showtimeToCalendar = null;
+
+    private int? _chosenShowTimeId;
 
     private bool _answerSaved = false;
 
@@ -495,10 +497,11 @@
         await JsRuntime.InvokeVoidAsync("customFunctions.scrollToBottom");
     }
 
-    private async Task OpenDetailsDialog(int showtimeId)
+    private async Task OpenDetailsDialog(int? showtimeId)
     {
         Console.WriteLine("Showtime ID passed:" + showtimeId);
-        _event.ChosenShowtimeId = showtimeId;
+        Console.WriteLine("chosenShowtime id:" + _chosenShowTimeId);
+        _event.ChosenShowtimeId = _chosenShowTimeId;
         await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirmDetails");
     }
 
