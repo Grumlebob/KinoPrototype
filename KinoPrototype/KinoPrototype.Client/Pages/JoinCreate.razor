@@ -910,6 +910,13 @@
 
                 foreach (var versions in movie.Versions)
                 {
+
+                    Console.WriteLine("Version: " + versions.Label);
+                    if (versions.Label.ToLower().Contains("lukket forestilling"))
+                    {
+                        continue;
+                    }
+                    
                     VersionTag versionObject;
                     if (!versionTags.Any(v => v.Type == versions.Label))
                     {
@@ -928,6 +935,12 @@
                     {
                         foreach (var showtimeItem in showtimeDate.Showtimes)
                         {
+                            //Skip if no more seats left
+                            if (showtimeItem.AvailableSeats == 0)
+                            {
+                                continue;
+                            }
+                            
                             Domain.Room roomObject;
                             if (!rooms.Any(s => s.Name == showtimeItem.Room.Label))
                             {
