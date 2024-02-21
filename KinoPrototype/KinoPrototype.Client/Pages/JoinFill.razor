@@ -346,7 +346,7 @@
                                            }
                                                }
                                            
-                                           var p = new Participant { Nickname = Nickname,Email=Email, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; 
+                                           var p = new Participant { Nickname = Nickname,Email=Email, JoinEventId = int.Parse(JoinEventId) }; //VotedFor
                                            var jsonP = JsonConvert.SerializeObject(p); 
                                            var httpClient = new HttpClient(); 
                                            var response = await httpClient.PutAsync($"{baseUrl}participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) {
@@ -388,7 +388,7 @@
                                                        
                                                        _confirmSubmit = false;
                                                        
-                                                       var p = new Participant { Nickname = Nickname, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) };
+                                                       var p = new Participant { Nickname = Nickname, JoinEventId = int.Parse(JoinEventId) }; //VotedFor
                                                        var jsonP = JsonConvert.SerializeObject(p);
                                                        var httpClient = new HttpClient();
                                                        var response = await httpClient.PutAsync($"{baseUrl}participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json"));
@@ -428,9 +428,9 @@
 </label>
 
 @{
-    var orderedShowtimes = _sortedAfter == VotesString
+    var orderedShowtimes = /*_sortedAfter == VotesString
         ? _event.Showtimes.OrderByDescending(s => { return _event.Participants?.Count(p => (p.VotedFor ?? new()).Select(voted => voted.Id).Contains(s.Id)); }).ThenBy(s => s.Playtime.StartTime.ToLocalTime()).ToList()
-        : _event.Showtimes.OrderBy(s => s.Playtime.StartTime.ToLocalTime()).ToList();
+        :*/ _event.Showtimes.OrderBy(s => s.Playtime.StartTime.ToLocalTime()).ToList();
 }
 <div style="max-width: 60vw; overflow-x: scroll">
     <table style="border-spacing:0.5rem;">
@@ -456,7 +456,7 @@
                                 Kl. @showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm") - @showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
                             </p>
                             <p class="participants" style="font-size: 10px; font-weight: bold">
-                                Stemmer: @_event.Participants?.Count(p => (p.VotedFor ?? new()).Select(s => s.Id).Contains(showtime.Id))
+                                Stemmer: @*_event.Participants?.Count(p => (p.VotedFor ?? new()).Select(s => s.Id).Contains(showtime.Id))*@
                             </p>
                         </div>
                     </div>
@@ -471,7 +471,7 @@
                 @foreach (var showtime in orderedShowtimes)
                 {
                     <td>
-                        <div style="height:2rem; background: @(participant.VotedFor.Select(s => s.Id).Contains(showtime.Id) ? "green" : "red")">
+                        <div style="height:2rem; background: @(/*participant.VotedFor.Select(s => s.Id).Contains(showtime.Id) ? "green" : "red"*/)">
                         </div>
                     </td>
                 }

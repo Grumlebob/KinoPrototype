@@ -54,7 +54,7 @@ public static class AllEndpoints
                         Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host,
                         Participants = e.Participants.Select(p => new Participant
                         {
-                            Id = p.Id, Nickname = p.Nickname, VotedFor = p.VotedFor,Email = p.Email
+                            Id = p.Id, Nickname = p.Nickname, Email = p.Email //VotedFor
                         }).ToList(),
                         Showtimes = e.Showtimes.Select(s => new Showtime
                         {
@@ -74,7 +74,7 @@ public static class AllEndpoints
         app.MapPut("/participate/{eventId}", async (int eventId, [FromBody] Participant p) =>
         {
             await using var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<KinoContext>();
-
+            /*
             var cinemaIds = p.VotedFor.Select(st => st.Cinema.Id).Distinct();
             foreach (var cinemaId in cinemaIds)
             {
@@ -199,7 +199,7 @@ public static class AllEndpoints
                 {
                     ShowtimesToAttach.Add(showtime);
                 }
-            }
+            }*/
 
             var participant = new Participant
             {
@@ -207,7 +207,7 @@ public static class AllEndpoints
                 JoinEventId = p.JoinEventId,
                 Nickname = p.Nickname,
                 Email = p.Email,
-                VotedFor = ShowtimesToAttach
+                //VotedFor = ShowtimesToAttach
             };
 
             await context.Participants.AddAsync(participant);
