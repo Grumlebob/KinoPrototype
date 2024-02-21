@@ -54,7 +54,7 @@ public static class AllEndpoints
                         Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host,
                         Participants = e.Participants.Select(p => new Participant
                         {
-                            Id = p.Id, Nickname = p.Nickname, VotedFor = p.VotedFor
+                            Id = p.Id, Nickname = p.Nickname, VotedFor = p.VotedFor,Email = p.Email
                         }).ToList(),
                         Showtimes = e.Showtimes.Select(s => new Showtime
                         {
@@ -128,15 +128,15 @@ public static class AllEndpoints
                     }
                 }
 
-                var existingRoom = await context.Sals.FindAsync(st.Room.Id);
+                var existingRoom = await context.Rooms.FindAsync(st.Room.Id);
                 if (existingRoom != null)
                 {
-                    context.Sals.Attach(existingRoom);
+                    context.Rooms.Attach(existingRoom);
                     st.Room = existingRoom;
                 }
                 else
                 {
-                    context.Sals.Add(st.Room);
+                    context.Rooms.Add(st.Room);
                 }
 
                 var existingVersionTag = await context.Versions.FirstOrDefaultAsync(v => v.Type == st.VersionTag.Type);
@@ -206,6 +206,7 @@ public static class AllEndpoints
                 Id = p.Id,
                 JoinEventId = p.JoinEventId,
                 Nickname = p.Nickname,
+                Email = p.Email,
                 VotedFor = ShowtimesToAttach
             };
 
@@ -280,15 +281,15 @@ public static class AllEndpoints
                 }
 
                 // Handle Sal
-                var existingSal = await context.Sals.FindAsync(st.Room.Id);
+                var existingSal = await context.Rooms.FindAsync(st.Room.Id);
                 if (existingSal != null)
                 {
-                    context.Sals.Attach(existingSal);
+                    context.Rooms.Attach(existingSal);
                     st.Room = existingSal;
                 }
                 else
                 {
-                    context.Sals.Add(st.Room);
+                    context.Rooms.Add(st.Room);
                 }
 
                 await context.SaveChangesAsync();
