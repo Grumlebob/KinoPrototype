@@ -2,7 +2,6 @@
 @using Newtonsoft.Json
 @using System.Text
 @using KinoPrototype.Domain
-@using System.Collections.Immutable
 @using System.Text.RegularExpressions
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
@@ -49,33 +48,6 @@
     margin-bottom: 1em; /* Add space below each version */
 }
 
-
-/* Hide the default checkbox input */
-.Showtimes input[type="checkbox"] {
-    display: none;
-}
-
-/* Style when checkbox is checked */
-.Showtimes input[type="checkbox"]:checked + .showtime-label {
-    background-color: #66bb6a;
-}
-
-/* Style when checkbox is not checked */
-.Showtimes input[type="checkbox"]:not(:checked) + .showtime-label {
-    background-color: #eee;
-}
-
-/* Style for checked checkbox text */
-.Showtimes input[type="checkbox"]:checked + .showtime-label .showtime-time {
-    color: white;
-}
-
-/* Style for unchecked checkbox text */
-.Showtimes input[type="checkbox"]:not(:checked) + .showtime-label .showtime-time {
-    color: black;
-}
-
-
 /* Base styles for the showtime labels */
 .Showtimes .showtime-label {
 
@@ -95,8 +67,8 @@
     width: 100px;
 }
 
-/* Style for the sal name */
-.Showtimes .showtime-sal {
+/* Style for the room name */
+.Showtimes .showtime-room {
     font-size: 14px; /* Smaller font size for sal name */
     margin-bottom: 2px; /* Space between sal name and playtime */
     overflow: hidden; /* Ensures the content does not expand the container */
@@ -248,63 +220,51 @@
                             <div class="table-container">
                                 <table>
                                     <tr>
-                                      @{
-                                                                                      // Determine the start and end dates of the interval
-                                                                                      var startDate = _event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime());
-                                                                                      var endDate = _event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime());
-                                                                                      
-                                                                                      Console.WriteLine("count1:"+ showtimesByVersionTag.Count());
-                                                                                      Console.WriteLine("Movie:"+ movie.Title);
-                                                                                      Console.WriteLine(showtimesByVersionTag.First().Movie.Title);
-                                                                                      var count = showtimesByVersionTag.Where(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key).Count();
-                                                                                      Console.WriteLine("count2:"+count);
-                                                                                      
-                                                                                      var latestDateForSpecificCinemaVersion = _event.Showtimes.Where(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key).Max(s => s.Playtime.StartTime.ToLocalTime().Date);
-                                                                                      
-                                      
-                                                                                      // Loop through each date in the interval
-                                                                                      for (var date = startDate.Date; date <= endDate.Date && date <= latestDateForSpecificCinemaVersion.Date; date = date.AddDays(1))
-                                                                                      {
-                                                                                          <th>@date.ToString("dd. MMM")</th>
-                                                                                      }
-                                                                                  }
+                                        @{
+                                            // Determine the start and end dates of the interval
+                                            var startDate = _event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime());
+                                            var endDate = _event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime());
+
+                                            var latestDateForSpecificCinemaVersion = _event.Showtimes.Where(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key).Max(s => s.Playtime.StartTime.ToLocalTime().Date);
+
+
+                                            // Loop through each date in the interval
+                                            for (var date = startDate.Date; date <= endDate.Date && date <= latestDateForSpecificCinemaVersion.Date; date = date.AddDays(1))
+                                            {
+                                                <th>@date.ToString("dd. MMM")</th>
+                                            }
+                                        }
                                     </tr>
                                     <tr>
-                                          <!-- Create table data for each showtime within the grouped date -->
-                                                                                   @for (var date = startDate.Date; date <= endDate.Date && date <= latestDateForSpecificCinemaVersion.Date; date = date.AddDays(1))
-                                                                                   {
-                                                                                       //Check if it exists if not, else
-                                                                                       @if (_event.Showtimes.Any(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key && s.Playtime.StartTime.ToLocalTime().Date == date))
-                                                                                       {
-                                                                                           <td>
-                                                                                               @foreach (var showtime in _event.Showtimes.Where(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key && s.Playtime.StartTime.ToLocalTime().Date == date))
-                                                                                               {
-                                                                                                   var checkboxId = "showtime_" + showtime.Id;
-                                                                                                   var showtimeId = showtime.Id;
-                                                                                                   var isChecked = _votedFor.Contains(showtime);
-                                       
-                                                                                                   <div>
-                                                                                                       <input type="checkbox" id="@checkboxId" name="showtime" value="@showtime.Playtime.StartTime.ToLocalTime()" checked="@isChecked" @onclick="() => { if (_votedFor.Contains(showtime)) { _votedFor.Remove(showtime); }else { _votedFor.Add(showtime); } }">
-                                                                                                       <label for="@checkboxId" class="showtime-label">
-                                                                                                           <div class="showtime-sal">@showtime.Room.Name</div>
-                                                                                                           <div class="showtime-time">@showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm")</div>
-                                                                                                       </label>
-                                                                                                   </div>
-                                                                                               }
-                                                                                           </td>
-                                                                                       }
-                                                                                       else
-                                                                                       {
-                                                                                           <td>
-                                                                                               <div class="empty-showtime">
-                                                                                               </div>
-                                                                                           </td>
-                                                                                       }
-                                                                                   }
+                                        <!-- Create table data for each showtime within the grouped date -->
+                                        @for (var date = startDate.Date; date <= endDate.Date && date <= latestDateForSpecificCinemaVersion.Date; date = date.AddDays(1))
+                                        {
+                                            //Check if it exists if not, else
+                                            @if (_event.Showtimes.Any(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key && s.Playtime.StartTime.ToLocalTime().Date == date))
+                                            {
+                                                <td>
+                                                    @foreach (var showtime in _event.Showtimes.Where(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key && s.Playtime.StartTime.ToLocalTime().Date == date))
+                                                    {
+                                                        var index = _votedFor.IndexOf(_votedFor.First(v => v.ShowtimeId == showtime.Id));
+                                                        <div style="background-color: @(_votedFor[index].Vote switch { Vote.No => "gray", Vote.Yes => "lightgreen", Vote.IfNeedBe => "orange", _ => "" })" value="@showtime.Playtime.StartTime.ToLocalTime()" @onclick="() => { var next = ((int)_votedFor[index].Vote + 1) % Enum.GetValues(typeof(Vote)).Length; _votedFor[index].Vote = (Vote)Enum.GetValues(typeof(Vote)).GetValue(next)!; }">
+                                                            <div class="showtime-room">@showtime.Room.Name</div>
+                                                            <div class="showtime-time">@showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm")</div>
+                                                        </div>
+                                                    }
+                                                </td>
+                                            }
+                                            else
+                                            {
+                                                <td>
+                                                    <div class="empty-showtime">
+                                                    </div>
+                                                </td>
+                                            }
+                                        }
                                     </tr>
-                                </table>
-                            </div>
-                        </div>
+                                </table >
+                            </div >
+                        </div >
                     </div>
                 }
             }
@@ -317,49 +277,7 @@
     <div>
         <input placeholder="Indtast dit navn" @bind="@Nickname"/>
         <input placeholder="Skriv din email" type="email" @bind="@Email"/>
-        <button onclick="@(async () => {
-                                           _infoMessage = ""; 
-                                           if (Nickname is null or "") 
-                                           {
-                                               _infoMessage = "Indtast venligst et navn"; 
-                                               return; 
-                                           } 
-                                           if (!_votedFor.Any()) 
-                                           { 
-                                               _confirmSubmit = true; 
-                                               return; 
-                                           } 
-                                           if(Email is not null or ""){ Console.WriteLine("Email is not null or empty");
-                                            var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$");
-                                            var emailMatch = emailRegex.Match(Email);
-                                           if(!emailMatch.Success )
-                                           {
-                                               _infoMessage = "Indtast venligst en gyldig email";
-                                               return;
-                                           }
-                                           
-                                           if (_event.Participants is not null && _event.Participants.Any(p => p.Email == Email))
-                                           {
-                                               
-                                                  _infoMessage = "Du har allerede svaret";
-                                                  return;
-                                           }
-                                               }
-                                           
-                                           var p = new Participant { Nickname = Nickname,Email=Email, JoinEventId = int.Parse(JoinEventId) }; //VotedFor
-                                           var jsonP = JsonConvert.SerializeObject(p); 
-                                           var httpClient = new HttpClient(); 
-                                           var response = await httpClient.PutAsync($"{baseUrl}participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) {
-                                               _infoMessage = "Svar gemt"; 
-                                               _answerSaved = true;
-                                               _event.Participants.Add(p);
-                                               StateHasChanged();
-                                               
-                                           } else {
-                                               _infoMessage = "Noget gik galt. Prøv igen.";
-                                               
-                                           } 
-                         })">
+        <button onclick="@(async () => { _infoMessage = ""; if (Nickname is null or "") { _infoMessage = "Indtast venligst et navn"; return; } if (_votedFor.All(v => v.Vote == Vote.No)) { _confirmSubmit = true; return; } if (Email is not null or "") { Console.WriteLine("Email is not null or empty"); var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$"); var emailMatch = emailRegex.Match(Email); if (!emailMatch.Success) { _infoMessage = "Indtast venligst en gyldig email"; return; } if (_event.Participants is not null && _event.Participants.Any(p => p.Email == Email)) { _infoMessage = "Du har allerede svaret"; return; } } var p = new Participant { Nickname = Nickname, Email = Email, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; var jsonP = JsonConvert.SerializeObject(p); var httpClient = new HttpClient(); var response = await httpClient.PutAsync($"{baseUrl}participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; _answerSaved = true; _event.Participants.Add(p); StateHasChanged(); }else { _infoMessage = "Noget gik galt. Prøv igen."; } })">
             Send svar
         </button>
         @if (_confirmSubmit)
@@ -367,42 +285,9 @@
             <div>
                 <p>Du har ikke valgt nogen tider. Vil du indsende dit svar alligevel?</p>
                 <div style="display: inline-block">
-                    <button onclick="@(async () => {
-                                                       
-                                           if(Email is not null or ""){ Console.WriteLine("Email is not null or empty");
-                                            var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$");
-                                            var emailMatch = emailRegex.Match(Email);
-                                           if(!emailMatch.Success )
-                                           {
-                                               _infoMessage = "Indtast venligst en gyldig email";
-                                               return;
-                                           }
-                                           
-                                           if (_event.Participants is not null && _event.Participants.Any(p => p.Email == Email))
-                                           {
-                                               
-                                                  _infoMessage = "Du har allerede svaret";
-                                                  return;
-                                           }
-                                               }
-                                                       
-                                                       _confirmSubmit = false;
-                                                       
-                                                       var p = new Participant { Nickname = Nickname, JoinEventId = int.Parse(JoinEventId) }; //VotedFor
-                                                       var jsonP = JsonConvert.SerializeObject(p);
-                                                       var httpClient = new HttpClient();
-                                                       var response = await httpClient.PutAsync($"{baseUrl}participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json"));
-                                                       if (response.IsSuccessStatusCode) 
-                                                       {
-                                                           _infoMessage = "Svar gemt";
-                                                           _answerSaved = true;
-                                                           _event.Participants.Add(p);
-                                                           StateHasChanged();
-                                                           
-                                                       } else {
-                                                           _infoMessage = "Noget gik galt. Prøv igen.";
-                                                           
-                                                       } })">Ja</button>
+                    <button onclick="@(async () => { if (Email is not null or "") { Console.WriteLine("Email is not null or empty"); var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$"); var emailMatch = emailRegex.Match(Email); if (!emailMatch.Success) { _infoMessage = "Indtast venligst en gyldig email"; return; } if (_event.Participants is not null && _event.Participants.Any(p => p.Email == Email)) { _infoMessage = "Du har allerede svaret"; return; } } _confirmSubmit = false; var p = new Participant { Nickname = Nickname, VotedFor = _votedFor, JoinEventId = int.Parse(JoinEventId) }; var jsonP = JsonConvert.SerializeObject(p); var httpClient = new HttpClient(); var response = await httpClient.PutAsync($"{baseUrl}participate/{JoinEventId}", new StringContent(jsonP, Encoding.UTF8, "application/json")); if (response.IsSuccessStatusCode) { _infoMessage = "Svar gemt"; _answerSaved = true; _event.Participants.Add(p); StateHasChanged(); }else { _infoMessage = "Noget gik galt. Prøv igen."; } })">
+                        Ja
+                    </button>
                     <button onclick="@(() => { _confirmSubmit = false; })">Nej</button>
                 </div>
             </div>
@@ -428,9 +313,11 @@
 </label>
 
 @{
-    var orderedShowtimes = /*_sortedAfter == VotesString
-        ? _event.Showtimes.OrderByDescending(s => { return _event.Participants?.Count(p => (p.VotedFor ?? new()).Select(voted => voted.Id).Contains(s.Id)); }).ThenBy(s => s.Playtime.StartTime.ToLocalTime()).ToList()
-        :*/ _event.Showtimes.OrderBy(s => s.Playtime.StartTime.ToLocalTime()).ToList();
+    var orderedShowtimes = _sortedAfter == VotesString
+        ? _event.Showtimes.OrderByDescending(showtime => (_event.Participants ?? []).Sum(p => (p.VotedFor ?? []).Any(v => v.ShowtimeId == showtime.Id && v.Vote == Vote.Yes) ? 1 : 0)) //take sum of yes votes
+            .ThenByDescending(s => (_event.Participants ?? []).Sum(p => (p.VotedFor ?? []).Any(v => v.ShowtimeId == s.Id && v.Vote == Vote.IfNeedBe) ? 1 : 0)) //then sum of IfNeedBe votes as tiebreaker
+            .ThenBy(s => s.Playtime.StartTime.ToLocalTime()).ToList()
+        : _event.Showtimes.OrderBy(s => s.Playtime.StartTime.ToLocalTime()).ToList();
 }
 <div style="max-width: 60vw; overflow-x: scroll">
     <table style="border-spacing:0.5rem;">
@@ -456,7 +343,7 @@
                                 Kl. @showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm") - @showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
                             </p>
                             <p class="participants" style="font-size: 10px; font-weight: bold">
-                                Stemmer: @*_event.Participants?.Count(p => (p.VotedFor ?? new()).Select(s => s.Id).Contains(showtime.Id))*@
+                                Stemmer: _event.Participants?.Count(p => (p.VotedFor ?? new()).Select(s => s.Id).Contains(showtime.Id))
                             </p>
                         </div>
                     </div>
@@ -471,8 +358,8 @@
                 @foreach (var showtime in orderedShowtimes)
                 {
                     <td>
-                        <div style="height:2rem; background: @(/*participant.VotedFor.Select(s => s.Id).Contains(showtime.Id) ? "green" : "red"*/)">
-                        </div>
+                        <!--<div style="height:2rem; background: @(participant.VotedFor.First(v => v.Showtime.Id == showtime.Id).Vote switch{ Vote.No => "red", Vote.Yes => "green", Vote.IfNeedBe => "orange", _ => "" })">
+                        </div>-->
                     </td>
                 }
             </tr>
@@ -484,7 +371,7 @@
                 <td>
                     <div>
                         <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank"); })">Bestil billetter</button>
-                        <button onclick="@(async () => { _showtimeToCalendar = showtime;await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til kalender</button>
+                        <button onclick="@(async () => { _showtimeToCalendar = showtime; await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til kalender</button>
                     </div>
                 </td>
             }
@@ -502,12 +389,11 @@
 
 @code {
 
-    [Parameter]
-    public required string JoinEventId { get; set; }
+    [Parameter] public required string JoinEventId { get; set; }
 
     private JoinEvent? _event;
 
-    private readonly List<Showtime> _votedFor = new();
+    private List<ParticipantVote> _votedFor = [];
 
     private Showtime? _showtimeToCalendar = null;
 
@@ -524,8 +410,8 @@
 
     private bool _confirmSubmit;
 
-        private const string VotesString = "Stemmer";
-        private const string TimeString = "Tidspunkt";
+    private const string VotesString = "Stemmer";
+    private const string TimeString = "Tidspunkt";
 
     private string _sortedAfter = VotesString;
 
@@ -540,6 +426,11 @@
             _event = await response.Content.ReadFromJsonAsync<JoinEvent>();
         }
 
+        if (_event is { Showtimes: not null })
+        {
+            _votedFor = _event.Showtimes.Select(st => new ParticipantVote {ShowtimeId = st.Id, Showtime = st, Vote = Vote.No }).ToList(); // a vote for each showtime
+        }
+
         _loading = false;
     }
 
@@ -552,29 +443,28 @@
                   + $"&details={_event.Description} %0AFilm: {showtime.Movie.Title}, {showtime.Room.Name}, {showtime.VersionTag.Type}";
 
         await JsRuntime.InvokeVoidAsync("open", url, "_blank");
-        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog");        
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog");
     }
 
     private async Task DownloadCalendarFile(Showtime showtimeToCalendar)
     {
-
         var DateStart = showtimeToCalendar.Playtime.StartTime;
         var DateEnd = showtimeToCalendar.Playtime.StartTime.AddMinutes(showtimeToCalendar.Movie.Duration);
         var Summary = _event.Title;
         var Location = showtimeToCalendar.Cinema.Name;
         var Description = _event.Description + "\n Film: " + showtimeToCalendar.Movie.Title + ", " + showtimeToCalendar.Room.Name + ", " + showtimeToCalendar.VersionTag.Type;
-        
-    //create a new stringbuilder instance
+
+        //create a new stringbuilder instance
         StringBuilder sb = new StringBuilder();
 
-    //start the calendar item
+        //start the calendar item
         sb.AppendLine("BEGIN:VCALENDAR");
         sb.AppendLine("VERSION:2.0");
         sb.AppendLine("PRODID:stackoverflow.com");
         sb.AppendLine("CALSCALE:GREGORIAN");
         sb.AppendLine("METHOD:PUBLISH");
 
-    //create a time zone if needed, TZID to be used in the event itself
+        //create a time zone if needed, TZID to be used in the event itself
         sb.AppendLine("BEGIN:VTIMEZONE");
         sb.AppendLine("TZID:Europe/Amsterdam");
         sb.AppendLine("BEGIN:STANDARD");
@@ -583,13 +473,13 @@
         sb.AppendLine("END:STANDARD");
         sb.AppendLine("END:VTIMEZONE");
 
-    //add the event
+        //add the event
         sb.AppendLine("BEGIN:VEVENT");
 
-    //with time zone specified
+        //with time zone specified
         sb.AppendLine("DTSTART;TZID=Europe/Amsterdam:" + DateStart.ToString("yyyyMMddTHHmm00"));
         sb.AppendLine("DTEND;TZID=Europe/Amsterdam:" + DateEnd.ToString("yyyyMMddTHHmm00"));
-    //or without
+        //or without
         sb.AppendLine("DTSTART:" + DateStart.ToString("yyyyMMddTHHmm00"));
         sb.AppendLine("DTEND:" + DateEnd.ToString("yyyyMMddTHHmm00"));
 
@@ -599,41 +489,34 @@
         sb.AppendLine("PRIORITY:3");
         sb.AppendLine("END:VEVENT");
 
-    //end calendar item
+        //end calendar item
         sb.AppendLine("END:VCALENDAR");
 
-    //create a string from the stringbuilder
+        //create a string from the stringbuilder
         string CalendarItem = sb.ToString();
-        
-        
+
+
         var fileName = "event.ics";
-        
+
         var bytes = Encoding.UTF8.GetBytes(CalendarItem);
         var stream = new MemoryStream(bytes);
         using var streamRef = new DotNetStreamReference(stream: stream);
         await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
-        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog");        
-        
-        
-        
-        
-        
-        
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog");
 
 
-        
-    /*
-//send the calendar item to the browser
-Response.ClearHeaders();
-Response.Clear();
-Response.Buffer = true;
-Response.ContentType = "text/calendar";
-Response.AddHeader("content-length", CalendarItem.Length.ToString());
-Response.AddHeader("content-disposition", "attachment; filename=\"" + FileName + ".ics\"");
-Response.Write(CalendarItem);
-Response.Flush();
-HttpContext.Current.ApplicationInstance.CompleteRequest(); 
-*/
+        /*
+    //send the calendar item to the browser
+    Response.ClearHeaders();
+    Response.Clear();
+    Response.Buffer = true;
+    Response.ContentType = "text/calendar";
+    Response.AddHeader("content-length", CalendarItem.Length.ToString());
+    Response.AddHeader("content-disposition", "attachment; filename=\"" + FileName + ".ics\"");
+    Response.Write(CalendarItem);
+    Response.Flush();
+    HttpContext.Current.ApplicationInstance.CompleteRequest();
+    */
     }
 
 }

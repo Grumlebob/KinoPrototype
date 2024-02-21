@@ -54,7 +54,7 @@ public static class AllEndpoints
                         Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host,
                         Participants = e.Participants.Select(p => new Participant
                         {
-                            Id = p.Id, Nickname = p.Nickname, Email = p.Email //VotedFor
+                            Id = p.Id, Nickname = p.Nickname, Email = p.Email
                         }).ToList(),
                         Showtimes = e.Showtimes.Select(s => new Showtime
                         {
@@ -74,38 +74,37 @@ public static class AllEndpoints
         app.MapPut("/participate/{eventId}", async (int eventId, [FromBody] Participant p) =>
         {
             await using var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<KinoContext>();
-            /*
-            var cinemaIds = p.VotedFor.Select(st => st.Cinema.Id).Distinct();
+            var cinemaIds = p.VotedFor.Select(vote => vote.Showtime.Cinema.Id).Distinct();
             foreach (var cinemaId in cinemaIds)
             {
                 var existingCinema = await context.Cinemas.FindAsync(cinemaId);
                 if (existingCinema == null)
                 {
                     // This should only happen if you're sure you want to add new Cinemas
-                    var cinemaName = p.VotedFor.FirstOrDefault(st => st.Cinema.Id == cinemaId)?.Cinema
+                    var cinemaName = p.VotedFor.FirstOrDefault(vote => vote.Showtime.Cinema.Id == cinemaId)?.Showtime.Cinema
                         .Name;
                     context.Cinemas.Add(new Cinema { Id = cinemaId, Name = cinemaName });
                 }
                 else
                 {
                     // Attach existing cinemas to each showtime
-                    foreach (var showtime in p.VotedFor.Where(st => st.Cinema.Id == cinemaId))
+                    foreach (var participantVote in p.VotedFor.Where(vote => vote.Showtime.Cinema.Id == cinemaId))
                     {
-                        showtime.Cinema = existingCinema;
+                        participantVote.Showtime.Cinema = existingCinema;
                     }
                 }
             }
 
-            foreach (var st in p.VotedFor)
+            foreach (var participantVote in p.VotedFor)
             {
-                var movieIds = p.VotedFor.Select(st => st.Movie.Id).Distinct();
+                var movieIds = p.VotedFor.Select(vote => vote.Showtime.Movie.Id).Distinct();
                 foreach (var movieId in movieIds)
                 {
                     var existingMovie = await context.Movies.FindAsync(movieId);
                     if (existingMovie == null)
                     {
                         //find the correct movie in st
-                        var movie = p.VotedFor.FirstOrDefault(st => st.Movie.Id == movieId)?.Movie;
+                        var movie = p.VotedFor.FirstOrDefault(vote => vote.Showtime.Movie.Id == movieId)?.Showtime.Movie;
 
                         // This should only happen if you're sure you want to add new Movies
                         context.Movies.Add(new Movie
@@ -121,66 +120,66 @@ public static class AllEndpoints
                     else
                     {
                         // Attach existing movies to each showtime
-                        foreach (var showtime in p.VotedFor.Where(st => st.Movie.Id == movieId))
+                        foreach (var pVote in p.VotedFor.Where(vote => vote.Showtime.Movie.Id == movieId))
                         {
-                            showtime.Movie = existingMovie;
+                            pVote.Showtime.Movie = existingMovie;
                         }
                     }
                 }
 
-                var existingRoom = await context.Rooms.FindAsync(st.Room.Id);
+                var existingRoom = await context.Rooms.FindAsync(participantVote.Showtime.Room.Id);
                 if (existingRoom != null)
                 {
                     context.Rooms.Attach(existingRoom);
-                    st.Room = existingRoom;
+                    participantVote.Showtime.Room = existingRoom;
                 }
                 else
                 {
-                    context.Rooms.Add(st.Room);
+                    context.Rooms.Add(participantVote.Showtime.Room);
                 }
 
-                var existingVersionTag = await context.Versions.FirstOrDefaultAsync(v => v.Type == st.VersionTag.Type);
+                var existingVersionTag = await context.Versions.FirstOrDefaultAsync(v => v.Type == participantVote.Showtime.VersionTag.Type);
                 if (existingVersionTag != null)
                 {
                     Console.WriteLine("Existing version tag: " + existingVersionTag.Type);
                     context.Versions.Attach(existingVersionTag);
-                    st.VersionTag = existingVersionTag;
+                    participantVote.Showtime.VersionTag = existingVersionTag;
                 }
                 else
                 {
-                    context.Versions.Add(st.VersionTag);
+                    context.Versions.Add(participantVote.Showtime.VersionTag);
                 }
 
                 // Handle Playtime
                 var existingPlaytime =
-                    await context.Playtimes.FirstOrDefaultAsync(p => p.StartTime == st.Playtime.StartTime);
+                    await context.Playtimes.FirstOrDefaultAsync(p => p.StartTime == participantVote.Showtime.Playtime.StartTime);
                 if (existingPlaytime != null)
                 {
                     context.Playtimes.Attach(existingPlaytime);
-                    st.Playtime = existingPlaytime;
+                    participantVote.Showtime.Playtime = existingPlaytime;
                 }
                 else
                 {
-                    context.Playtimes.Add(st.Playtime);
+                    context.Playtimes.Add(participantVote.Showtime.Playtime);
                 }
 
-                var existingShowtime = await context.Showtimes.FindAsync(st.Id);
+                var existingShowtime = await context.Showtimes.FindAsync(participantVote.Showtime.Id);
                 if (existingShowtime != null)
                 {
                     context.Showtimes.Attach(existingShowtime);
-                    st.Id = existingShowtime.Id;
+                    participantVote.Showtime.Id = existingShowtime.Id;
                 }
                 else
                 {
                     //add new showtime, with only the Ids of the related entities
                     var newShowtime = new Showtime
                     {
-                        Id = st.Id,
-                        MovieId = st.Movie.Id,
-                        CinemaId = st.Cinema.Id,
-                        PlaytimeId = st.Playtime.Id,
-                        VersionTagId = st.VersionTag.Id,
-                        RoomId = st.Room.Id
+                        Id = participantVote.Showtime.Id,
+                        MovieId = participantVote.Showtime.Movie.Id,
+                        CinemaId = participantVote.Showtime.Cinema.Id,
+                        PlaytimeId = participantVote.Showtime.Playtime.Id,
+                        VersionTagId = participantVote.Showtime.VersionTag.Id,
+                        RoomId = participantVote.Showtime.Room.Id
                     };
 
                     context.Showtimes.Add(newShowtime);
@@ -188,18 +187,18 @@ public static class AllEndpoints
             }
 
             var ShowtimesToAttach = new List<Showtime>();
-            foreach (var showtime in p.VotedFor)
+            foreach (var participantVote in p.VotedFor)
             {
-                var existingShowtime = await context.Showtimes.FindAsync(showtime.Id);
+                var existingShowtime = await context.Showtimes.FindAsync(participantVote.Showtime.Id);
                 if (existingShowtime != null)
                 {
                     ShowtimesToAttach.Add(existingShowtime);
                 }
                 else
                 {
-                    ShowtimesToAttach.Add(showtime);
+                    ShowtimesToAttach.Add(participantVote.Showtime);
                 }
-            }*/
+            }
 
             var participant = new Participant
             {

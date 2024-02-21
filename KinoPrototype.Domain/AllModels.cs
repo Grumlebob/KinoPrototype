@@ -22,6 +22,8 @@ public class Participant
     //navigation property
     [ForeignKey("JoinEventId")]
     public JoinEvent? JoinEvent { get; set; }
+
+    public ICollection<ParticipantVote> VotedFor { get; set; }
 }
 
 public class JoinEvent
@@ -87,8 +89,8 @@ public class ParticipantVote
     public int ParticipantId { get; set; }
     public int ShowtimeId { get; set; }
     
-    [ForeignKey("ParticipantId")]public Participant Participant { get; set; }
-    [ForeignKey("ShowtimeId")]public Showtime Showtime { get; set; }
+    public Participant Participant { get; set; } //ForeignKeys set in context
+    public Showtime Showtime { get; set; }
     public Vote Vote { get; set; }
     
 }
@@ -134,5 +136,5 @@ public class Room
 
 public enum Vote
 {
-    Yes, No, IfNeedBe
+    No, Yes, IfNeedBe
 }

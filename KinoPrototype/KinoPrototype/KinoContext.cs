@@ -31,7 +31,7 @@ public class KinoContext : DbContext
         modelBuilder.Entity<JoinEvent>()
             .HasKey(je => je.Id);
 
-        modelBuilder.Entity<ParticipantVote>().HasKey(pv => new { pv.Participant, pv.Showtime });
+        modelBuilder.Entity<ParticipantVote>().HasKey(pv => new { pv.ParticipantId, pv.ShowtimeId });
 
         modelBuilder.Entity<JoinEvent>()
             .HasMany(je => je.Showtimes)
@@ -57,6 +57,17 @@ public class KinoContext : DbContext
         // Make showtime key MovieId, CinemaId, ShowtimeId, VersionId, SalId
         modelBuilder.Entity<Showtime>()
             .HasKey(st => st.Id);
+        
+        // Configure relations for ParticipantVote
+        modelBuilder.Entity<ParticipantVote>()
+            .HasOne(pv => pv.Participant)
+            .WithMany(p => p.VotedFor)
+            .HasForeignKey(pv => pv.ParticipantId);
+
+        modelBuilder.Entity<ParticipantVote>()
+            .HasOne(pv => pv.Showtime)
+            .WithMany()
+            .HasForeignKey(pv => pv.ShowtimeId);
 
         // Call the base method to ensure any configuration from the base class is applied
         base.OnModelCreating(modelBuilder);
