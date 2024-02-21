@@ -51,7 +51,7 @@ public static class AllEndpoints
             var result = await scope.ServiceProvider.GetRequiredService<KinoContext>().JoinEvents.Select(
                     e => new JoinEvent
                     {
-                        Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host,
+                        Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host, ChosenShowtimeId = e.ChosenShowtimeId,
                         Participants = e.Participants.Select(p => new Participant
                         {
                             Id = p.Id, Nickname = p.Nickname, Email = p.Email
@@ -381,8 +381,10 @@ public static class AllEndpoints
             var existingJoinEvent = await context.JoinEvents.FindAsync(joinEvent.Id);
             if (existingJoinEvent != null)
             {
+                existingJoinEvent.ChosenShowtimeId = joinEvent.ChosenShowtimeId;
                 context.JoinEvents.Attach(existingJoinEvent);
                 joinEvent.Id = existingJoinEvent.Id;
+                newJoinEventId = joinEvent.Id;
                 await context.SaveChangesAsync();
             }
             else
@@ -408,7 +410,8 @@ public static class AllEndpoints
                     Description = joinEvent.Description,
                     Deadline = joinEvent.Deadline,
                     HostId = joinEvent.Host.AuthId,
-                    Showtimes = ShowtimesToAttach
+                    Showtimes = ShowtimesToAttach,
+                    ChosenShowtimeId = joinEvent.ChosenShowtimeId
                 };
 
                 context.JoinEvents.Add(newJoinEvent);
@@ -421,10 +424,11 @@ public static class AllEndpoints
                 .FirstOrDefaultAsync(e => e.Id == newJoinEventId);
 
             //Confirm attributes
-            Console.WriteLine("JoinEvent: " + recentlyAddedJoinEvent.Id);
+            /*Console.WriteLine("JoinEvent: " + recentlyAddedJoinEvent.Id);
             Console.WriteLine("Title: " + recentlyAddedJoinEvent.Title);
             Console.WriteLine(
                 "movie of first showtime: " + recentlyAddedJoinEvent.Showtimes.FirstOrDefault().Movie.Title);
+                */
 
             return Results.Ok(newJoinEventId);
         });
