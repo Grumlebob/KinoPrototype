@@ -186,6 +186,10 @@
 <p>Deadline for tilmelding: @_event.Deadline.ToLocalTime().ToString("dd. MMM")</p>
 <p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM") - @_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM")</p>
 
+<span style="background-color: lightgray">Kan ikke</span> 
+<span style="background-color: lightgreen">Kan godt</span> 
+<span style="background-color: orange">Hvis Nødvendigt (Klik to gange)</span>
+
 @if (_event.Showtimes.Count == 0)
 {
     <p>Ingen showtimes fundet</p>
@@ -363,7 +367,7 @@
                 @foreach (var showtime in orderedShowtimes)
                 {
                     <td>
-                        <div style="height:2rem; background: @(participant.VotedFor.First(v => v.Showtime.Id == showtime.Id).Vote switch{ Vote.No => "red", Vote.Yes => "green", Vote.IfNeedBe => "orange", _ => "" })">
+                        <div style="height:2rem; background: @(participant.VotedFor.First(v => v.Showtime.Id == showtime.Id).Vote switch{ Vote.No => "lightgray", Vote.Yes => "green", Vote.IfNeedBe => "orange", _ => "" })">
                         </div>
                     </td>
                 }
