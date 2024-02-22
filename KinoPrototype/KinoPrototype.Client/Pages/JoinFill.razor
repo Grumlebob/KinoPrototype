@@ -418,7 +418,7 @@ else
                 var showtime = orderedShowtimes[index];
                 <td>
                     <div>
-                        @if (_event.ChosenShowtimeId == null)
+                        @if (_event.ChosenShowtimeId == null && _isHost)
                         {
                             <button @onclick="() => OpenConfirmationDialog(index)">Bekræft event</button>
                         }
@@ -457,6 +457,8 @@ else
 
     [Parameter] public required string JoinEventId { get; set; }
 
+    [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+    
     private JoinEvent? _event;
 
     private List<ParticipantVote> _votedFor = [];
@@ -484,6 +486,8 @@ else
 
     private bool _alreadyAnsweredCookie;
 
+    private bool _isHost;
+
     protected override async Task OnInitializedAsync()
     {
         baseUrl = NavigationManager.BaseUri;
@@ -508,6 +512,16 @@ else
             _alreadyAnsweredCookie = true;
         }
        
+        //check if user is host
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            var username = user.Identity.Name;
+            var userId = user.FindFirst(c => c.Type == "sub")?.Value;
+            _isHost = _event.Host.AuthId == userId;
+        }
+        
 
         _loading = false;
     }
