@@ -183,8 +183,14 @@
 </div>
 
 <p>@_event.Description</p>
+
+<div style="height: 1px; width: 500px; background-color: gray;margin-bottom: 10px"/>
+
+<p>@_event.Host.Username vil gerne I biografen med dig! Nedenunder kan du vise hvilke spilletider der passer dig, ved at trykke på dem.</p>
 <p>Deadline for tilmelding: @_event.Deadline.ToLocalTime().ToString("dd. MMM")</p>
 <p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM") - @_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM")</p>
+
+
 
 <span style="background-color: lightgray">Kan ikke</span> 
 <span style="background-color: lightgreen">Kan godt</span> 
@@ -287,8 +293,11 @@
     else if (!_answerSaved)
     {
         <div>
-            <input placeholder="Indtast dit navn" @bind="@Nickname"/>
-            <input placeholder="Skriv din email" type="email" @bind="@Email"/>
+            <input placeholder="Indtast dit navn" @bind="@Nickname" required="required"/>
+            <input placeholder="Skriv din email (valgfrit)" type="email" @bind="@Email"/>
+            <div>
+                <textarea style="margin-bottom: 5px;margin-top: 5px;width: 300px" type="text"   placeholder="Note (valgfrit)"  @bind="Note"></textarea>
+            </div>
             <button onclick="@(async () => { await SaveParticipantAnswer(false); })">
                 Send svar
             </button>
@@ -373,7 +382,23 @@ else
             Console.WriteLine(string.Join(", ", orderedShowtimes.Select(s => s.Id)));
             Console.WriteLine(string.Join(", ", participant.VotedFor.Select(s => s.Vote.ToString())));
             <tr>    
-            <td>@participant.Nickname</td>
+                <td>
+                        @participant.Nickname 
+                        @if (!string.IsNullOrEmpty(participant.Note))
+                        {
+                            <div class="tooltip-container" >
+                                <span style="font-size: 10px;">Note📝</span>
+                                 <div class="tooltip-content" style="border-style: solid; border-width: 2px;border-color: #1a1e21; padding: 5px">
+                                                            <p style="font-weight: bold">@participant.Nickname</p>
+                                                            @if (!string.IsNullOrEmpty(participant.Note))
+                                                            {
+                                                                <p>Note: @participant.Note</p>
+                                                            }
+                                                        </div>
+                            </div>
+                        }
+                    
+                </td>
                 @foreach (var showtime in orderedShowtimes)
                 {
                     <td>
@@ -442,6 +467,7 @@ else
 
     private string? Nickname { get; set; }
     private string? Email { get; set; }
+    private string? Note { get; set; } 
 
     private string? _infoMessage;
 
@@ -538,7 +564,7 @@ else
             }
         }
 
-        var p = new Participant { Nickname = Nickname, Email = Email, VotedFor = _votedFor.ToList(), JoinEventId = int.Parse(JoinEventId) };
+        var p = new Participant { Nickname = Nickname, Email = Email, Note = Note,VotedFor = _votedFor.ToList(), JoinEventId = int.Parse(JoinEventId) };
         var httpClient = new HttpClient();
         var response = await httpClient.PutAsJsonAsync($"{baseUrl}participate/{JoinEventId}", p);
         if (response.IsSuccessStatusCode)

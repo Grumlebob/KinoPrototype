@@ -19,6 +19,8 @@ public class Participant
     public string Nickname { get; set; }
     public string? Email { get; set; }
     
+    public string? Note { get; set; }
+    
     //navigation property
     [ForeignKey("JoinEventId")]
     public JoinEvent? JoinEvent { get; set; }
