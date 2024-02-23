@@ -3,6 +3,7 @@
 @using System.Text
 @using KinoPrototype.Domain
 @using System.Text.RegularExpressions
+@using KinoPrototype.Client.ExternalAPI
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
 
@@ -16,9 +17,13 @@
 
 /* Styling for the poster image */
 .PosterImage {
-    margin-right: 20px;
     position: sticky;
     top: 65px;
+    margin-right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
 }
 
 /* Container for movie details */
@@ -189,9 +194,9 @@
 
     @if (_isHost)
     {
-        <button style="margin-left: 5px;height: 40px" @onclick= "async () => { if (_isEditing) await UpdateJoinEvent();_isEditing = !_isEditing;  } ">
-            
-            @( _isEditing ? "Gem ændringer" : "✎" )
+        <button style="margin-left: 5px;height: 40px" @onclick="async () => { if (_isEditing) await UpdateJoinEvent(); _isEditing = !_isEditing; }">
+
+            @(_isEditing ? "Gem ændringer" : "✎")
         </button>
     }
     <button style="margin-left: 5px;height: 40px" @onclick="ScrollToBottom">Gå til resultater</button>
@@ -207,13 +212,13 @@ else
 }
 
 
-
 <div style="height: 1px; width: 500px; background-color: gray;margin-bottom: 10px"/>
 
 
 <p>@_event.Host.Username vil gerne I biografen med dig! Nedenunder kan du vise hvilke spilletider der passer dig, ved at trykke på dem.</p>
 
-<p>Deadline for tilmelding:
+<p>
+    Deadline for tilmelding:
     @if (_isEditing)
     {
         <input style="margin-bottom: 5px; margin-top: 0px;width: 300px" type="date" placeholder="Deadline" min="@DateTime.Now.Date.ToString("yyyy-MM-dd")" max="@_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("yyyy-MM-dd")" @bind="@_deadline"/>
@@ -222,13 +227,12 @@ else
     {
         @_deadline.ToString("dd. MMM")
     }
-    </p>
+</p>
 <p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM") - @_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM")</p>
 
 
-
-<span style="background-color: lightgray">Kan ikke</span> 
-<span style="background-color: lightgreen">Kan godt</span> 
+<span style="background-color: lightgray">Kan ikke</span>
+<span style="background-color: lightgreen">Kan godt</span>
 <span style="background-color: orange">Hvis Nødvendigt (Klik to gange)</span>
 
 @if (_event.Showtimes.Count == 0)
@@ -241,11 +245,21 @@ else
     var movie = showtimesByMovie.First().Movie;
     <div class="Redbox">
         <div class="PosterImage">
-            <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+            <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank">
+                <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+            </a>
+            <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank">
+                <button style="margin-top: 3px">Læs mere</button>
+            </a>
+
+            <button style="margin-top: 3px" onclick=@(async () => await GetMovieTrailer(movie))>Se trailer</button>
+
         </div>
         <div class="MovieDetails">
             <div class="MovieHeader">
-                <h2>@movie.Title</h2>
+                <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank" style="text-decoration: none; color: black">
+                    <h2>@movie.Title</h2>
+                </a>
 
                 <div class="movie-info">
                     <span class="premiere">Premiere @movie.PremiereDate | </span>
@@ -320,35 +334,35 @@ else
     </div>
 }
 
-    @if (_alreadyAnsweredCookie)
-    {
-        <p>Du har allerede svaret</p>
-    }
-    else if (!_answerSaved)
-    {
+@if (_alreadyAnsweredCookie)
+{
+    <p>Du har allerede svaret</p>
+}
+else if (!_answerSaved)
+{
+    <div>
+        <input placeholder="Indtast dit navn" @bind="@Nickname" required="required"/>
+        <input placeholder="Skriv din email (valgfrit)" type="email" @bind="@Email"/>
         <div>
-            <input placeholder="Indtast dit navn" @bind="@Nickname" required="required"/>
-            <input placeholder="Skriv din email (valgfrit)" type="email" @bind="@Email"/>
-            <div>
-                <textarea style="margin-bottom: 5px;margin-top: 5px;width: 300px" type="text"   placeholder="Note (valgfrit)"  @bind="Note"></textarea>
-            </div>
-            <button onclick="@(async () => { await SaveParticipantAnswer(false); })">
-                Send svar
-            </button>
-            @if (_confirmSubmit)
-            {
-                <div>
-                    <p>Du har ikke valgt nogen tider. Vil du indsende dit svar alligevel?</p>
-                    <div style="display: inline-block">
-                        <button onclick="@(async () => { await SaveParticipantAnswer(true); })">
-                            Ja
-                        </button>
-                        <button onclick="@(() => { _confirmSubmit = false; })">Nej</button>
-                    </div>
-                </div>
-            }
+            <textarea style="margin-bottom: 5px;margin-top: 5px;width: 300px" type="text"   placeholder="Note (valgfrit)"  @bind="Note"></textarea>
         </div>
-    }
+        <button onclick="@(async () => { await SaveParticipantAnswer(false); })">
+            Send svar
+        </button>
+        @if (_confirmSubmit)
+        {
+            <div>
+                <p>Du har ikke valgt nogen tider. Vil du indsende dit svar alligevel?</p>
+                <div style="display: inline-block">
+                    <button onclick="@(async () => { await SaveParticipantAnswer(true); })">
+                        Ja
+                    </button>
+                    <button onclick="@(() => { _confirmSubmit = false; })">Nej</button>
+                </div>
+            </div>
+        }
+    </div>
+}
 
 @if (_infoMessage is not null)
 {
@@ -410,30 +424,30 @@ else
         {
             Console.WriteLine(string.Join(", ", orderedShowtimes.Select(s => s.Id)));
             Console.WriteLine(string.Join(", ", participant.VotedFor.Select(s => s.Vote.ToString())));
-            <tr>    
+            <tr>
                 <td>
                     <div style="display: flex">
-                    @participant.Nickname
-                    @if (!string.IsNullOrEmpty(participant.Note))
-                    {
-                        <div class="tooltip-container">
-                            <span style="font-size: 10px;">📝</span>
-                            <div class="tooltip-content" style="border-style: solid; border-width: 2px;border-color: #1a1e21; padding: 5px">
-                                <p style="font-weight: bold">@participant.Nickname</p>
-                                @if (!string.IsNullOrEmpty(participant.Note))
-                                {
-                                    <p>Note: @participant.Note</p>
-                                }
+                        @participant.Nickname
+                        @if (!string.IsNullOrEmpty(participant.Note))
+                        {
+                            <div class="tooltip-container">
+                                <span style="font-size: 10px;">📝</span>
+                                <div class="tooltip-content" style="border-style: solid; border-width: 2px;border-color: #1a1e21; padding: 5px">
+                                    <p style="font-weight: bold">@participant.Nickname</p>
+                                    @if (!string.IsNullOrEmpty(participant.Note))
+                                    {
+                                        <p>Note: @participant.Note</p>
+                                    }
+                                </div>
                             </div>
-                        </div>
-                    }
+                        }
                     </div>
 
                 </td>
                 @foreach (var showtime in orderedShowtimes)
                 {
                     <td>
-                        <div style="height:2rem; background: @(participant.VotedFor.First(v => v.Showtime.Id == showtime.Id).Vote switch{ Vote.No => "lightgray", Vote.Yes => "green", Vote.IfNeedBe => "orange", _ => "" })">
+                        <div style="height:2rem; background: @(participant.VotedFor.First(v => v.Showtime.Id == showtime.Id).Vote switch { Vote.No => "lightgray", Vote.Yes => "green", Vote.IfNeedBe => "orange", _ => "" })">
                         </div>
                     </td>
                 }
@@ -481,15 +495,12 @@ else
 </dialog>
 
 
-   
-
-
 @code {
 
     [Parameter] public required string JoinEventId { get; set; }
 
     [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
-    
+
     private JoinEvent? _event;
 
     private List<ParticipantVote> _votedFor = [];
@@ -500,7 +511,7 @@ else
 
     private string? Nickname { get; set; }
     private string? Email { get; set; }
-    private string? Note { get; set; } 
+    private string? Note { get; set; }
 
     private string? _infoMessage;
 
@@ -518,9 +529,9 @@ else
     private bool _alreadyAnsweredCookie;
 
     private bool _isHost;
-    
+
     private bool _isEditing;
-    
+
     private DateTime _deadline;
 
     protected override async Task OnInitializedAsync()
@@ -538,15 +549,16 @@ else
         {
             _votedFor = _event.Showtimes.Select(st => new ParticipantVote { ShowtimeId = st.Id, Showtime = st, Vote = Vote.No }).ToList(); // a vote for each showtime
         }
+
         var cookieString = await JsRuntime.InvokeAsync<string>("eval", "document.cookie");
         var cookies = cookieString.Split(';').Select(c => c.Trim());
         var cookie = cookies.FirstOrDefault(c => c.StartsWith($"eventAnswer{_event.Id}="));
-        
+
         if (cookie is not null)
         {
             _alreadyAnsweredCookie = true;
         }
-       
+
         //check if user is host
         var authState = await AuthenticationStateTask;
         var user = authState.User;
@@ -556,7 +568,7 @@ else
             var userId = user.FindFirst(c => c.Type == "sub")?.Value;
             _isHost = _event.Host.AuthId == userId;
         }
-        
+
         _deadline = _event.Deadline.ToLocalTime();
         _loading = false;
     }
@@ -614,7 +626,7 @@ else
             }
         }
 
-        var p = new Participant { Nickname = Nickname, Email = Email, Note = Note,VotedFor = _votedFor.ToList(), JoinEventId = int.Parse(JoinEventId) };
+        var p = new Participant { Nickname = Nickname, Email = Email, Note = Note, VotedFor = _votedFor.ToList(), JoinEventId = int.Parse(JoinEventId) };
         var httpClient = new HttpClient();
         var response = await httpClient.PutAsJsonAsync($"{baseUrl}participate/{JoinEventId}", p);
         if (response.IsSuccessStatusCode)
@@ -647,11 +659,11 @@ else
     private async Task ShareEvent()
     {
         Showtime showtime = _event.Showtimes.First(s => s.Id == _event.ChosenShowtimeId);
-        
+
         var data = new
         {
             title = _event.Title,
-            text = _event.Description + "\n"+ "Valgt forestilling: " + showtime.Movie.Title + ", " + showtime.Cinema.Name + ", " + showtime.Playtime.StartTime.ToLocalTime().ToString("dd. MMM HH:mm"),
+            text = _event.Description + "\n" + "Valgt forestilling: " + showtime.Movie.Title + ", " + showtime.Cinema.Name + ", " + showtime.Playtime.StartTime.ToLocalTime().ToString("dd. MMM HH:mm"),
         };
 
         await JsRuntime.InvokeVoidAsync("navigator.share", data);
@@ -727,7 +739,6 @@ else
         await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
         await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog");
 
-        
 
 /*
 //send the calendar item to the browser
@@ -742,7 +753,7 @@ Response.Flush();
 HttpContext.Current.ApplicationInstance.CompleteRequest();
 */
     }
-    
+
     private async Task UpdateJoinEvent()
     {
         _event.Deadline = _deadline;
@@ -756,6 +767,27 @@ HttpContext.Current.ApplicationInstance.CompleteRequest();
         {
             Console.WriteLine("Failed to update");
         }
+    }
+
+    private async Task GetMovieTrailer(Movie movie)
+    {
+        var client = new HttpClient();
+        baseUrl = NavigationManager.BaseUri;
+        var apiString = $"https://api.kino.dk{movie.KinoURL}?region=content&format=json";
+
+        var json = await client.GetStringAsync(apiString);
+
+        MovieRoot? movieRoot = JsonConvert.DeserializeObject<MovieRoot>(json);
+        if (movieRoot?.Content?.field_trailer?.FieldMediaOembedVideo?.trailerUrl == null)
+        {
+            Console.WriteLine("No trailer found");
+            var noUrl = $"https://www.youtube.com/results?search_query={movie.Title}+trailer";
+            await JsRuntime.InvokeVoidAsync("open", noUrl, "_blank");
+            return;
+        }
+
+        var trailerUrl = movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl;
+        await JsRuntime.InvokeVoidAsync("open", trailerUrl, "_blank");
     }
 
 }

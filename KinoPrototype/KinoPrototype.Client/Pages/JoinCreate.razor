@@ -755,7 +755,7 @@
     }
 
 
-    public async Task GetMovieTrailer(Movie movie)
+    private async Task GetMovieTrailer(Movie movie)
     {
         var client = new HttpClient();
         baseUrl = NavigationManager.BaseUri;
