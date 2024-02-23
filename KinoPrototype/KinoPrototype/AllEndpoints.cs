@@ -54,7 +54,7 @@ public static class AllEndpoints
                         Id = e.Id, Title = e.Title, Description = e.Description, Deadline = e.Deadline, Host = e.Host, ChosenShowtimeId = e.ChosenShowtimeId,
                         Participants = e.Participants.Select(p => new Participant
                         {
-                            Id = p.Id, Nickname = p.Nickname, Email = p.Email, Note = p.Note,
+                            Id = p.Id, Nickname = p.Nickname, Email = p.Email, Note = p.Note, AuthId = p.AuthId,
                             VotedFor = p.VotedFor.Select(v => new ParticipantVote
                             {
                                 ParticipantId = v.ParticipantId, Participant = v.Participant, ShowtimeId = v.ShowtimeId, Showtime = v.Showtime, Vote = v.Vote

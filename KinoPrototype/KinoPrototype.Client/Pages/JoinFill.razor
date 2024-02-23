@@ -3,6 +3,7 @@
 @using System.Text
 @using KinoPrototype.Domain
 @using System.Text.RegularExpressions
+@using System.Web
 @using KinoPrototype.Client.ExternalAPI
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
@@ -164,14 +165,26 @@
     );
 }
 
+#trailerPopUp {
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 
 </style>
 
 <PageTitle>JoinEvent</PageTitle>
-<p> logged in id: @loggedInUserId</p>
 @if (_showFirstLoginDialog)
 {
-    <h4>Hej du blevet inviteret til bla bla bla.</h4>
+    <h4>@_event.Host.Username vil gerne I biografen med dig! Du kan vælge hvilke forestillinger der passer dig bedst.</h4>
     <a href="authentication/login">Anvend dit kino login til at stemme</a>
     <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Anvend gæste login til at stemme</button>
 }
@@ -218,13 +231,7 @@ else
     {
         <p>@_event.Description</p>
     }
-
-
-    <div style="height: 1px; width: 500px; background-color: gray;margin-bottom: 10px"/>
-
-
-    <p>@_event.Host.Username vil gerne I biografen med dig! Nedenunder kan du vise hvilke spilletider der passer dig, ved at trykke på dem.</p>
-
+    
     <p>
         Deadline for tilmelding:
         @if (_isEditing)
@@ -261,7 +268,7 @@ else
                     <button style="margin-top: 3px">Læs mere</button>
                 </a>
 
-                <button style="margin-top: 3px" onclick=@(async () => await GetMovieTrailer(movie))>Se trailer</button>
+                <button style="margin-top: 3px" @onclick="async () => { await ShowMovieTrailer(movie); }">Se trailer</button>
 
             </div>
             <div class="MovieDetails">
@@ -343,7 +350,7 @@ else
         </div>
     }
 
-    @if (_alreadyAnsweredCookie)
+    @if (_alreadyAnswered)
     {
         <p>Du har allerede svaret</p>
     }
@@ -430,8 +437,6 @@ else
 
             @foreach (var participant in _event.Participants ?? new())
             {
-                Console.WriteLine(string.Join(", ", orderedShowtimes.Select(s => s.Id)));
-                Console.WriteLine(string.Join(", ", participant.VotedFor.Select(s => s.Vote.ToString())));
                 <tr>
                     <td>
                         <div style="display: flex">
@@ -501,6 +506,15 @@ else
         </div>
         <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
     </dialog>
+
+    if (_trailerUrl != null)
+    {
+        <div id="trailerPopUp">
+            <iframe src="@_trailerUrl" width="60%" height="60%" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+            </iframe>
+            <button onclick="@(() => { _trailerUrl = null; })">Luk</button>
+        </div>
+    }
 }
 
 @code {
@@ -534,7 +548,7 @@ else
 
     private string _sortedAfter = VotesString;
 
-    private bool _alreadyAnsweredCookie;
+    private bool _alreadyAnswered;
 
     private bool _isHost;
 
@@ -546,6 +560,9 @@ else
     private DateTime _deadline;
 
     private string? loggedInUserId;
+    private string? _trailerUrl;
+    
+    private bool _isLoggedIn;
 
     protected override async Task OnInitializedAsync()
     {
@@ -564,29 +581,34 @@ else
             _votedFor = _event.Showtimes.Select(st => new ParticipantVote { ShowtimeId = st.Id, Showtime = st, Vote = Vote.No }).ToList(); // a vote for each showtime
         }
 
-        var cookieString = await JsRuntime.InvokeAsync<string>("eval", "document.cookie");
-        var cookies = cookieString.Split(';').Select(c => c.Trim());
-        var cookie = cookies.FirstOrDefault(c => c.StartsWith($"eventAnswer{_event.Id}="));
-
-        if (cookie is not null)
-        {
-            _alreadyAnsweredCookie = true;
-        }
+        
 
         //check if user is host
         var authState = await AuthenticationStateTask;
         var user = authState.User;
-        if (user.Identity.IsAuthenticated)
+        _isLoggedIn = user.Identity.IsAuthenticated;
+        if (_isLoggedIn)
         {
             var username = user.Identity.Name;
             loggedInUserId = user.FindFirst(c => c.Type == "sub")?.Value;
             _isHost = _event.Host.AuthId == loggedInUserId;
+            Nickname = username;
+            if (_event.Participants.Any(p => p.AuthId==loggedInUserId))
+            {
+                _alreadyAnswered = true;
+            }
         }
         else
         {
             _showFirstLoginDialog = true;
-            await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "firstLoginDialog");
-            Console.WriteLine("SHOWING DIALOG");
+            var cookieString = await JsRuntime.InvokeAsync<string>("eval", "document.cookie");
+            var cookies = cookieString.Split(';').Select(c => c.Trim());
+            var cookie = cookies.FirstOrDefault(c => c.StartsWith($"eventAnswer{_event.Id}="));
+
+            if (cookie is not null)
+            {
+                _alreadyAnswered = true;
+            }
             StateHasChanged();
         }
 
@@ -631,7 +653,6 @@ else
         if (Email?.Trim() == "") Email = null;
         if (Email != null)
         {
-            Console.WriteLine("Email is " + Email);
             var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$");
             var emailMatch = emailRegex.Match(Email);
             if (!emailMatch.Success)
@@ -655,8 +676,11 @@ else
             _infoMessage = "Svar gemt";
             _answerSaved = true;
             _event.Participants.Add(p);
-            var expiry = DateTime.Now.AddDays(60).ToString("R"); // "R" for RFC1123 pattern
-            await JsRuntime.InvokeVoidAsync("eval", $"document.cookie = 'eventAnswer{_event.Id}={1}; expires={expiry}; path=/'");
+            if (!_isLoggedIn)
+            {
+                var expiry = DateTime.Now.AddDays(60).ToString("R"); // "R" for RFC1123 pattern
+                await JsRuntime.InvokeVoidAsync("eval", $"document.cookie = 'eventAnswer{_event.Id}={1}; expires={expiry}; path=/'");
+            }
             StateHasChanged();
         }
         else
@@ -790,25 +814,25 @@ HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
     }
 
-    private async Task GetMovieTrailer(Movie movie)
+    private async Task ShowMovieTrailer(Movie movie)
     {
         var client = new HttpClient();
-        baseUrl = NavigationManager.BaseUri;
         var apiString = $"https://api.kino.dk{movie.KinoURL}?region=content&format=json";
-
         var json = await client.GetStringAsync(apiString);
 
         MovieRoot? movieRoot = JsonConvert.DeserializeObject<MovieRoot>(json);
-        if (movieRoot?.Content?.field_trailer?.FieldMediaOembedVideo?.trailerUrl == null)
+        if (movieRoot?.Content?.field_trailer?.FieldMediaOembedVideo?.trailerUrl == null) //no video found
         {
-            Console.WriteLine("No trailer found");
-            var noUrl = $"https://www.youtube.com/results?search_query={movie.Title}+trailer";
-            await JsRuntime.InvokeVoidAsync("open", noUrl, "_blank");
+            await JsRuntime.InvokeVoidAsync("open", $"https://www.youtube.com/results?search_query={movie.Title}+trailer", "_blank"); //search in youtube
             return;
         }
 
-        var trailerUrl = movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl;
-        await JsRuntime.InvokeVoidAsync("open", trailerUrl, "_blank");
+        var uri = new Uri(movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl);
+        var videoId = uri.Segments.Last() == "watch" ? HttpUtility.ParseQueryString(uri.Query)["v"] : uri.Segments.Last();
+
+        if (videoId == null) await JsRuntime.InvokeVoidAsync("open", $"https://www.youtube.com/results?search_query={movie.Title}+trailer", "_blank"); //search in youtube
+        else _trailerUrl = $"https://www.youtube.com/embed/{videoId}";
     }
 
 }
+
