@@ -195,6 +195,19 @@
     );
 }
 
+#trailerPopUp {
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 
 </style>
 
@@ -210,7 +223,7 @@
     <p style="margin-bottom: 0px">Deadline</p>
     <input style="margin-bottom: 5px; margin-top: 0px;width: 300px" type="date" placeholder="Deadline" @bind="@_deadline"/>
     <br/>
-    <button style="margin-bottom: 5px;width: 200px;height: 50px;bottom: 3rem; right: 3rem; position: fixed; z-index: 999" @onclick="OpenDialog">Opret Event</button>
+    <button style="margin-bottom: 5px;width: 200px;height: 50px;bottom: 3rem; right: 3rem; position: fixed; z-index: 1" @onclick="OpenDialog">Opret Event</button>
     <br/>
 
     <dialog id="eventDialog">
@@ -227,7 +240,7 @@
         else
         {
             <h4>Event oprettet</h4>
-            
+
             <p>Send dette link til dine venner</p>
             <a href="@(baseUrl + "filling/" + _joinEventId)">@(baseUrl + "filling/" + _joinEventId)</a>
             <button @onclick="ShareEvent">Del</button>
@@ -246,30 +259,30 @@
     }
 
     <h2 style="margin-top: 10px">Tilpas filtrer</h2>
-    
+
     <p style="margin-bottom: 0px">Film</p>
     <div style="display: inline-block; width: 400px; max-height: 100px; overflow-y: auto;">
         @foreach (var movie in MovieIdAndName)
         {
             <div style="display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(40ch + 20px);">
-                <input type="checkbox" id="@($"movie-{movie.Key}")" 
-                       value="@movie.Key" 
+                <input type="checkbox" id="@($"movie-{movie.Key}")"
+                       value="@movie.Key"
                        @onchange="@(e => HandleMovieCheckboxChange(e, movie.Key))"
-                       checked="@(selectedMovieFilters.Contains(movie.Key))" />
+                       checked="@(selectedMovieFilters.Contains(movie.Key))"/>
                 <label for="@($"movie-{movie.Key}")" style="flex-grow: 1; text-overflow: ellipsis; overflow: hidden; margin-left: 5px;">@movie.Value</label>
             </div>
         }
     </div>
-    
+
     <p style="margin-bottom: 0px">Biograf</p>
     <div style="display: inline-block; width: 400px; max-height: 100px; overflow-y: auto;">
         @foreach (var cinema in CinemaIdAndName)
         {
             <div style="display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(40ch + 20px);">
-                <input type="checkbox" id="@($"cinema-{cinema.Key}")" 
-                       value="@cinema.Key" 
+                <input type="checkbox" id="@($"cinema-{cinema.Key}")"
+                       value="@cinema.Key"
                        @onchange="@(e => HandleCinemaCheckboxChange(e, cinema.Key))"
-                       checked="@(selectedCinemaFilters.Contains(cinema.Key))" />
+                       checked="@(selectedCinemaFilters.Contains(cinema.Key))"/>
                 <label for="@($"cinema-{cinema.Key}")" style="flex-grow: 1; text-overflow: ellipsis; overflow: hidden; margin-left: 5px;">@cinema.Value</label>
             </div>
         }
@@ -284,7 +297,7 @@
     <input style="margin-bottom: 10px" type="date" @bind="EndDate"/>
 
     <button @onclick="UpdateFilters">Opdater filtrer</button>
-    
+
 
     @foreach (var movie in showtimes.GroupBy(s => s.Movie))
     {
@@ -298,7 +311,7 @@
                     <button style="margin-top: 3px">Læs mere</button>
                 </a>
 
-                <button style="margin-top: 3px" onclick=@(async () => await GetMovieTrailer(movie.Key))>Se trailer</button>
+                <button style="margin-top: 3px" @onclick="async () => { await ShowMovieTrailer(movie.Key); }">Se trailer</button>
 
             </div>
             <div class="MovieDetails">
@@ -391,6 +404,16 @@
             </div>
         </div>
     }
+
+    Console.WriteLine("Trailer url: " + _trailerUrl);
+    if (_trailerUrl != null)
+    {
+        <div id="trailerPopUp">
+            <iframe src="@_trailerUrl" width="60%" height="80%">
+            </iframe>
+            <button onclick="@(() => { _trailerUrl = null; })">Luk</button>
+        </div>
+    }
 }
 
 
@@ -414,6 +437,8 @@
 
     private bool _showSnackbar;
 
+    private string? _trailerUrl;
+
     private bool HostCanAllShowtimes = true;
 
     [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
@@ -427,7 +452,7 @@
     List<Domain.Room> rooms = new();
     List<int> selectedShowtimeIds = new List<int>();
 
-    
+
     List<string> movieStrings = new();
     List<string> cinemaStrings = new();
     List<string> genreStrings = new();
@@ -440,9 +465,10 @@
     Dictionary<int, string> CinemaIdAndName = new Dictionary<int, string>();
     Dictionary<int, string> MovieIdAndName = new Dictionary<int, string>();
     Dictionary<int, string> GenrerIdAndName = new Dictionary<int, string>();
-    
+
     private DateTime _startDate = DateTime.Today;
     private DateTime _endDate = DateTime.Today.AddDays(30);
+
     private DateTime StartDate
     {
         get => _startDate;
@@ -479,7 +505,7 @@
 
         await JsRuntime.InvokeVoidAsync("navigator.share", data);
     }
-    
+
     private void HandleMovieCheckboxChange(ChangeEventArgs e, int movieId)
     {
         if ((bool)e.Value)
@@ -494,7 +520,7 @@
             selectedMovieFilters.Remove(movieId);
         }
     }
-    
+
     private void HandleCinemaCheckboxChange(ChangeEventArgs e, int cinemaId)
     {
         if (e.Value.ToString() == "true")
@@ -512,10 +538,9 @@
             }
         }
     }
-    
+
     private async Task UpdateFilters()
     {
-        
         var newFilterstring = "";
         var cinemaIndex = 0;
         var movieIndex = 0;
@@ -536,7 +561,7 @@
 
         //Handles start date filter
         newFilterstring += "&date=" + _startDate;
-        
+
         //Handles end date filter
         newFilterstring += "&date=" + _endDate;
 
@@ -555,7 +580,7 @@
         var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased&" +
                         filterString + "&?region=content&format=json";
 
-        
+
         json = await client.GetStringAsync(apiString);
 
         CinemaIdAndName = new Dictionary<int, string>();
@@ -729,7 +754,7 @@
                 }
             }
         }
-        
+
         selectedShowtimeIds = selectedShowtimeIds.Where(id => showtimes.Any(s => s.Id == id)).ToList();
         StateHasChanged();
     }
@@ -750,26 +775,25 @@
     }
 
 
-    private async Task GetMovieTrailer(Movie movie)
+    private async Task ShowMovieTrailer(Movie movie)
     {
         var client = new HttpClient();
-        baseUrl = NavigationManager.BaseUri;
-        showtimes = new List<Showtime>();
         var apiString = $"https://api.kino.dk{movie.KinoURL}?region=content&format=json";
-
         json = await client.GetStringAsync(apiString);
 
         MovieRoot? movieRoot = JsonConvert.DeserializeObject<MovieRoot>(json);
-        if (movieRoot?.Content?.field_trailer?.FieldMediaOembedVideo?.trailerUrl == null)
+        if (movieRoot?.Content?.field_trailer?.FieldMediaOembedVideo?.trailerUrl == null) //no video found
         {
-            var noUrl = $"https://www.youtube.com/results?search_query={movie.Title}+trailer";
-            await JsRuntime.InvokeVoidAsync("open", noUrl, "_blank");
-
+            await JsRuntime.InvokeVoidAsync("open", $"https://www.youtube.com/results?search_query={movie.Title}+trailer", "_blank"); //search in youtube
             return;
         }
+        _trailerUrl = movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl.Replace("youtube.com/watch?v=", "youtube.com/embed/");
+        var argsIndex = _trailerUrl.IndexOf('&');
+        if (argsIndex > -1) //link has additional args
+        {
+            _trailerUrl = _trailerUrl.Substring(0, argsIndex) + '?' + _trailerUrl.Substring(argsIndex + 1);
+        }
 
-        var trailerUrl = movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl;
-        await JsRuntime.InvokeVoidAsync("open", trailerUrl, "_blank");
     }
 
     protected override async Task OnInitializedAsync()
@@ -871,8 +895,8 @@
 
         var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
                         MovieApiString + CinemaApiString + dateApiString + "&?region=content&format=json";
-        
-        
+
+
         json = await client.GetStringAsync(apiString);
 
         var startDate = DateTime.MinValue;
@@ -1176,9 +1200,12 @@
 
         if (HostCanAllShowtimes)
         {
-            var p = new Participant { Nickname = host.Username, Email = null, Note = null,
-                VotedFor = pickedShowtimes.Select(s => new ParticipantVote { ShowtimeId = s.Id, Showtime = s, Vote = Vote.Yes}).ToList(), 
-                JoinEventId = _joinEventId };
+            var p = new Participant
+            {
+                Nickname = host.Username, Email = null, Note = null,
+                VotedFor = pickedShowtimes.Select(s => new ParticipantVote { ShowtimeId = s.Id, Showtime = s, Vote = Vote.Yes }).ToList(),
+                JoinEventId = _joinEventId
+            };
             var httpClient = new HttpClient();
             var participateResponse = await httpClient.PutAsJsonAsync($"{baseUrl}participate/{_joinEventId}", p);
             if (participateResponse.IsSuccessStatusCode)
