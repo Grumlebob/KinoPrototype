@@ -1222,12 +1222,6 @@ else
             };
             var httpClient = new HttpClient();
             var participateResponse = await httpClient.PutAsJsonAsync($"{baseUrl}participate/{_joinEventId}", p);
-            if (participateResponse.IsSuccessStatusCode)
-            {
-                var expiry = DateTime.Now.AddDays(60).ToString("R"); // "R" for RFC1123 pattern
-                await JsRuntime.InvokeVoidAsync("eval", $"document.cookie = 'eventAnswer{_joinEventId}={1}; expires={expiry}; path=/'");
-                StateHasChanged();
-            }
         }
     }
 
