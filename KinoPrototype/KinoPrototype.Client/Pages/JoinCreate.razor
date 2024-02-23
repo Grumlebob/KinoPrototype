@@ -240,7 +240,7 @@
 
 
     <p style="margin-bottom: 0px">Film</p>
-    <select style="margin-bottom: 10px" @onchange="" multiple>
+    <select style="margin-bottom: 10px" multiple>
         @foreach (var movie in movieStrings)
         {
             <option value="@movie">@movie</option>
@@ -249,7 +249,7 @@
 
 
     <p style="margin-bottom: 0px">Biograf</p>
-    <select style="margin-bottom: 10px" @onchange="" multiple>
+    <select style="margin-bottom: 10px"  multiple>
         @foreach (var cinema in cinemaStrings)
         {
             <option value="@cinema">@cinema</option>
@@ -257,10 +257,10 @@
     </select>
 
     <p style="margin-bottom: 0px">Start Dato</p>
-    <input style="margin-bottom: 10px" type="date" value="@_startDate" onchange=""/>
+    <input style="margin-bottom: 10px" type="date" value="@_startDate" />
     <br/>
     <p style="margin-bottom: 0px">Slut Dato</p>
-    <input style="margin-bottom: 10px" type="date" value="@_endDate" onchange=""/>
+    <input style="margin-bottom: 10px" type="date" value="@_endDate" />
 
     <button @onclick="UpdateFilters">Opdater filtrer</button>
 
