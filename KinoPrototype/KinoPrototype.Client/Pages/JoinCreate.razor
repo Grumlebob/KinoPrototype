@@ -247,16 +247,6 @@
 
     <h2 style="margin-top: 10px">Tilpas filtrer</h2>
     
-    <p style="margin-bottom: 0px">Start Dato</p>
-    <input style="margin-bottom: 10px" type="date" @bind="StartDate"/>
-
-    <br/>
-
-    <p style="margin-bottom: 0px">Slut Dato</p>
-    <input style="margin-bottom: 10px" type="date" @bind="EndDate"/>
-
-    <p> NYE FILTRER:</p>
-
     <p style="margin-bottom: 0px">Film</p>
     <div style="display: inline-block; width: 400px; max-height: 100px; overflow-y: auto;">
         @foreach (var movie in MovieIdAndName)
@@ -285,6 +275,13 @@
         }
     </div>
 
+    <p style="margin-bottom: 0px">Start Dato</p>
+    <input style="margin-bottom: 10px" type="date" @bind="StartDate"/>
+
+    <br/>
+
+    <p style="margin-bottom: 0px">Slut Dato</p>
+    <input style="margin-bottom: 10px" type="date" @bind="EndDate"/>
 
     <button @onclick="UpdateFilters">Opdater filtrer</button>
     
@@ -518,7 +515,6 @@
     
     private async Task UpdateFilters()
     {
-        Console.WriteLine("Before update: selectedMovieFilters: " + string.Join(", ", selectedMovieFilters));
         
         var newFilterstring = "";
         var cinemaIndex = 0;
@@ -559,7 +555,6 @@
         var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased&" +
                         filterString + "&?region=content&format=json";
 
-        Console.WriteLine("apiString called: " + apiString);
         
         json = await client.GetStringAsync(apiString);
 
@@ -767,7 +762,6 @@
         MovieRoot? movieRoot = JsonConvert.DeserializeObject<MovieRoot>(json);
         if (movieRoot?.Content?.field_trailer?.FieldMediaOembedVideo?.trailerUrl == null)
         {
-            Console.WriteLine("No trailer found");
             var noUrl = $"https://www.youtube.com/results?search_query={movie.Title}+trailer";
             await JsRuntime.InvokeVoidAsync("open", noUrl, "_blank");
 
@@ -780,7 +774,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("ONINIT CALLED");
         var client = new HttpClient();
 
         baseUrl = NavigationManager.BaseUri;
@@ -788,8 +781,6 @@
         showtimes = new List<Showtime>();
 
         var url = "https://api.kino.dk/ticketflow/showtimes?" + filterString;
-
-        Console.WriteLine("url: " + url);
 
         var uri = new Uri(url);
         var queryParams = HttpUtility.ParseQueryString(uri.Query);
@@ -856,10 +847,6 @@
         string CinemaApiString = "";
         var dateApiString = "";
 
-        Console.WriteLine("cinemasFilter: " + cinemasFilter.Count);
-        Console.WriteLine("moviesFilter: " + moviesFilter.Count);
-        Console.WriteLine("movie filters are: " + string.Join(", ", moviesFilter));
-
         if (cinemasFilter.Count >= 1)
         {
             CinemaApiString = "";
@@ -884,9 +871,7 @@
 
         var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
                         MovieApiString + CinemaApiString + dateApiString + "&?region=content&format=json";
-
-
-        Console.WriteLine("OnINIT API string:" + apiString);
+        
         
         json = await client.GetStringAsync(apiString);
 
