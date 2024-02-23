@@ -319,8 +319,7 @@ else
         </div>
     </div>
 }
-@if (_event.ChosenShowtimeId == null)
-{
+
     @if (_alreadyAnsweredCookie)
     {
         <p>Du har allerede svaret</p>
@@ -350,11 +349,6 @@ else
             }
         </div>
     }
-}
-else
-{
-    <p>Eventet er lukket</p>
-}
 
 @if (_infoMessage is not null)
 {
@@ -455,12 +449,12 @@ else
                 var showtime = orderedShowtimes[index];
                 <td>
                     <div>
-                        @if (_event.ChosenShowtimeId == null && _isHost)
+                        @if (_isHost)
                         {
                             <button @onclick="() => OpenConfirmationDialog(index)">Bekræft event</button>
                         }
                         <dialog id="@("confirmEvent" + index)">
-                            <h4>Ønsker du at låse dette event?</h4>
+                            <h4>Ønsker du at bekræfte forestillingen for dette event?</h4>
                             <button @onclick="async () => { await OpenDetailsDialog(showtime, index); }">Ja</button>
                             <button @onclick="() => CloseDialog(index)">Nej</button>
                             <dialog id="@("confirmDetails" + index)">
