@@ -236,11 +236,11 @@
         </div>
     }
 
-    <h2 style="margin-top: 10px">Vælg muglige forestillinger</h2>
+    <h2 style="margin-top: 10px">Tilpas filtrer</h2>
 
 
     <p style="margin-bottom: 0px">Film</p>
-    <select style="margin-bottom: 10px" @onchange="SelectMovie" multiple>
+    <select style="margin-bottom: 10px" @onchange="" multiple>
         @foreach (var movie in movieStrings)
         {
             <option value="@movie">@movie</option>
@@ -249,7 +249,7 @@
 
 
     <p style="margin-bottom: 0px">Biograf</p>
-    <select style="margin-bottom: 10px" @onchange="SelectCinema" multiple>
+    <select style="margin-bottom: 10px" @onchange="" multiple>
         @foreach (var cinema in cinemaStrings)
         {
             <option value="@cinema">@cinema</option>
@@ -257,11 +257,12 @@
     </select>
 
     <p style="margin-bottom: 0px">Start Dato</p>
-    <input style="margin-bottom: 10px" type="date" value="@_startDate" onchange="@SelectStartDate"/>
+    <input style="margin-bottom: 10px" type="date" value="@_startDate" onchange=""/>
     <br/>
     <p style="margin-bottom: 0px">Slut Dato</p>
-    <input style="margin-bottom: 10px" type="date" value="@_endDate" onchange="@SelectEndDate"/>
+    <input style="margin-bottom: 10px" type="date" value="@_endDate" onchange=""/>
 
+    <button @onclick="UpdateFilters">Opdater filtrer</button>
 
     <div style="height: 1px; width: 500px; background-color: gray;margin-bottom: 10px"/>
 
@@ -405,9 +406,8 @@
     List<Domain.Room> rooms = new();
     List<int> selectedShowtimeIds = new List<int>();
 
-    private List<string> selectedMovies = new List<string>();
-    private List<string> selectedCinemas = new List<string>();
-
+    private List<int> selectedMovieFilters = new List<int>();
+    private List<int> selectedCinemaFilters = new List<int>();
 
     DateTime _startDate;
     DateTime _endDate;
@@ -437,108 +437,24 @@
     }
 
 
-    private async Task SelectMovie(ChangeEventArgs e)
+    private async Task UpdateFilters()
     {
-        var selectedOptions = e.Value as IEnumerable<string>; // Cast the value to IEnumerable<string>
-        if (selectedOptions != null)
-        {
-            foreach (var selectedMovie in selectedOptions)
-            {
-                if (!string.IsNullOrWhiteSpace(selectedMovie))
-                {
-                    selectedMovies.Add(selectedMovie);
-                }
-            }
-        }
-
-
         var newFilterstring = "";
-
-        var movieIndex = 0;
-        foreach (var selectedMovie in selectedMovies)
-        {
-            if (!string.IsNullOrEmpty(selectedMovie))
-            {
-                var movieId = MovieIdAndName.FirstOrDefault(x => x.Value == selectedMovie).Key;
-                newFilterstring += (string.IsNullOrEmpty(newFilterstring) ? "" : "&") + $"movies[{movieIndex}]=" + movieId;
-                movieIndex++;
-            }
-        }
-
         var cinemaIndex = 0;
-        foreach (var selectedCinema in selectedCinemas)
-        {
-            if (!string.IsNullOrEmpty(selectedCinema))
-            {
-                var cinemaId = CinemaIdAndName.FirstOrDefault(x => x.Value == selectedCinema).Key;
-                newFilterstring += (string.IsNullOrEmpty(newFilterstring) ? "" : "&") + $"cinemas[{cinemaIndex}]=" + cinemaId;
-                cinemaIndex++;
-            }
-        }
-
-        if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue)
-        {
-            newFilterstring += "&date=" + _startDate.ToString();
-        }
-
-        //endDate
-        if (_endDate != DateTime.MinValue)
-        {
-            newFilterstring += "&date=" + _endDate.ToString();
-        }
-
-
-        filterString = newFilterstring;
-
-        MovieIdAndName = new Dictionary<int, string>();
-        CinemaIdAndName = new Dictionary<int, string>();
-        showtimes = new List<Showtime>();
-
-        movieStrings = new List<string>();
-        cinemaStrings = new List<string>();
-
-        await OnInitializedAsync();
-
-        selectedShowtimeIds = selectedShowtimeIds.Where(id => showtimes.Any(s => s.Id == id)).ToList();
-    }
-
-    private async Task SelectCinema(ChangeEventArgs e)
-    {
-        var selectedOptions = e.Value as IEnumerable<string>; // Cast the value to IEnumerable<string>
-        if (selectedOptions != null)
-        {
-            foreach (var selectedCinema in selectedOptions)
-            {
-                if (!string.IsNullOrWhiteSpace(selectedCinema))
-                {
-                    selectedCinemas.Add(selectedCinema); // Add each selected cinema to the list
-                }
-            }
-        }
-
-        var newFilterstring = "";
-
-        var cinemaIndex = 0;
-
-        foreach (var selectedCinema in selectedCinemas)
-        {
-            if (!string.IsNullOrEmpty(selectedCinema))
-            {
-                var cinemaId = CinemaIdAndName.FirstOrDefault(x => x.Value == selectedCinema).Key;
-                newFilterstring += (string.IsNullOrEmpty(newFilterstring) ? "" : "&") + $"cinemas[{cinemaIndex}]=" + cinemaId;
-                cinemaIndex++;
-            }
-        }
-
         var movieIndex = 0;
-        foreach (var selectedMovie in selectedMovies)
+
+        foreach (var selectedCinema in selectedCinemaFilters)
         {
-            if (!string.IsNullOrEmpty(selectedMovie))
-            {
-                var movieId = MovieIdAndName.FirstOrDefault(x => x.Value == selectedMovie).Key;
-                newFilterstring += (string.IsNullOrEmpty(newFilterstring) ? "" : "&") + $"movies[{movieIndex}]=" + movieId;
-                movieIndex++;
-            }
+            var cinemaId = CinemaIdAndName.FirstOrDefault(x => x.Key == selectedCinema).Key;
+            newFilterstring += (string.IsNullOrEmpty(newFilterstring) ? "" : "&") + $"cinemas[{cinemaIndex}]=" + cinemaId;
+            cinemaIndex++;
+        }
+
+        foreach (var selectedMovie in selectedMovieFilters)
+        {
+            var movieId = MovieIdAndName.FirstOrDefault(x => x.Key == selectedMovie).Key;
+            newFilterstring += (string.IsNullOrEmpty(newFilterstring) ? "" : "&") + $"movies[{movieIndex}]=" + movieId;
+            movieIndex++;
         }
 
         if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue)
@@ -559,109 +475,6 @@
         movieStrings = new List<string>();
         cinemaStrings = new List<string>();
 
-
-        await OnInitializedAsync();
-
-        selectedShowtimeIds = selectedShowtimeIds.Where(id => showtimes.Any(s => s.Id == id)).ToList();
-    }
-
-    private async Task SelectStartDate(ChangeEventArgs e)
-    {
-        _startDate = DateTime.Parse((string)e.Value);
-
-        var newFilterstring = "";
-
-        var cinemaIndex = 0;
-        foreach (var selectedCinema in selectedCinemas)
-        {
-            if (!string.IsNullOrEmpty(selectedCinema))
-            {
-                var cinemaId = CinemaIdAndName.FirstOrDefault(x => x.Value == selectedCinema).Key;
-                newFilterstring += (string.IsNullOrEmpty(newFilterstring) ? "" : "&") + $"cinemas[{cinemaIndex}]=" + cinemaId;
-                cinemaIndex++;
-            }
-        }
-
-        var movieIndex = 0;
-        foreach (var selectedMovie in selectedMovies)
-        {
-            if (!string.IsNullOrEmpty(selectedMovie))
-            {
-                var movieId = MovieIdAndName.FirstOrDefault(x => x.Value == selectedMovie).Key;
-                newFilterstring += (string.IsNullOrEmpty(newFilterstring) ? "" : "&") + $"movies[{movieIndex}]=" + movieId;
-                movieIndex++;
-            }
-        }
-
-        if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue)
-        {
-            newFilterstring += "&date=" + _startDate.ToString();
-        }
-
-        //endDate
-        if (_endDate != DateTime.MinValue)
-        {
-            newFilterstring += "&date=" + _endDate.ToString();
-        }
-
-        filterString = newFilterstring;
-        MovieIdAndName = new Dictionary<int, string>();
-        CinemaIdAndName = new Dictionary<int, string>();
-        showtimes = new List<Showtime>();
-        movieStrings = new List<string>();
-        cinemaStrings = new List<string>();
-
-
-        await OnInitializedAsync();
-
-        selectedShowtimeIds = selectedShowtimeIds.Where(id => showtimes.Any(s => s.Id == id)).ToList();
-    }
-
-    private async Task SelectEndDate(ChangeEventArgs e)
-    {
-        _endDate = DateTime.Parse((string)e.Value);
-
-        var newFilterstring = "";
-
-        var cinemaIndex = 0;
-        foreach (var selectedCinema in selectedCinemas)
-        {
-            if (!string.IsNullOrEmpty(selectedCinema))
-            {
-                var cinemaId = CinemaIdAndName.FirstOrDefault(x => x.Value == selectedCinema).Key;
-                newFilterstring += (string.IsNullOrEmpty(newFilterstring) ? "" : "&") + $"cinemas[{cinemaIndex}]=" + cinemaId;
-                cinemaIndex++;
-            }
-        }
-
-        var movieIndex = 0;
-        foreach (var selectedMovie in selectedMovies)
-        {
-            if (!string.IsNullOrEmpty(selectedMovie))
-            {
-                var movieId = MovieIdAndName.FirstOrDefault(x => x.Value == selectedMovie).Key;
-                newFilterstring += (string.IsNullOrEmpty(newFilterstring) ? "" : "&") + $"movies[{movieIndex}]=" + movieId;
-                movieIndex++;
-            }
-        }
-
-        if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue)
-        {
-            newFilterstring += "&date=" + _startDate.ToString();
-        }
-
-        //endDate
-        if (_endDate != DateTime.MinValue)
-        {
-            newFilterstring += "&date=" + _endDate.ToString();
-        }
-
-        filterString = newFilterstring;
-        MovieIdAndName = new Dictionary<int, string>();
-        CinemaIdAndName = new Dictionary<int, string>();
-        showtimes = new List<Showtime>();
-        movieStrings = new List<string>();
-        cinemaStrings = new List<string>();
 
         await OnInitializedAsync();
 
@@ -908,13 +721,12 @@
 
                 foreach (var versions in movie.Versions)
                 {
-
                     Console.WriteLine("Version: " + versions.Label);
                     if (versions.Label.ToLower().Contains("lukket forestilling"))
                     {
                         continue;
                     }
-                    
+
                     VersionTag versionObject;
                     if (!versionTags.Any(v => v.Type == versions.Label))
                     {
@@ -938,7 +750,7 @@
                             {
                                 continue;
                             }
-                            
+
                             Domain.Room roomObject;
                             if (!rooms.Any(s => s.Name == showtimeItem.Room.Label))
                             {
@@ -1011,7 +823,7 @@
         {
             foreach (var movieFilter in moviesFilter)
             {
-                selectedMovies.Add(MovieIdAndName[movieFilter]);
+                selectedMovieFilters.Add(movieFilter);
             }
         }
 
@@ -1019,7 +831,7 @@
         {
             foreach (var cinemaFilter in cinemasFilter)
             {
-                selectedCinemas.Add(CinemaIdAndName[cinemaFilter]);
+                selectedCinemaFilters.Add(cinemaFilter);
             }
         }
     }
@@ -1056,7 +868,7 @@
             await JSRuntime.InvokeVoidAsync("customFunctions.showDialog", "eventDialog");
         }
     }
-    
+
 
     private async Task CloseDialog()
     {
@@ -1122,4 +934,5 @@
 
         eventCreated = true;
     }
+
 }
