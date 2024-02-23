@@ -218,7 +218,7 @@
 {
     <p>Indlæser...</p>
 }
-else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
+else if (CinemaIdAndName.Count > 0 || MovieIdAndName.Count > 0)
 {
     <input style="margin-bottom: 5px; width: 300px" type="text" placeholder="Titel" @bind-value="_eventTitle"/>
     <br/>
@@ -301,10 +301,10 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
     <input style="margin-bottom: 10px" type="date" @bind="EndDate"/>
 
     <button @onclick="UpdateFilters">Opdater filtrer</button>
-    
+
     @if (showtimes.Count == 0)
     {
-        if ((selectedCinemaFilters.Count>0 || selectedMovieFilters.Count>0) && !_noFilters )
+        if ((selectedCinemaFilters.Count > 0 || selectedMovieFilters.Count > 0) && !_noFilters)
         {
             <p>Der er ingen forestillinger for de valgte filtre</p>
         }
@@ -312,8 +312,8 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
         {
             <p>Du skal vælge mindst en film eller biograf til filteret</p>
         }
-        
     }
+
     @foreach (var movie in showtimes.GroupBy(s => s.Movie))
     {
         <div class="Redbox">
@@ -419,7 +419,7 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
             </div>
         </div>
     }
-    
+
     if (_trailerUrl != null)
     {
         <div id="trailerPopUp">
@@ -428,10 +428,11 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
             <button onclick="@(() => { _trailerUrl = null; })">Luk</button>
         </div>
     }
-} else
+}
+else
 {
     <p>Du skal vælge mindst en film eller biograf som filter</p>
-    <button onclick="@(async () => {await JsRuntime.InvokeVoidAsync("history.back");})">Gå Tilbage</button>
+    <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("history.back"); })">Gå Tilbage</button>
 }
 
 
@@ -458,8 +459,8 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
     private string? _trailerUrl;
 
     private bool HostCanAllShowtimes = true;
-    
-    
+
+
     private bool _loading = true;
 
     private bool _noFilters = false;
@@ -467,10 +468,9 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
     [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
 
-   
     List<Showtime> showtimes = new();
     List<Movie> movies = new();
-  
+
     List<int> selectedShowtimeIds = new List<int>();
 
 
@@ -559,14 +559,14 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
             }
         }
     }
-    
+
     private async Task UpdateFilters()
     {
         _loading = true;
         var newFilterstring = "";
         var cinemaIndex = 0;
         var movieIndex = 0;
-        
+
         if (selectedCinemaFilters.Count == 0 && selectedMovieFilters.Count == 0)
         {
             showtimes = new List<Showtime>();
@@ -697,11 +697,11 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
                     }
 
                     VersionTag versionObject;
-                        versionObject = new VersionTag()
-                        {
-                            Type = versions.Label
-                        };
-                   
+                    versionObject = new VersionTag()
+                    {
+                        Type = versions.Label
+                    };
+
 
                     foreach (var showtimeDate in versions.Dates)
                     {
@@ -714,12 +714,12 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
                             }
 
                             Domain.Room roomObject;
-                                roomObject = new Domain.Room()
-                                {
-                                    Id = showtimeItem.Room.Id,
-                                    Name = showtimeItem.Room.Label
-                                };
-                               
+                            roomObject = new Domain.Room()
+                            {
+                                Id = showtimeItem.Room.Id,
+                                Name = showtimeItem.Room.Label
+                            };
+
 
                             Playtime playtimeObject;
                             var dateString = (showtimeDate.Date + " " + showtimeItem.Time);
@@ -745,12 +745,12 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
                                 }
                             }
 
-                            
-                                playtimeObject = new Playtime()
-                                {
-                                    StartTime = dateTime
-                                };
-                                
+
+                            playtimeObject = new Playtime()
+                            {
+                                StartTime = dateTime
+                            };
+
 
                             var showtimeObject = new Showtime()
                             {
@@ -836,13 +836,13 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
                 }
             }
         }
-        
-        if (queryParams.AllKeys.Any(k=>k==null))
+
+        if (queryParams.AllKeys.Any(k => k == null))
         {
             _loading = false;
             return;
         }
-        
+
 
         //case: url is cinemas[0]=1&cinemas[1]=2
         foreach (var key in queryParams.AllKeys)
@@ -892,8 +892,8 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
             _loading = false;
             return;
         }
-        
-        
+
+
         string MovieApiString = "";
         string CinemaApiString = "";
         var dateApiString = "";
@@ -976,14 +976,14 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
                 Id = cinema.Id,
                 Name = CinemaIdAndName[cinema.Id]
             };
-            
+
             foreach (var movie in cinema.Movies)
             {
                 if (!MovieIdAndName.ContainsKey(movie.Id))
                 {
                     continue;
                 }
-                
+
 
                 Movie movieObject;
 
@@ -1025,12 +1025,12 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
                     }
 
                     VersionTag versionObject;
-                    
-                        versionObject = new VersionTag()
-                        {
-                            Type = versions.Label
-                        };
-                      
+
+                    versionObject = new VersionTag()
+                    {
+                        Type = versions.Label
+                    };
+
 
                     foreach (var showtimeDate in versions.Dates)
                     {
@@ -1043,13 +1043,13 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
                             }
 
                             Domain.Room roomObject;
-                           
-                                roomObject = new Domain.Room()
-                                {
-                                    Id = showtimeItem.Room.Id,
-                                    Name = showtimeItem.Room.Label
-                                };
-                              
+
+                            roomObject = new Domain.Room()
+                            {
+                                Id = showtimeItem.Room.Id,
+                                Name = showtimeItem.Room.Label
+                            };
+
 
                             Playtime playtimeObject;
                             var dateString = (showtimeDate.Date + " " + showtimeItem.Time);
@@ -1075,12 +1075,12 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
                                 }
                             }
 
-                            
-                                playtimeObject = new Playtime()
-                                {
-                                    StartTime = dateTime
-                                };
-                               
+
+                            playtimeObject = new Playtime()
+                            {
+                                StartTime = dateTime
+                            };
+
 
                             var showtimeObject = new Showtime()
                             {
@@ -1113,7 +1113,7 @@ else if (CinemaIdAndName.Count>0 || MovieIdAndName.Count>0)
                 selectedCinemaFilters.Add(cinemaFilter);
             }
         }
-        
+
         _loading = false;
     }
 

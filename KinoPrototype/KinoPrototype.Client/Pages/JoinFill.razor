@@ -275,7 +275,7 @@ else
                     <button style="margin-top: 3px">Læs mere</button>
                 </a>
 
-            <button style="margin-top: 3px" @onclick="async () => { await ShowMovieTrailer(movie); }">Se trailer</button>
+                <button style="margin-top: 3px" @onclick="async () => { await ShowMovieTrailer(movie); }">Se trailer</button>
 
             </div>
             <div class="MovieDetails">
@@ -522,8 +522,6 @@ else
             <button onclick="@(() => { _trailerUrl = null; })">Luk</button>
         </div>
     }
-
-
 }
 
 @code {
@@ -834,3 +832,4 @@ HttpContext.Current.ApplicationInstance.CompleteRequest();
     }
 
 }
+
