@@ -3,6 +3,7 @@
 @using System.Text
 @using KinoPrototype.Domain
 @using System.Text.RegularExpressions
+@using System.Web
 @using KinoPrototype.Client.ExternalAPI
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
@@ -164,6 +165,19 @@
     );
 }
 
+#trailerPopUp {
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 
 </style>
 
@@ -261,7 +275,7 @@ else
                 <button style="margin-top: 3px">Læs mere</button>
             </a>
 
-            <button style="margin-top: 3px" onclick=@(async () => await GetMovieTrailer(movie))>Se trailer</button>
+            <button style="margin-top: 3px" @onclick="async () => { await ShowMovieTrailer(movie); }">Se trailer</button>
 
         </div>
         <div class="MovieDetails">
@@ -501,6 +515,17 @@ else if (!_answerSaved)
     </div>
     <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
 </dialog>
+
+if (_trailerUrl != null)
+{
+    <div id="trailerPopUp">
+        <iframe src="@_trailerUrl" width="60%" height="60%" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+        </iframe>
+        <button onclick="@(() => { _trailerUrl = null; })">Luk</button>
+    </div>
+}
+
+
 }
 
 @code {
@@ -545,6 +570,7 @@ else if (!_answerSaved)
     private DateTime _deadline;
 
     private string? loggedInUserId;
+    private string? _trailerUrl;
 
     protected override async Task OnInitializedAsync()
     {
@@ -788,25 +814,26 @@ HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
     }
 
-    private async Task GetMovieTrailer(Movie movie)
+    private async Task ShowMovieTrailer(Movie movie)
     {
         var client = new HttpClient();
-        baseUrl = NavigationManager.BaseUri;
         var apiString = $"https://api.kino.dk{movie.KinoURL}?region=content&format=json";
-
         var json = await client.GetStringAsync(apiString);
 
         MovieRoot? movieRoot = JsonConvert.DeserializeObject<MovieRoot>(json);
-        if (movieRoot?.Content?.field_trailer?.FieldMediaOembedVideo?.trailerUrl == null)
+        if (movieRoot?.Content?.field_trailer?.FieldMediaOembedVideo?.trailerUrl == null) //no video found
         {
-            Console.WriteLine("No trailer found");
-            var noUrl = $"https://www.youtube.com/results?search_query={movie.Title}+trailer";
-            await JsRuntime.InvokeVoidAsync("open", noUrl, "_blank");
+            await JsRuntime.InvokeVoidAsync("open", $"https://www.youtube.com/results?search_query={movie.Title}+trailer", "_blank"); //search in youtube
             return;
         }
 
-        var trailerUrl = movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl;
-        await JsRuntime.InvokeVoidAsync("open", trailerUrl, "_blank");
+        var uri = new Uri(movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl);
+        string? videoId;
+        Console.WriteLine("original " + uri.AbsoluteUri);
+        videoId = uri.Segments.Last() == "watch" ? HttpUtility.ParseQueryString(uri.Query)["v"] : uri.Segments.Last();
+
+        if (videoId == null) await JsRuntime.InvokeVoidAsync("open", $"https://www.youtube.com/results?search_query={movie.Title}+trailer", "_blank"); //search in youtube
+        else _trailerUrl = $"https://www.youtube.com/embed/{videoId}";
     }
 
 }

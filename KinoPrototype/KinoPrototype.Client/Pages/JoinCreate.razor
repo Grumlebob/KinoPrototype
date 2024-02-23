@@ -204,6 +204,7 @@
     background-color: rgba(0, 0, 0, 0.3);
     z-index: 2;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
 }
@@ -404,12 +405,11 @@
             </div>
         </div>
     }
-
-    Console.WriteLine("Trailer url: " + _trailerUrl);
+    
     if (_trailerUrl != null)
     {
         <div id="trailerPopUp">
-            <iframe src="@_trailerUrl" width="60%" height="80%">
+            <iframe src="@_trailerUrl" width="60%" height="60%" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
             </iframe>
             <button onclick="@(() => { _trailerUrl = null; })">Luk</button>
         </div>
@@ -787,13 +787,14 @@
             await JsRuntime.InvokeVoidAsync("open", $"https://www.youtube.com/results?search_query={movie.Title}+trailer", "_blank"); //search in youtube
             return;
         }
-        _trailerUrl = movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl.Replace("youtube.com/watch?v=", "youtube.com/embed/");
-        var argsIndex = _trailerUrl.IndexOf('&');
-        if (argsIndex > -1) //link has additional args
-        {
-            _trailerUrl = _trailerUrl.Substring(0, argsIndex) + '?' + _trailerUrl.Substring(argsIndex + 1);
-        }
 
+        var uri = new Uri(movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl);
+        string? videoId;
+        Console.WriteLine("original " + uri.AbsoluteUri);
+        videoId = uri.Segments.Last() == "watch" ? HttpUtility.ParseQueryString(uri.Query)["v"] : uri.Segments.Last();
+
+        if (videoId == null) await JsRuntime.InvokeVoidAsync("open", $"https://www.youtube.com/results?search_query={movie.Title}+trailer", "_blank"); //search in youtube
+        else _trailerUrl = $"https://www.youtube.com/embed/{videoId}";
     }
 
     protected override async Task OnInitializedAsync()
