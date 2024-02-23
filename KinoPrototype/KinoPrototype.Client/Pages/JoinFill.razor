@@ -444,8 +444,6 @@ else if (!_answerSaved)
 
         @foreach (var participant in _event.Participants ?? new())
         {
-            Console.WriteLine(string.Join(", ", orderedShowtimes.Select(s => s.Id)));
-            Console.WriteLine(string.Join(", ", participant.VotedFor.Select(s => s.Vote.ToString())));
             <tr>
                 <td>
                     <div style="display: flex">
@@ -655,7 +653,6 @@ if (_trailerUrl != null)
         if (Email?.Trim() == "") Email = null;
         if (Email != null)
         {
-            Console.WriteLine("Email is " + Email);
             var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$");
             var emailMatch = emailRegex.Match(Email);
             if (!emailMatch.Success)
@@ -828,9 +825,7 @@ HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
 
         var uri = new Uri(movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl);
-        string? videoId;
-        Console.WriteLine("original " + uri.AbsoluteUri);
-        videoId = uri.Segments.Last() == "watch" ? HttpUtility.ParseQueryString(uri.Query)["v"] : uri.Segments.Last();
+        var videoId = uri.Segments.Last() == "watch" ? HttpUtility.ParseQueryString(uri.Query)["v"] : uri.Segments.Last();
 
         if (videoId == null) await JsRuntime.InvokeVoidAsync("open", $"https://www.youtube.com/results?search_query={movie.Title}+trailer", "_blank"); //search in youtube
         else _trailerUrl = $"https://www.youtube.com/embed/{videoId}";
