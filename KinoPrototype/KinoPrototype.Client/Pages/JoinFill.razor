@@ -560,9 +560,10 @@ else
             }
         }
 
-        if (Email is not null or "")
+        if (Email?.Trim() == "") Email = null;
+        if (Email != null)
         {
-            Console.WriteLine("Email is not null or empty");
+            Console.WriteLine("Email is " + Email);
             var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$");
             var emailMatch = emailRegex.Match(Email);
             if (!emailMatch.Success)
