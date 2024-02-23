@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using KinoPrototype.Client;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -10,6 +11,7 @@ builder.Services.AddOidcAuthentication(options =>
 {
     builder.Configuration.Bind("Auth0", options.ProviderOptions);
     options.ProviderOptions.ResponseType = "code";
+    options.ProviderOptions.DefaultScopes.Add("email");
 });
 
 builder.Services.AddCascadingAuthenticationState();
