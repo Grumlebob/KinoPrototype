@@ -195,6 +195,7 @@
     );
 }
 
+
 </style>
 
 
@@ -249,7 +250,7 @@
 
 
     <p style="margin-bottom: 0px">Biograf</p>
-    <select style="margin-bottom: 10px"  multiple>
+    <select style="margin-bottom: 10px" multiple>
         @foreach (var cinema in cinemaStrings)
         {
             <option value="@cinema">@cinema</option>
@@ -257,15 +258,37 @@
     </select>
 
     <p style="margin-bottom: 0px">Start Dato</p>
-    <input style="margin-bottom: 10px" type="date" value="@_startDate" />
+    <input style="margin-bottom: 10px" type="date" value="@_startDate"/>
     <br/>
     <p style="margin-bottom: 0px">Slut Dato</p>
-    <input style="margin-bottom: 10px" type="date" value="@_endDate" />
+    <input style="margin-bottom: 10px" type="date" value="@_endDate"/>
 
     <button @onclick="UpdateFilters">Opdater filtrer</button>
 
     <div style="height: 1px; width: 500px; background-color: gray;margin-bottom: 10px"/>
 
+    <p> NYE FILTRER:</p>
+
+    <p style="margin-bottom: 0px">Film</p>
+    <div style="display: inline-block; width: 400px; max-height: 100px; overflow-y: auto;">
+        @foreach (var movie in MovieIdAndName)
+        {
+            <div style="display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(40ch + 20px);">
+                <input type="checkbox" id="@($"movie-{movie.Key}")" 
+                       value="@movie.Key" 
+                       @onchange="@(e => HandleCheckboxChange(e, movie.Key))"
+                       checked="@(selectedMovieFilters.Contains(movie.Key))" />
+                <label for="@($"movie-{movie.Key}")" style="flex-grow: 1; text-overflow: ellipsis; overflow: hidden; margin-left: 5px;">@movie.Value</label>
+            </div>
+        }
+    </div>
+
+
+
+
+
+
+    
 
     @foreach (var movie in showtimes.GroupBy(s => s.Movie))
     {
@@ -406,8 +429,6 @@
     List<Domain.Room> rooms = new();
     List<int> selectedShowtimeIds = new List<int>();
 
-    private List<int> selectedMovieFilters = new List<int>();
-    private List<int> selectedCinemaFilters = new List<int>();
 
     DateTime _startDate;
     DateTime _endDate;
@@ -419,6 +440,9 @@
 
     string baseUrl;
 
+    //FILTERS
+    private List<int> selectedMovieFilters = new List<int>();
+    private List<int> selectedCinemaFilters = new List<int>();
     Dictionary<int, string> MovieIdAndName = new Dictionary<int, string>();
     Dictionary<int, string> CinemaIdAndName = new Dictionary<int, string>();
     Dictionary<int, string> GenrerIdAndName = new Dictionary<int, string>();
@@ -435,10 +459,29 @@
 
         await JSRuntime.InvokeVoidAsync("navigator.share", data);
     }
+    
+    private void HandleCheckboxChange(ChangeEventArgs e, int movieId)
+    {
+        if ((bool)e.Value)
+        {
+            if (!selectedMovieFilters.Contains(movieId))
+            {
+                selectedMovieFilters.Add(movieId);
+            }
+        }
+        else
+        {
+            selectedMovieFilters.Remove(movieId);
+        }
+    }
 
 
+    
+    
     private async Task UpdateFilters()
     {
+        Console.WriteLine("Before update: selectedMovieFilters: " + string.Join(", ", selectedMovieFilters));
+        
         var newFilterstring = "";
         var cinemaIndex = 0;
         var movieIndex = 0;
@@ -457,6 +500,7 @@
             movieIndex++;
         }
 
+
         if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue)
         {
             newFilterstring += "&date=" + _startDate.ToString();
@@ -468,6 +512,8 @@
             newFilterstring += "&date=" + _endDate.ToString();
         }
 
+        Console.WriteLine("newFilterstring: " + newFilterstring);
+
         filterString = newFilterstring;
         MovieIdAndName = new Dictionary<int, string>();
         CinemaIdAndName = new Dictionary<int, string>();
@@ -476,9 +522,191 @@
         cinemaStrings = new List<string>();
 
 
-        await OnInitializedAsync();
+        var client = new HttpClient();
 
+        baseUrl = NavigationManager.BaseUri;
+
+        var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased&" +
+                        filterString + "&?region=content&format=json";
+
+        Console.WriteLine("apiString called: " + apiString);
+        
+        json = await client.GetStringAsync(apiString);
+
+        CinemaIdAndName = new Dictionary<int, string>();
+        MovieIdAndName = new Dictionary<int, string>();
+        GenrerIdAndName = new Dictionary<int, string>();
+
+        Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(json);
+
+        foreach (var cinemaOption in myDeserializedClass.Content.Content.Facets.Cinemas.Options)
+        {
+            CinemaIdAndName.Add(cinemaOption.Key, cinemaOption.Value);
+            cinemaStrings.Add(cinemaOption.Value);
+        }
+
+        foreach (var movieOptions in myDeserializedClass.Content.Content.Facets.Movies.Options)
+        {
+            MovieIdAndName.Add(movieOptions.Key, movieOptions.Value);
+            movieStrings.Add(movieOptions.Value);
+        }
+
+        foreach (var genrerOptions in myDeserializedClass.Content.Content.Facets.Genres.Options)
+        {
+            GenrerIdAndName.Add(genrerOptions.Key, genrerOptions.Value);
+            genreStrings.Add(genrerOptions.Value);
+        }
+
+
+        foreach (var cinema in myDeserializedClass.Content.Content.Content.Content)
+        {
+            var cinemaObject = new Cinema()
+            {
+                Id = cinema.Id,
+                Name = CinemaIdAndName[cinema.Id]
+            };
+            cinemas.Add(cinemaObject);
+
+            foreach (var movie in cinema.Movies)
+            {
+                if (!MovieIdAndName.ContainsKey(movie.Id))
+                {
+                    continue;
+                }
+
+                Movie movieObject;
+
+                if (!movies.Any(m => m.Title == MovieIdAndName[movie.Id]))
+                {
+                    int duration;
+
+                    int.TryParse(movie.Content.FieldPlayingTime, out duration);
+
+                    if (movie.Content.URL == null)
+                    {
+                        Console.WriteLine("KINO URL NULL, BØR IKKE SKE");
+                    }
+
+                    movieObject = new Movie()
+                    {
+                        Id = movie.Id,
+                        Title = MovieIdAndName[movie.Id],
+                        PremiereDate = movie.Content.FieldPremiere,
+                        KinoURL = movie.Content.URL,
+                        AgeRating = movie.Content.FieldCensorshipIcon,
+                        ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
+                        Duration = duration,
+                        Showtimes = new List<Showtime>()
+                    };
+                    movies.Add(movieObject);
+                }
+                else
+                {
+                    movieObject = movies.First(m => m.Title == MovieIdAndName[movie.Id]);
+                }
+
+
+                foreach (var versions in movie.Versions)
+                {
+                    if (versions.Label.ToLower().Contains("lukket forestilling"))
+                    {
+                        continue;
+                    }
+
+                    VersionTag versionObject;
+                    if (!versionTags.Any(v => v.Type == versions.Label))
+                    {
+                        versionObject = new VersionTag()
+                        {
+                            Type = versions.Label
+                        };
+                        versionTags.Add(versionObject);
+                    }
+                    else
+                    {
+                        versionObject = versionTags.First(v => v.Type == versions.Label);
+                    }
+
+                    foreach (var showtimeDate in versions.Dates)
+                    {
+                        foreach (var showtimeItem in showtimeDate.Showtimes)
+                        {
+                            //Skip if no more seats left
+                            if (showtimeItem.AvailableSeats == 0)
+                            {
+                                continue;
+                            }
+
+                            Domain.Room roomObject;
+                            if (!rooms.Any(s => s.Name == showtimeItem.Room.Label))
+                            {
+                                roomObject = new Domain.Room()
+                                {
+                                    Id = showtimeItem.Room.Id,
+                                    Name = showtimeItem.Room.Label
+                                };
+                                rooms.Add(roomObject);
+                            }
+                            else
+                            {
+                                roomObject = rooms.First(s => s.Name == showtimeItem.Room.Label);
+                            }
+
+                            Playtime playtimeObject;
+                            var dateString = (showtimeDate.Date + " " + showtimeItem.Time);
+                            var commaIndex = dateString.IndexOf(',');
+                            if (commaIndex > 0)
+                            {
+                                dateString = dateString.Substring(commaIndex + 2);
+                            }
+
+                            var dateTimeFormat = "dd/MM HH:mm";
+                            DateTime dateTime;
+
+                            if (DateTime.TryParseExact(dateString, dateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+                            {
+                                if (_startDate != DateTime.MinValue && dateTime < _startDate)
+                                {
+                                    continue;
+                                }
+
+                                if (_endDate != DateTime.MinValue && dateTime > _endDate)
+                                {
+                                    continue;
+                                }
+                            }
+
+                            if (!playtimes.Any(p => p.StartTime == dateTime))
+                            {
+                                playtimeObject = new Playtime()
+                                {
+                                    StartTime = dateTime
+                                };
+                                playtimes.Add(playtimeObject);
+                            }
+                            else
+                            {
+                                playtimeObject = playtimes.First(p => p.StartTime == dateTime);
+                            }
+
+                            var showtimeObject = new Showtime()
+                            {
+                                Id = showtimeItem.Id,
+                                Movie = movieObject,
+                                Cinema = cinemaObject,
+                                VersionTag = versionObject,
+                                Room = roomObject,
+                                Playtime = playtimeObject
+                            };
+                            showtimes.Add(showtimeObject);
+                        }
+                    }
+                }
+            }
+        }
+        
         selectedShowtimeIds = selectedShowtimeIds.Where(id => showtimes.Any(s => s.Id == id)).ToList();
+        StateHasChanged();
     }
 
 
@@ -522,6 +750,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine("ONINIT CALLED");
         var client = new HttpClient();
 
         baseUrl = NavigationManager.BaseUri;
@@ -626,6 +855,9 @@
         var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
                         MovieApiString + CinemaApiString + dateApiString + "&?region=content&format=json";
 
+
+        Console.WriteLine("OnINIT API string:" + apiString);
+        
         json = await client.GetStringAsync(apiString);
 
         var startDate = DateTime.MinValue;
@@ -721,7 +953,6 @@
 
                 foreach (var versions in movie.Versions)
                 {
-                    Console.WriteLine("Version: " + versions.Label);
                     if (versions.Label.ToLower().Contains("lukket forestilling"))
                     {
                         continue;
