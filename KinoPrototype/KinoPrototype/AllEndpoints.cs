@@ -387,9 +387,13 @@ public static class AllEndpoints
             var existingJoinEvent = await context.JoinEvents.FindAsync(joinEvent.Id);
             if (existingJoinEvent != null)
             {
-                existingJoinEvent.ChosenShowtimeId = joinEvent.ChosenShowtimeId;
-                context.JoinEvents.Attach(existingJoinEvent);
-                joinEvent.Id = existingJoinEvent.Id;
+                //existingJoinEvent.ChosenShowtimeId = joinEvent.ChosenShowtimeId;
+                //context.JoinEvents.Attach(existingJoinEvent);
+                //existingJoinEvent = joinEvent;
+                existingJoinEvent.Title = joinEvent.Title;
+                existingJoinEvent.Description = joinEvent.Description;
+                existingJoinEvent.Deadline = joinEvent.Deadline;
+                //joinEvent.Id = existingJoinEvent.Id;
                 newJoinEventId = joinEvent.Id;
                 await context.SaveChangesAsync();
             }
