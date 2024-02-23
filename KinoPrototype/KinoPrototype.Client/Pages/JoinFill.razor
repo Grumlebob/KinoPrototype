@@ -168,7 +168,16 @@
 </style>
 
 <PageTitle>JoinEvent</PageTitle>
-
+<p> logged in id: @loggedInUserId</p>
+@if (_showFirstLoginDialog)
+{
+    <h4>Hej du blevet inviteret til bla bla bla.</h4>
+    <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Anvend dit kino login til at stemme</button>
+    <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Anvend gæste login til at stemme</button>
+}
+else
+{
+    
 
 @if (_loading)
 {
@@ -380,18 +389,17 @@ else if (!_answerSaved)
         <option value="@TimeString">@TimeString</option>
     </select>
 </label>
-
-@{
-    var orderedShowtimes = _sortedAfter == VotesString
-        ? _event.Showtimes.OrderByDescending(showtime => (_event.Participants ?? []).Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No))) //take sum of Non-no votes
-            .ThenByDescending(showtime => (_event.Participants ?? []).Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote == Vote.Yes))) //take sum of yes votes as tie breaker
-            .ThenBy(s => s.Playtime.StartTime.ToLocalTime()).ToList()
-        : _event.Showtimes.OrderBy(s => s.Playtime.StartTime.ToLocalTime()).ToList();
-}
 <div style="max-width: 60vw; overflow-x: scroll">
     <table style="border-spacing:0.5rem;">
         <tr>
             <th style="vertical-align: bottom">Navn</th>
+            @{
+                var orderedShowtimes = _sortedAfter == VotesString
+                    ? _event.Showtimes.OrderByDescending(showtime => (_event.Participants ?? []).Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No))) //take sum of Non-no votes
+                        .ThenByDescending(showtime => (_event.Participants ?? []).Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote == Vote.Yes))) //take sum of yes votes as tie breaker
+                        .ThenBy(s => s.Playtime.StartTime.ToLocalTime()).ToList()
+                    : _event.Showtimes.OrderBy(s => s.Playtime.StartTime.ToLocalTime()).ToList();
+            }
             @foreach (var showtime in orderedShowtimes)
             {
                 <th style="padding-left:0.5rem; padding-right: 0.5rem">
@@ -493,7 +501,7 @@ else if (!_answerSaved)
     </div>
     <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
 </dialog>
-
+}
 
 @code {
 
@@ -532,7 +540,11 @@ else if (!_answerSaved)
 
     private bool _isEditing;
 
+    private bool _showFirstLoginDialog;
+
     private DateTime _deadline;
+
+    private string? loggedInUserId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -565,8 +577,15 @@ else if (!_answerSaved)
         if (user.Identity.IsAuthenticated)
         {
             var username = user.Identity.Name;
-            var userId = user.FindFirst(c => c.Type == "sub")?.Value;
-            _isHost = _event.Host.AuthId == userId;
+            loggedInUserId = user.FindFirst(c => c.Type == "sub")?.Value;
+            _isHost = _event.Host.AuthId == loggedInUserId;
+        }
+        else
+        {
+            _showFirstLoginDialog = true;
+            await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "firstLoginDialog");
+            Console.WriteLine("SHOWING DIALOG");
+            StateHasChanged();
         }
 
         _deadline = _event.Deadline.ToLocalTime();
@@ -626,7 +645,7 @@ else if (!_answerSaved)
             }
         }
 
-        var p = new Participant { Nickname = Nickname, Email = Email, Note = Note, VotedFor = _votedFor.ToList(), JoinEventId = int.Parse(JoinEventId) };
+        var p = new Participant { AuthId = loggedInUserId, Nickname = Nickname, Email = Email, Note = Note, VotedFor = _votedFor.ToList(), JoinEventId = int.Parse(JoinEventId) };
         var httpClient = new HttpClient();
         var response = await httpClient.PutAsJsonAsync($"{baseUrl}participate/{JoinEventId}", p);
         if (response.IsSuccessStatusCode)
