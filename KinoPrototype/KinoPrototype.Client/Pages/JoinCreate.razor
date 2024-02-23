@@ -204,7 +204,7 @@
 {
     <input style="margin-bottom: 5px; width: 300px" type="text" placeholder="Titel" @bind-value="_eventTitle"/>
     <br/>
-    <textarea style="margin-bottom: 5px;width: 300px" type="text"   placeholder="Beskrivelse"  @bind="_eventDescription"></textarea>
+    <textarea style="margin-bottom: 5px;width: 300px" type="text" placeholder="Beskrivelse (valgfrit)"  @bind="_eventDescription"></textarea>
     <br/>
     <p style="margin-bottom: 0px">Deadline</p>
     <input style="margin-bottom: 5px; margin-top: 0px;width: 300px" type="date" placeholder="Deadline" @bind="@_deadline"/>
@@ -383,7 +383,7 @@
     string json;
 
     private string _eventTitle;
-    private string _eventDescription;
+    private string? _eventDescription;
 
     private DateTime _deadline = DateTime.Now.AddDays(30);
 
@@ -429,7 +429,7 @@
         var data = new
         {
             title = _eventTitle,
-            text = _eventDescription,
+            text = _eventDescription ?? "",
             url = baseUrl + "filling/" + _joinEventId
         };
 
@@ -851,12 +851,6 @@
             _showSnackbar = true;
             await Task.Delay(3000).ContinueWith(_ => _showSnackbar = false);
         }
-        else if (string.IsNullOrEmpty(_eventDescription))
-        {
-            _snackbarMessage = "Eventet skal have en beskrivelse";
-            _showSnackbar = true;
-            await Task.Delay(3000).ContinueWith(_ => _showSnackbar = false);
-        }
         else if (_deadline < DateTime.Now)
         {
             _snackbarMessage = "Deadline skal være i fremtiden";
@@ -921,7 +915,7 @@
             Showtimes = pickedShowtimes,
             Host = host,
             Title = _eventTitle,
-            Description = _eventDescription,
+            Description = _eventDescription ?? "",
             Deadline = _deadline,
         };
 
