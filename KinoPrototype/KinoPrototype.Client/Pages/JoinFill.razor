@@ -168,7 +168,7 @@
 </style>
 
 <PageTitle>JoinEvent</PageTitle>
-
+<p> logged in id: @loggedInUserId</p>
 @if (_showFirstLoginDialog)
 {
     <h4>Hej du blevet inviteret til bla bla bla.</h4>
@@ -544,6 +544,8 @@ else if (!_answerSaved)
 
     private DateTime _deadline;
 
+    private string? loggedInUserId;
+
     protected override async Task OnInitializedAsync()
     {
         baseUrl = NavigationManager.BaseUri;
@@ -575,8 +577,8 @@ else if (!_answerSaved)
         if (user.Identity.IsAuthenticated)
         {
             var username = user.Identity.Name;
-            var userId = user.FindFirst(c => c.Type == "sub")?.Value;
-            _isHost = _event.Host.AuthId == userId;
+            loggedInUserId = user.FindFirst(c => c.Type == "sub")?.Value;
+            _isHost = _event.Host.AuthId == loggedInUserId;
         }
         else
         {
@@ -643,7 +645,7 @@ else if (!_answerSaved)
             }
         }
 
-        var p = new Participant { Nickname = Nickname, Email = Email, Note = Note, VotedFor = _votedFor.ToList(), JoinEventId = int.Parse(JoinEventId) };
+        var p = new Participant { AuthId = loggedInUserId, Nickname = Nickname, Email = Email, Note = Note, VotedFor = _votedFor.ToList(), JoinEventId = int.Parse(JoinEventId) };
         var httpClient = new HttpClient();
         var response = await httpClient.PutAsJsonAsync($"{baseUrl}participate/{JoinEventId}", p);
         if (response.IsSuccessStatusCode)

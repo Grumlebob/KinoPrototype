@@ -207,6 +207,7 @@ public static class AllEndpoints
 
             var participant = new Participant
             {
+                AuthId = p.AuthId,
                 Id = p.Id,
                 JoinEventId = p.JoinEventId,
                 Nickname = p.Nickname,
