@@ -238,34 +238,14 @@
     }
 
     <h2 style="margin-top: 10px">Tilpas filtrer</h2>
-
-
-    <p style="margin-bottom: 0px">Film</p>
-    <select style="margin-bottom: 10px" multiple>
-        @foreach (var movie in movieStrings)
-        {
-            <option value="@movie">@movie</option>
-        }
-    </select>
-
-
-    <p style="margin-bottom: 0px">Biograf</p>
-    <select style="margin-bottom: 10px" multiple>
-        @foreach (var cinema in cinemaStrings)
-        {
-            <option value="@cinema">@cinema</option>
-        }
-    </select>
-
+    
     <p style="margin-bottom: 0px">Start Dato</p>
-    <input style="margin-bottom: 10px" type="date" value="@_startDate"/>
+    <input style="margin-bottom: 10px" type="date" @bind="StartDate"/>
+
     <br/>
+
     <p style="margin-bottom: 0px">Slut Dato</p>
-    <input style="margin-bottom: 10px" type="date" value="@_endDate"/>
-
-    <button @onclick="UpdateFilters">Opdater filtrer</button>
-
-    <div style="height: 1px; width: 500px; background-color: gray;margin-bottom: 10px"/>
+    <input style="margin-bottom: 10px" type="date" @bind="EndDate"/>
 
     <p> NYE FILTRER:</p>
 
@@ -276,18 +256,29 @@
             <div style="display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(40ch + 20px);">
                 <input type="checkbox" id="@($"movie-{movie.Key}")" 
                        value="@movie.Key" 
-                       @onchange="@(e => HandleCheckboxChange(e, movie.Key))"
+                       @onchange="@(e => HandleMovieCheckboxChange(e, movie.Key))"
                        checked="@(selectedMovieFilters.Contains(movie.Key))" />
                 <label for="@($"movie-{movie.Key}")" style="flex-grow: 1; text-overflow: ellipsis; overflow: hidden; margin-left: 5px;">@movie.Value</label>
             </div>
         }
     </div>
+    
+    <p style="margin-bottom: 0px">Biograf</p>
+    <div style="display: inline-block; width: 400px; max-height: 100px; overflow-y: auto;">
+        @foreach (var cinema in CinemaIdAndName)
+        {
+            <div style="display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(40ch + 20px);">
+                <input type="checkbox" id="@($"cinema-{cinema.Key}")" 
+                       value="@cinema.Key" 
+                       @onchange="@(e => HandleCinemaCheckboxChange(e, cinema.Key))"
+                       checked="@(selectedCinemaFilters.Contains(cinema.Key))" />
+                <label for="@($"cinema-{cinema.Key}")" style="flex-grow: 1; text-overflow: ellipsis; overflow: hidden; margin-left: 5px;">@cinema.Value</label>
+            </div>
+        }
+    </div>
 
 
-
-
-
-
+    <button @onclick="UpdateFilters">Opdater filtrer</button>
     
 
     @foreach (var movie in showtimes.GroupBy(s => s.Movie))
@@ -429,11 +420,7 @@
     List<Domain.Room> rooms = new();
     List<int> selectedShowtimeIds = new List<int>();
 
-
-    DateTime _startDate;
-    DateTime _endDate;
-
-
+    
     List<string> movieStrings = new();
     List<string> cinemaStrings = new();
     List<string> genreStrings = new();
@@ -443,9 +430,35 @@
     //FILTERS
     private List<int> selectedMovieFilters = new List<int>();
     private List<int> selectedCinemaFilters = new List<int>();
-    Dictionary<int, string> MovieIdAndName = new Dictionary<int, string>();
     Dictionary<int, string> CinemaIdAndName = new Dictionary<int, string>();
+    Dictionary<int, string> MovieIdAndName = new Dictionary<int, string>();
     Dictionary<int, string> GenrerIdAndName = new Dictionary<int, string>();
+    
+    private DateTime _startDate = DateTime.Today;
+    private DateTime _endDate = DateTime.Today.AddDays(30);
+    private DateTime StartDate
+    {
+        get => _startDate;
+        set
+        {
+            if (_startDate != value)
+            {
+                _startDate = value;
+            }
+        }
+    }
+
+    private DateTime EndDate
+    {
+        get => _endDate;
+        set
+        {
+            if (_endDate != value)
+            {
+                _endDate = value;
+            }
+        }
+    }
 
 
     private async Task ShareEvent()
@@ -460,7 +473,7 @@
         await JSRuntime.InvokeVoidAsync("navigator.share", data);
     }
     
-    private void HandleCheckboxChange(ChangeEventArgs e, int movieId)
+    private void HandleMovieCheckboxChange(ChangeEventArgs e, int movieId)
     {
         if ((bool)e.Value)
         {
@@ -474,9 +487,24 @@
             selectedMovieFilters.Remove(movieId);
         }
     }
-
-
     
+    private void HandleCinemaCheckboxChange(ChangeEventArgs e, int cinemaId)
+    {
+        if (e.Value.ToString() == "true")
+        {
+            if (!selectedCinemaFilters.Contains(cinemaId))
+            {
+                selectedCinemaFilters.Add(cinemaId);
+            }
+        }
+        else
+        {
+            if (selectedCinemaFilters.Contains(cinemaId))
+            {
+                selectedCinemaFilters.Remove(cinemaId);
+            }
+        }
+    }
     
     private async Task UpdateFilters()
     {
@@ -500,19 +528,11 @@
             movieIndex++;
         }
 
-
-        if (_startDate != DateTime.MinValue || _endDate != DateTime.MinValue)
-        {
-            newFilterstring += "&date=" + _startDate.ToString();
-        }
-
-        //endDate
-        if (_endDate != DateTime.MinValue)
-        {
-            newFilterstring += "&date=" + _endDate.ToString();
-        }
-
-        Console.WriteLine("newFilterstring: " + newFilterstring);
+        //Handles start date filter
+        newFilterstring += "&date=" + _startDate;
+        
+        //Handles end date filter
+        newFilterstring += "&date=" + _endDate;
 
         filterString = newFilterstring;
         MovieIdAndName = new Dictionary<int, string>();
