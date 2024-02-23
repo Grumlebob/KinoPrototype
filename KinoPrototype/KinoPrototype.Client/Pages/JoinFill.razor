@@ -172,335 +172,335 @@
 @if (_showFirstLoginDialog)
 {
     <h4>Hej du blevet inviteret til bla bla bla.</h4>
-    <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Anvend dit kino login til at stemme</button>
+    <a href="authentication/login">Anvend dit kino login til at stemme</a>
     <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Anvend gæste login til at stemme</button>
 }
 else
 {
-    
+    @if (_loading)
+    {
+        <h3>Indlæser...</h3>
+        return;
+    }
 
-@if (_loading)
-{
-    <h3>Indlæser...</h3>
-    return;
-}
-@if (_event is null)
-{
-    <h3>Ingen events fundet</h3>
-    <p>Tjek at dit link er korrekt.</p>
-    return;
-}
+    @if (_event is null)
+    {
+        <h3>Ingen events fundet</h3>
+        <p>Tjek at dit link er korrekt.</p>
+        return;
+    }
 
-<div style="display: flex; flex-direction: row">
+    <div style="display: flex; flex-direction: row">
+        @if (_isEditing)
+        {
+            <input type="text" @bind="_event.Title" style="margin-right: 5px"/>
+        }
+        else
+        {
+            <h1>@_event.Title</h1>
+        }
+
+        @if (_isHost)
+        {
+            <button style="margin-left: 5px;height: 40px" @onclick="async () => { if (_isEditing) await UpdateJoinEvent(); _isEditing = !_isEditing; }">
+
+                @(_isEditing ? "Gem ændringer" : "✎")
+            </button>
+        }
+        <button style="margin-left: 5px;height: 40px" @onclick="ScrollToBottom">Gå til resultater</button>
+    </div>
+
     @if (_isEditing)
     {
-        <input type="text" @bind="_event.Title" style="margin-right: 5px"/>
+        <textarea style="margin-bottom: 5px;width: 300px" type="text"   placeholder="Beskrivelse"  @bind="_event.Description"></textarea>
     }
     else
     {
-        <h1>@_event.Title</h1>
+        <p>@_event.Description</p>
     }
 
-    @if (_isHost)
+
+    <div style="height: 1px; width: 500px; background-color: gray;margin-bottom: 10px"/>
+
+
+    <p>@_event.Host.Username vil gerne I biografen med dig! Nedenunder kan du vise hvilke spilletider der passer dig, ved at trykke på dem.</p>
+
+    <p>
+        Deadline for tilmelding:
+        @if (_isEditing)
+        {
+            <input style="margin-bottom: 5px; margin-top: 0px;width: 300px" type="date" placeholder="Deadline" min="@DateTime.Now.Date.ToString("yyyy-MM-dd")" max="@_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("yyyy-MM-dd")" @bind="@_deadline"/>
+        }
+        else
+        {
+            @_deadline.ToString("dd. MMM")
+        }
+    </p>
+    <p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM") - @_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM")</p>
+
+
+    <span style="background-color: lightgray">Kan ikke</span>
+    <span style="background-color: lightgreen">Kan godt</span>
+    <span style="background-color: orange">Hvis Nødvendigt (Klik to gange)</span>
+
+    @if (_event.Showtimes.Count == 0)
     {
-        <button style="margin-left: 5px;height: 40px" @onclick="async () => { if (_isEditing) await UpdateJoinEvent(); _isEditing = !_isEditing; }">
-
-            @(_isEditing ? "Gem ændringer" : "✎")
-        </button>
+        <p>Ingen showtimes fundet</p>
+        return;
     }
-    <button style="margin-left: 5px;height: 40px" @onclick="ScrollToBottom">Gå til resultater</button>
-</div>
 
-@if (_isEditing)
-{
-    <textarea style="margin-bottom: 5px;width: 300px" type="text"   placeholder="Beskrivelse"  @bind="_event.Description"></textarea>
-}
-else
-{
-    <p>@_event.Description</p>
-}
-
-
-<div style="height: 1px; width: 500px; background-color: gray;margin-bottom: 10px"/>
-
-
-<p>@_event.Host.Username vil gerne I biografen med dig! Nedenunder kan du vise hvilke spilletider der passer dig, ved at trykke på dem.</p>
-
-<p>
-    Deadline for tilmelding:
-    @if (_isEditing)
+    @foreach (var showtimesByMovie in _event.Showtimes.GroupBy(s => s.Movie.Id))
     {
-        <input style="margin-bottom: 5px; margin-top: 0px;width: 300px" type="date" placeholder="Deadline" min="@DateTime.Now.Date.ToString("yyyy-MM-dd")" max="@_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("yyyy-MM-dd")" @bind="@_deadline"/>
-    }
-    else
-    {
-        @_deadline.ToString("dd. MMM")
-    }
-</p>
-<p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM") - @_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM")</p>
-
-
-<span style="background-color: lightgray">Kan ikke</span>
-<span style="background-color: lightgreen">Kan godt</span>
-<span style="background-color: orange">Hvis Nødvendigt (Klik to gange)</span>
-
-@if (_event.Showtimes.Count == 0)
-{
-    <p>Ingen showtimes fundet</p>
-    return;
-}
-@foreach (var showtimesByMovie in _event.Showtimes.GroupBy(s => s.Movie.Id))
-{
-    var movie = showtimesByMovie.First().Movie;
-    <div class="Redbox">
-        <div class="PosterImage">
-            <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank">
-                <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
-            </a>
-            <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank">
-                <button style="margin-top: 3px">Læs mere</button>
-            </a>
-
-            <button style="margin-top: 3px" onclick=@(async () => await GetMovieTrailer(movie))>Se trailer</button>
-
-        </div>
-        <div class="MovieDetails">
-            <div class="MovieHeader">
-                <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank" style="text-decoration: none; color: black">
-                    <h2>@movie.Title</h2>
+        var movie = showtimesByMovie.First().Movie;
+        <div class="Redbox">
+            <div class="PosterImage">
+                <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank">
+                    <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+                </a>
+                <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank">
+                    <button style="margin-top: 3px">Læs mere</button>
                 </a>
 
-                <div class="movie-info">
-                    <span class="premiere">Premiere @movie.PremiereDate | </span>
-                    <span class="duration">Varighed @movie.Duration min</span>
-                </div>
+                <button style="margin-top: 3px" onclick=@(async () => await GetMovieTrailer(movie))>Se trailer</button>
 
             </div>
-            @foreach (var showtimesByCinema in showtimesByMovie.GroupBy(s => s.Cinema.Id))
-            {
-                var cinema = showtimesByCinema.First().Cinema;
-                <div class="CinemaLocation">
-                    <h2 id="@cinema.Id">@cinema.Name</h2>
+            <div class="MovieDetails">
+                <div class="MovieHeader">
+                    <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank" style="text-decoration: none; color: black">
+                        <h2>@movie.Title</h2>
+                    </a>
+
+                    <div class="movie-info">
+                        <span class="premiere">Premiere @movie.PremiereDate | </span>
+                        <span class="duration">Varighed @movie.Duration min</span>
+                    </div>
+
                 </div>
-                @foreach (var showtimesByVersionTag in showtimesByCinema.GroupBy(s => s.VersionTag.Id))
+                @foreach (var showtimesByCinema in showtimesByMovie.GroupBy(s => s.Cinema.Id))
                 {
-                    var versionTag = showtimesByVersionTag.First().VersionTag;
-                    <div class="Version">
-                        <strong>@versionTag.Type</strong>
-                        <div class="Showtimes">
-                            <div class="table-container">
-                                <table>
-                                    <tr>
-                                        @{
-                                            // Determine the start and end dates of the interval
-                                            var startDate = _event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime());
-                                            var endDate = _event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime());
+                    var cinema = showtimesByCinema.First().Cinema;
+                    <div class="CinemaLocation">
+                        <h2 id="@cinema.Id">@cinema.Name</h2>
+                    </div>
+                    @foreach (var showtimesByVersionTag in showtimesByCinema.GroupBy(s => s.VersionTag.Id))
+                    {
+                        var versionTag = showtimesByVersionTag.First().VersionTag;
+                        <div class="Version">
+                            <strong>@versionTag.Type</strong>
+                            <div class="Showtimes">
+                                <div class="table-container">
+                                    <table>
+                                        <tr>
+                                            @{
+                                                // Determine the start and end dates of the interval
+                                                var startDate = _event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime());
+                                                var endDate = _event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime());
 
-                                            var latestDateForSpecificCinemaVersion = _event.Showtimes.Where(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key).Max(s => s.Playtime.StartTime.ToLocalTime().Date);
+                                                var latestDateForSpecificCinemaVersion = _event.Showtimes.Where(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key).Max(s => s.Playtime.StartTime.ToLocalTime().Date);
 
 
-                                            // Loop through each date in the interval
-                                            for (var date = startDate.Date; date <= endDate.Date && date <= latestDateForSpecificCinemaVersion.Date; date = date.AddDays(1))
-                                            {
-                                                <th>@date.ToString("dd. MMM")</th>
+                                                // Loop through each date in the interval
+                                                for (var date = startDate.Date; date <= endDate.Date && date <= latestDateForSpecificCinemaVersion.Date; date = date.AddDays(1))
+                                                {
+                                                    <th>@date.ToString("dd. MMM")</th>
+                                                }
                                             }
-                                        }
-                                    </tr>
-                                    <tr>
-                                        <!-- Create table data for each showtime within the grouped date -->
-                                        @for (var date = startDate.Date; date <= endDate.Date && date <= latestDateForSpecificCinemaVersion.Date; date = date.AddDays(1))
-                                        {
-                                            //Check if it exists if not, else
-                                            @if (_event.Showtimes.Any(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key && s.Playtime.StartTime.ToLocalTime().Date == date))
+                                        </tr>
+                                        <tr>
+                                            <!-- Create table data for each showtime within the grouped date -->
+                                            @for (var date = startDate.Date; date <= endDate.Date && date <= latestDateForSpecificCinemaVersion.Date; date = date.AddDays(1))
                                             {
-                                                <td>
-                                                    @foreach (var showtime in _event.Showtimes.Where(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key && s.Playtime.StartTime.ToLocalTime().Date == date))
-                                                    {
-                                                        var index = _votedFor.IndexOf(_votedFor.First(v => v.ShowtimeId == showtime.Id));
-                                                        <div class="showtime-label" style="background-color: @(_votedFor[index].Vote switch { Vote.No => "lightgray", Vote.Yes => "lightgreen", Vote.IfNeedBe => "orange", _ => "" })" value="@showtime.Playtime.StartTime.ToLocalTime()" @onclick="() => { var next = ((int)_votedFor[index].Vote + 1) % Enum.GetValues(typeof(Vote)).Length; _votedFor[index].Vote = (Vote)Enum.GetValues(typeof(Vote)).GetValue(next)!; }">
-                                                            <div class="showtime-room">@showtime.Room.Name</div>
-                                                            <div class="showtime-time">@showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm")</div>
+                                                //Check if it exists if not, else
+                                                @if (_event.Showtimes.Any(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key && s.Playtime.StartTime.ToLocalTime().Date == date))
+                                                {
+                                                    <td>
+                                                        @foreach (var showtime in _event.Showtimes.Where(s => s.Movie.Id == showtimesByMovie.Key && s.Cinema.Id == showtimesByCinema.Key && s.VersionTag.Id == showtimesByVersionTag.Key && s.Playtime.StartTime.ToLocalTime().Date == date))
+                                                        {
+                                                            var index = _votedFor.IndexOf(_votedFor.First(v => v.ShowtimeId == showtime.Id));
+                                                            <div class="showtime-label" style="background-color: @(_votedFor[index].Vote switch { Vote.No => "lightgray", Vote.Yes => "lightgreen", Vote.IfNeedBe => "orange", _ => "" })" value="@showtime.Playtime.StartTime.ToLocalTime()" @onclick="() => { var next = ((int)_votedFor[index].Vote + 1) % Enum.GetValues(typeof(Vote)).Length; _votedFor[index].Vote = (Vote)Enum.GetValues(typeof(Vote)).GetValue(next)!; }">
+                                                                <div class="showtime-room">@showtime.Room.Name</div>
+                                                                <div class="showtime-time">@showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm")</div>
+                                                            </div>
+                                                        }
+                                                    </td>
+                                                }
+                                                else
+                                                {
+                                                    <td>
+                                                        <div class="empty-showtime">
                                                         </div>
-                                                    }
-                                                </td>
+                                                    </td>
+                                                }
                                             }
-                                            else
-                                            {
-                                                <td>
-                                                    <div class="empty-showtime">
-                                                    </div>
-                                                </td>
-                                            }
-                                        }
-                                    </tr>
-                                </table >
+                                        </tr>
+                                    </table >
+                                </div >
                             </div >
-                        </div >
-                    </div>
+                        </div>
+                    }
                 }
-            }
-        </div>
-    </div>
-}
-
-@if (_alreadyAnsweredCookie)
-{
-    <p>Du har allerede svaret</p>
-}
-else if (!_answerSaved)
-{
-    <div>
-        <input placeholder="Indtast dit navn" @bind="@Nickname" required="required"/>
-        <input placeholder="Skriv din email (valgfrit)" type="email" @bind="@Email"/>
-        <div>
-            <textarea style="margin-bottom: 5px;margin-top: 5px;width: 300px" type="text"   placeholder="Note (valgfrit)"  @bind="Note"></textarea>
-        </div>
-        <button onclick="@(async () => { await SaveParticipantAnswer(false); })">
-            Send svar
-        </button>
-        @if (_confirmSubmit)
-        {
-            <div>
-                <p>Du har ikke valgt nogen tider. Vil du indsende dit svar alligevel?</p>
-                <div style="display: inline-block">
-                    <button onclick="@(async () => { await SaveParticipantAnswer(true); })">
-                        Ja
-                    </button>
-                    <button onclick="@(() => { _confirmSubmit = false; })">Nej</button>
-                </div>
             </div>
-        }
-    </div>
-}
+        </div>
+    }
 
-@if (_infoMessage is not null)
-{
-    <p>@_infoMessage</p>
-}
-
-<!-- other's votes -->
-<br/>
-<br/>
-<h2>Andres svar</h2>
-<label>
-    Sortér efter:
-    <select @bind="_sortedAfter">
-        <option value="@VotesString">@VotesString</option>
-        <option value="@TimeString">@TimeString</option>
-    </select>
-</label>
-<div style="max-width: 60vw; overflow-x: scroll">
-    <table style="border-spacing:0.5rem;">
-        <tr>
-            <th style="vertical-align: bottom">Navn</th>
-            @{
-                var orderedShowtimes = _sortedAfter == VotesString
-                    ? _event.Showtimes.OrderByDescending(showtime => (_event.Participants ?? []).Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No))) //take sum of Non-no votes
-                        .ThenByDescending(showtime => (_event.Participants ?? []).Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote == Vote.Yes))) //take sum of yes votes as tie breaker
-                        .ThenBy(s => s.Playtime.StartTime.ToLocalTime()).ToList()
-                    : _event.Showtimes.OrderBy(s => s.Playtime.StartTime.ToLocalTime()).ToList();
-            }
-            @foreach (var showtime in orderedShowtimes)
+    @if (_alreadyAnsweredCookie)
+    {
+        <p>Du har allerede svaret</p>
+    }
+    else if (!_answerSaved)
+    {
+        <div>
+            <input placeholder="Indtast dit navn" @bind="@Nickname" required="required"/>
+            <input placeholder="Skriv din email (valgfrit)" type="email" @bind="@Email"/>
+            <div>
+                <textarea style="margin-bottom: 5px;margin-top: 5px;width: 300px" type="text"   placeholder="Note (valgfrit)"  @bind="Note"></textarea>
+            </div>
+            <button onclick="@(async () => { await SaveParticipantAnswer(false); })">
+                Send svar
+            </button>
+            @if (_confirmSubmit)
             {
-                <th style="padding-left:0.5rem; padding-right: 0.5rem">
-                    <div class="tooltip-container">
-                        <div class="tooltip-content">
-                            <p>Bio: @showtime.Cinema.Name</p>
-                            <p>Version: @showtime.VersionTag.Type</p>
-                            <p>@showtime.Room.Name</p>
-                        </div>
-                        <div class="result-table-header" style="display:flex;flex-direction: column; justify-content: center;align-items: center; gap: 0.33rem; background-color: @(_event.ChosenShowtimeId == showtime.Id ? "green" : "lightgray")">
-                            <p class="film-title">
-                                @(showtime.Movie.Title.Length > 20 ? $"{showtime.Movie.Title[..17]}..." : showtime.Movie.Title)
-                            </p>
-                            <p class="date">
-                                @showtime.Playtime.StartTime.ToLocalTime().ToString("dd. MMM")
-                            </p>
-                            <p class="playtime" style="font-size: 12px">
-                                Kl. @showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm") - @showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
-                            </p>
-                            <p class="participants" style="font-size: 10px; font-weight: bold">
-                                Stemmer: @_event.Participants?.Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No));
-                            </p>
-                        </div>
+                <div>
+                    <p>Du har ikke valgt nogen tider. Vil du indsende dit svar alligevel?</p>
+                    <div style="display: inline-block">
+                        <button onclick="@(async () => { await SaveParticipantAnswer(true); })">
+                            Ja
+                        </button>
+                        <button onclick="@(() => { _confirmSubmit = false; })">Nej</button>
                     </div>
-                </th>
+                </div>
             }
-        </tr>
+        </div>
+    }
 
-        @foreach (var participant in _event.Participants ?? new())
-        {
-            Console.WriteLine(string.Join(", ", orderedShowtimes.Select(s => s.Id)));
-            Console.WriteLine(string.Join(", ", participant.VotedFor.Select(s => s.Vote.ToString())));
+    @if (_infoMessage is not null)
+    {
+        <p>@_infoMessage</p>
+    }
+
+    <!-- other's votes -->
+    <br/>
+    <br/>
+    <h2>Andres svar</h2>
+    <label>
+        Sortér efter:
+        <select @bind="_sortedAfter">
+            <option value="@VotesString">@VotesString</option>
+            <option value="@TimeString">@TimeString</option>
+        </select>
+    </label>
+    <div style="max-width: 60vw; overflow-x: scroll">
+        <table style="border-spacing:0.5rem;">
             <tr>
-                <td>
-                    <div style="display: flex">
-                        @participant.Nickname
-                        @if (!string.IsNullOrEmpty(participant.Note))
-                        {
-                            <div class="tooltip-container">
-                                <span style="font-size: 10px;">📝</span>
-                                <div class="tooltip-content" style="border-style: solid; border-width: 2px;border-color: #1a1e21; padding: 5px">
-                                    <p style="font-weight: bold">@participant.Nickname</p>
-                                    @if (!string.IsNullOrEmpty(participant.Note))
-                                    {
-                                        <p>Note: @participant.Note</p>
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </div>
-
-                </td>
+                <th style="vertical-align: bottom">Navn</th>
+                @{
+                    var orderedShowtimes = _sortedAfter == VotesString
+                        ? _event.Showtimes.OrderByDescending(showtime => (_event.Participants ?? []).Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No))) //take sum of Non-no votes
+                            .ThenByDescending(showtime => (_event.Participants ?? []).Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote == Vote.Yes))) //take sum of yes votes as tie breaker
+                            .ThenBy(s => s.Playtime.StartTime.ToLocalTime()).ToList()
+                        : _event.Showtimes.OrderBy(s => s.Playtime.StartTime.ToLocalTime()).ToList();
+                }
                 @foreach (var showtime in orderedShowtimes)
                 {
+                    <th style="padding-left:0.5rem; padding-right: 0.5rem">
+                        <div class="tooltip-container">
+                            <div class="tooltip-content">
+                                <p>Bio: @showtime.Cinema.Name</p>
+                                <p>Version: @showtime.VersionTag.Type</p>
+                                <p>@showtime.Room.Name</p>
+                            </div>
+                            <div class="result-table-header" style="display:flex;flex-direction: column; justify-content: center;align-items: center; gap: 0.33rem; background-color: @(_event.ChosenShowtimeId == showtime.Id ? "green" : "lightgray")">
+                                <p class="film-title">
+                                    @(showtime.Movie.Title.Length > 20 ? $"{showtime.Movie.Title[..17]}..." : showtime.Movie.Title)
+                                </p>
+                                <p class="date">
+                                    @showtime.Playtime.StartTime.ToLocalTime().ToString("dd. MMM")
+                                </p>
+                                <p class="playtime" style="font-size: 12px">
+                                    Kl. @showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm") - @showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
+                                </p>
+                                <p class="participants" style="font-size: 10px; font-weight: bold">
+                                    Stemmer: @_event.Participants?.Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No));
+                                </p>
+                            </div>
+                        </div>
+                    </th>
+                }
+            </tr>
+
+            @foreach (var participant in _event.Participants ?? new())
+            {
+                Console.WriteLine(string.Join(", ", orderedShowtimes.Select(s => s.Id)));
+                Console.WriteLine(string.Join(", ", participant.VotedFor.Select(s => s.Vote.ToString())));
+                <tr>
                     <td>
-                        <div style="height:2rem; background: @(participant.VotedFor.First(v => v.Showtime.Id == showtime.Id).Vote switch { Vote.No => "lightgray", Vote.Yes => "green", Vote.IfNeedBe => "orange", _ => "" })">
+                        <div style="display: flex">
+                            @participant.Nickname
+                            @if (!string.IsNullOrEmpty(participant.Note))
+                            {
+                                <div class="tooltip-container">
+                                    <span style="font-size: 10px;">📝</span>
+                                    <div class="tooltip-content" style="border-style: solid; border-width: 2px;border-color: #1a1e21; padding: 5px">
+                                        <p style="font-weight: bold">@participant.Nickname</p>
+                                        @if (!string.IsNullOrEmpty(participant.Note))
+                                        {
+                                            <p>Note: @participant.Note</p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                    </td>
+                    @foreach (var showtime in orderedShowtimes)
+                    {
+                        <td>
+                            <div style="height:2rem; background: @(participant.VotedFor.First(v => v.Showtime.Id == showtime.Id).Vote switch { Vote.No => "lightgray", Vote.Yes => "green", Vote.IfNeedBe => "orange", _ => "" })">
+                            </div>
+                        </td>
+                    }
+                </tr>
+            }
+            <tr>
+                <td/>
+                @for (var i = 0; i < orderedShowtimes.Count; i++)
+                {
+                    //var index = orderedShowtimes.IndexOf(showtime);
+                    //var localShowtime = orderedShowtimes[index];
+                    var index = i;
+                    var showtime = orderedShowtimes[index];
+                    <td>
+                        <div>
+                            @if (_isHost)
+                            {
+                                <button @onclick="() => OpenConfirmationDialog(index)">Bekræft event</button>
+                            }
+                            <dialog id="@("confirmEvent" + index)">
+                                <h4>Ønsker du at bekræfte forestillingen for dette event?</h4>
+                                <button @onclick="async () => { await OpenDetailsDialog(showtime, index); }">Ja</button>
+                                <button @onclick="() => CloseDialog(index)">Nej</button>
+                                <dialog id="@("confirmDetails" + index)">
+                                    <h4>Event valgt</h4>
+                                    <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank"); })">Bestil billetter</button>
+                                    <button onclick="@(async () => { _showtimeToCalendar = showtime; await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til egen kalender</button>
+                                    <button @onclick="ShareEvent">Del</button>
+                                    <button @onclick="() => CloseDialog(index)">Luk</button>
+                                </dialog>
+                            </dialog>
                         </div>
                     </td>
                 }
             </tr>
-        }
-        <tr>
-            <td/>
-            @for (var i = 0; i < orderedShowtimes.Count; i++)
-            {
-                //var index = orderedShowtimes.IndexOf(showtime);
-                //var localShowtime = orderedShowtimes[index];
-                var index = i;
-                var showtime = orderedShowtimes[index];
-                <td>
-                    <div>
-                        @if (_isHost)
-                        {
-                            <button @onclick="() => OpenConfirmationDialog(index)">Bekræft event</button>
-                        }
-                        <dialog id="@("confirmEvent" + index)">
-                            <h4>Ønsker du at bekræfte forestillingen for dette event?</h4>
-                            <button @onclick="async () => { await OpenDetailsDialog(showtime, index); }">Ja</button>
-                            <button @onclick="() => CloseDialog(index)">Nej</button>
-                            <dialog id="@("confirmDetails" + index)">
-                                <h4>Event valgt</h4>
-                                <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank"); })">Bestil billetter</button>
-                                <button onclick="@(async () => { _showtimeToCalendar = showtime; await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til egen kalender</button>
-                                <button @onclick="ShareEvent">Del</button>
-                                <button @onclick="() => CloseDialog(index)">Luk</button>
-                            </dialog>
-                        </dialog>
-                    </div>
-                </td>
-            }
-        </tr>
-    </table>
-</div>
-
-<dialog id="calendar-dialog">
-    <div style="display: flex">
-        <button onclick="@(() => { OpenGoogleCalendar(_showtimeToCalendar); })">Tilføj til google kalender</button>
-        <button onclick="@(() => { DownloadCalendarFile(_showtimeToCalendar); })">Download til andre kalendre</button>
+        </table>
     </div>
-    <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
-</dialog>
+
+    <dialog id="calendar-dialog">
+        <div style="display: flex">
+            <button onclick="@(() => { OpenGoogleCalendar(_showtimeToCalendar); })">Tilføj til google kalender</button>
+            <button onclick="@(() => { DownloadCalendarFile(_showtimeToCalendar); })">Download til andre kalendre</button>
+        </div>
+        <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
+    </dialog>
 }
 
 @code {
@@ -541,6 +541,7 @@ else if (!_answerSaved)
     private bool _isEditing;
 
     private bool _showFirstLoginDialog;
+    private string _returnUrl;
 
     private DateTime _deadline;
 
@@ -548,6 +549,7 @@ else if (!_answerSaved)
 
     protected override async Task OnInitializedAsync()
     {
+        _returnUrl = NavigationManager.Uri;
         baseUrl = NavigationManager.BaseUri;
         _infoMessage = null;
         var httpClient = new HttpClient();
