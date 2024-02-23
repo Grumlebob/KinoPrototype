@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using KinoPrototype.Client;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
