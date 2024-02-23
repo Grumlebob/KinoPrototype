@@ -178,16 +178,51 @@
 }
 
 <div style="display: flex; flex-direction: row">
-    <h1>@_event.Title</h1>
+    @if (_isEditing)
+    {
+        <input type="text" @bind="_event.Title" style="margin-right: 5px"/>
+    }
+    else
+    {
+        <h1>@_event.Title</h1>
+    }
+
+    @if (_isHost)
+    {
+        <button style="margin-left: 5px;height: 40px" @onclick= "async () => { if (_isEditing) await UpdateJoinEvent();_isEditing = !_isEditing;  } ">
+            
+            @( _isEditing ? "Gem ændringer" : "✎" )
+        </button>
+    }
     <button style="margin-left: 5px;height: 40px" @onclick="ScrollToBottom">Gå til resultater</button>
 </div>
 
-<p>@_event.Description</p>
+@if (_isEditing)
+{
+    <textarea style="margin-bottom: 5px;width: 300px" type="text"   placeholder="Beskrivelse"  @bind="_event.Description"></textarea>
+}
+else
+{
+    <p>@_event.Description</p>
+}
+
+
 
 <div style="height: 1px; width: 500px; background-color: gray;margin-bottom: 10px"/>
 
+
 <p>@_event.Host.Username vil gerne I biografen med dig! Nedenunder kan du vise hvilke spilletider der passer dig, ved at trykke på dem.</p>
-<p>Deadline for tilmelding: @_event.Deadline.ToLocalTime().ToString("dd. MMM")</p>
+
+<p>Deadline for tilmelding:
+    @if (_isEditing)
+    {
+        <input style="margin-bottom: 5px; margin-top: 0px;width: 300px" type="date" placeholder="Deadline" min="@DateTime.Now.Date.ToString("yyyy-MM-dd")" max="@_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("yyyy-MM-dd")" @bind="@_deadline"/>
+    }
+    else
+    {
+        @_deadline.ToString("dd. MMM")
+    }
+    </p>
 <p>Tidsinterval: @_event.Showtimes.Min(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM") - @_event.Showtimes.Max(s => s.Playtime.StartTime.ToLocalTime()).ToString("dd. MMM")</p>
 
 
@@ -284,8 +319,7 @@
         </div>
     </div>
 }
-@if (_event.ChosenShowtimeId == null)
-{
+
     @if (_alreadyAnsweredCookie)
     {
         <p>Du har allerede svaret</p>
@@ -315,11 +349,6 @@
             }
         </div>
     }
-}
-else
-{
-    <p>Eventet er lukket</p>
-}
 
 @if (_infoMessage is not null)
 {
@@ -383,21 +412,23 @@ else
             Console.WriteLine(string.Join(", ", participant.VotedFor.Select(s => s.Vote.ToString())));
             <tr>    
                 <td>
-                        @participant.Nickname 
-                        @if (!string.IsNullOrEmpty(participant.Note))
-                        {
-                            <div class="tooltip-container" >
-                                <span style="font-size: 10px;">Note📝</span>
-                                 <div class="tooltip-content" style="border-style: solid; border-width: 2px;border-color: #1a1e21; padding: 5px">
-                                                            <p style="font-weight: bold">@participant.Nickname</p>
-                                                            @if (!string.IsNullOrEmpty(participant.Note))
-                                                            {
-                                                                <p>Note: @participant.Note</p>
-                                                            }
-                                                        </div>
+                    <div style="display: flex">
+                    @participant.Nickname
+                    @if (!string.IsNullOrEmpty(participant.Note))
+                    {
+                        <div class="tooltip-container">
+                            <span style="font-size: 10px;">📝</span>
+                            <div class="tooltip-content" style="border-style: solid; border-width: 2px;border-color: #1a1e21; padding: 5px">
+                                <p style="font-weight: bold">@participant.Nickname</p>
+                                @if (!string.IsNullOrEmpty(participant.Note))
+                                {
+                                    <p>Note: @participant.Note</p>
+                                }
                             </div>
-                        }
-                    
+                        </div>
+                    }
+                    </div>
+
                 </td>
                 @foreach (var showtime in orderedShowtimes)
                 {
@@ -418,12 +449,12 @@ else
                 var showtime = orderedShowtimes[index];
                 <td>
                     <div>
-                        @if (_event.ChosenShowtimeId == null && _isHost)
+                        @if (_isHost)
                         {
                             <button @onclick="() => OpenConfirmationDialog(index)">Bekræft event</button>
                         }
                         <dialog id="@("confirmEvent" + index)">
-                            <h4>Ønsker du at låse dette event?</h4>
+                            <h4>Ønsker du at bekræfte forestillingen for dette event?</h4>
                             <button @onclick="async () => { await OpenDetailsDialog(showtime, index); }">Ja</button>
                             <button @onclick="() => CloseDialog(index)">Nej</button>
                             <dialog id="@("confirmDetails" + index)">
@@ -487,6 +518,10 @@ else
     private bool _alreadyAnsweredCookie;
 
     private bool _isHost;
+    
+    private bool _isEditing;
+    
+    private DateTime _deadline;
 
     protected override async Task OnInitializedAsync()
     {
@@ -522,7 +557,7 @@ else
             _isHost = _event.Host.AuthId == userId;
         }
         
-
+        _deadline = _event.Deadline.ToLocalTime();
         _loading = false;
     }
 
@@ -560,9 +595,10 @@ else
             }
         }
 
-        if (Email is not null or "")
+        if (Email?.Trim() == "") Email = null;
+        if (Email != null)
         {
-            Console.WriteLine("Email is not null or empty");
+            Console.WriteLine("Email is " + Email);
             var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$");
             var emailMatch = emailRegex.Match(Email);
             if (!emailMatch.Success)
@@ -691,6 +727,7 @@ else
         await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
         await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog");
 
+        
 
 /*
 //send the calendar item to the browser
@@ -704,6 +741,21 @@ Response.Write(CalendarItem);
 Response.Flush();
 HttpContext.Current.ApplicationInstance.CompleteRequest();
 */
+    }
+    
+    private async Task UpdateJoinEvent()
+    {
+        _event.Deadline = _deadline;
+        var httpClient = new HttpClient();
+        var response = await httpClient.PutAsJsonAsync($"{baseUrl}putJoinEvent", _event);
+        if (response.IsSuccessStatusCode)
+        {
+            Console.WriteLine("Updated");
+        }
+        else
+        {
+            Console.WriteLine("Failed to update");
+        }
     }
 
 }

@@ -2,7 +2,7 @@
 @using System.Globalization;
 @using System.Web
 @using KinoPrototype.Client.ExternalAPI
-@inject IJSRuntime JSRuntime
+@inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
 @using KinoPrototype.Domain
 
@@ -217,16 +217,24 @@
         @if (!eventCreated)
         {
             <h4>Ønsker du at oprette eventet?</h4>
-            <button style="background-color: green; color: white" @onclick="FinishJoinEvent">Opret</button>
-            <button style="background-color: red; color: white" @onclick="CloseDialog">Rediger videre</button>
+            <input id="CanAllShowtimes" type="checkbox" @bind="HostCanAllShowtimes"/>
+            <label for="CanAllShowtimes">@(HostCanAllShowtimes ? "Jeg kan alle valgte tider" : "Jeg ønsker selv at angive tider hvor jeg kan")</label>
+            <div>
+                <button style="background-color: green; color: white" @onclick="FinishJoinEvent">Opret</button>
+                <button style="background-color: red; color: white" @onclick="CloseDialog">Rediger videre</button>
+            </div>
         }
         else
         {
             <h4>Event oprettet</h4>
-
+            
             <p>Send dette link til dine venner</p>
-            <a href="@(baseUrl + "filling/" + @_joinEventId)">@(baseUrl + "filling/" + @_joinEventId)</a>
+            <a href="@(baseUrl + "filling/" + _joinEventId)">@(baseUrl + "filling/" + _joinEventId)</a>
             <button @onclick="ShareEvent">Del</button>
+            if (!HostCanAllShowtimes)
+            {
+                <p>Angiv hvilke tider du selv kan ved at gå ind på linket</p>
+            }
         }
     </dialog>
 
@@ -409,6 +417,8 @@
 
     private bool _showSnackbar;
 
+    private bool HostCanAllShowtimes = true;
+
     [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
 
 
@@ -470,7 +480,7 @@
             url = baseUrl + "filling/" + _joinEventId
         };
 
-        await JSRuntime.InvokeVoidAsync("navigator.share", data);
+        await JsRuntime.InvokeVoidAsync("navigator.share", data);
     }
     
     private void HandleMovieCheckboxChange(ChangeEventArgs e, int movieId)
@@ -759,13 +769,13 @@
         {
             Console.WriteLine("No trailer found");
             var noUrl = $"https://www.youtube.com/results?search_query={movie.Title}+trailer";
-            await JSRuntime.InvokeVoidAsync("open", noUrl, "_blank");
+            await JsRuntime.InvokeVoidAsync("open", noUrl, "_blank");
 
             return;
         }
 
         var trailerUrl = movieRoot.Content.field_trailer.FieldMediaOembedVideo.trailerUrl;
-        await JSRuntime.InvokeVoidAsync("open", trailerUrl, "_blank");
+        await JsRuntime.InvokeVoidAsync("open", trailerUrl, "_blank");
     }
 
     protected override async Task OnInitializedAsync()
@@ -1110,7 +1120,7 @@
         }
         else
         {
-            await JSRuntime.InvokeVoidAsync("customFunctions.showDialog", "eventDialog");
+            await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "eventDialog");
         }
     }
 
@@ -1118,13 +1128,13 @@
     private async Task CloseDialog()
     {
         // Hide the dialog using JavaScript interop
-        await JSRuntime.InvokeVoidAsync("customFunctions.hideDialog", "eventDialog");
+        await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "eventDialog");
     }
 
     private async Task CopyLink()
     {
         // Hide the dialog using JavaScript interop
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"{NavigationManager.BaseUri}filling/" + _joinEventId);
+        await JsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"{NavigationManager.BaseUri}filling/" + _joinEventId);
     }
 
     private async Task FinishJoinEvent()
@@ -1178,6 +1188,21 @@
         _joinEventId = int.Parse(id);
 
         eventCreated = true;
+
+        if (HostCanAllShowtimes)
+        {
+            var p = new Participant { Nickname = host.Username, Email = null, Note = null,
+                VotedFor = pickedShowtimes.Select(s => new ParticipantVote { ShowtimeId = s.Id, Showtime = s, Vote = Vote.Yes}).ToList(), 
+                JoinEventId = _joinEventId };
+            var httpClient = new HttpClient();
+            var participateResponse = await httpClient.PutAsJsonAsync($"{baseUrl}participate/{_joinEventId}", p);
+            if (participateResponse.IsSuccessStatusCode)
+            {
+                var expiry = DateTime.Now.AddDays(60).ToString("R"); // "R" for RFC1123 pattern
+                await JsRuntime.InvokeVoidAsync("eval", $"document.cookie = 'eventAnswer{_joinEventId}={1}; expires={expiry}; path=/'");
+                StateHasChanged();
+            }
+        }
     }
 
 }
