@@ -26,7 +26,7 @@ public static class AllEndpoints
                             Movie = new Movie()
                             {
                                 Id = s.MovieId, AgeRating = s.Movie.AgeRating, PremiereDate = s.Movie.PremiereDate,
-                                Title = s.Movie.Title, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration
+                                Title = s.Movie.Title, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration, KinoURL = s.Movie.KinoURL
                             },
                             Cinema = s.Cinema, Playtime = s.Playtime, Room = s.Room,
                             VersionTag = s.VersionTag,
@@ -66,7 +66,7 @@ public static class AllEndpoints
                             Movie = new Movie()
                             {
                                 Id = s.MovieId, AgeRating = s.Movie.AgeRating, PremiereDate = s.Movie.PremiereDate,
-                                Title = s.Movie.Title, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration,
+                                Title = s.Movie.Title, ImageUrl = s.Movie.ImageUrl, Duration = s.Movie.Duration, KinoURL = s.Movie.KinoURL
                             },
                             Cinema = s.Cinema, Playtime = s.Playtime, Room = s.Room,
                             VersionTag = s.VersionTag,
@@ -118,7 +118,8 @@ public static class AllEndpoints
                             Duration = movie.Duration,
                             ImageUrl = movie.ImageUrl,
                             Title = movie.Title,
-                            PremiereDate = movie.PremiereDate
+                            PremiereDate = movie.PremiereDate,
+                            KinoURL = movie.KinoURL
                         }); // Specify other properties
                     }
                     else
