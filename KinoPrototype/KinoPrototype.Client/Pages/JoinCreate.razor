@@ -1202,6 +1202,7 @@
         {
             var p = new Participant
             {
+                AuthId = host.AuthId,
                 Nickname = host.Username, Email = null, Note = null,
                 VotedFor = pickedShowtimes.Select(s => new ParticipantVote { ShowtimeId = s.Id, Showtime = s, Vote = Vote.Yes }).ToList(),
                 JoinEventId = _joinEventId
