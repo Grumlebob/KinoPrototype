@@ -229,6 +229,20 @@ public static class AllEndpoints
             }
 
             await context.SaveChangesAsync();
+            return Results.Ok(participant.Id);
+        });
+        
+        app.MapDelete("/deleteParticipant/{eventId}/{participantId}", async (int eventId, int participantId) =>
+        {
+            await using var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<KinoContext>();
+            var joinEvent = await context.JoinEvents.Include(e => e.Participants)
+                .FirstOrDefaultAsync(e => e.Id == eventId);
+            if (joinEvent is { Participants: not null } && joinEvent.Participants.Exists(eP => eP.Id == participantId))
+            {
+                joinEvent.Participants.Remove(joinEvent.Participants.First(p => p.Id == participantId));
+            }
+
+            await context.SaveChangesAsync();
             return Results.Ok();
         });
 
