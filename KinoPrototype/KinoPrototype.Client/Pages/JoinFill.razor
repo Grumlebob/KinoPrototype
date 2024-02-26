@@ -595,15 +595,6 @@ else
         else
         {
             _showFirstLoginDialog = true;
-            var cookieString = await JsRuntime.InvokeAsync<string>("eval", "document.cookie");
-            var cookies = cookieString.Split(';').Select(c => c.Trim());
-            var cookie = cookies.FirstOrDefault(c => c.StartsWith($"eventAnswer{_event.Id}="));
-
-            if (cookie is not null)
-            {
-                _alreadyAnswered = true;
-            }
-
             StateHasChanged();
         }
 
@@ -663,11 +654,6 @@ else
             _infoMessage = "Svar gemt";
             _answerSaved = true;
             _event.Participants.Add(p);
-            if (!_isLoggedIn)
-            {
-                var expiry = DateTime.Now.AddDays(60).ToString("R"); // "R" for RFC1123 pattern
-                await JsRuntime.InvokeVoidAsync("eval", $"document.cookie = 'eventAnswer{_event.Id}={1}; expires={expiry}; path=/'");
-            }
 
             StateHasChanged();
         }
