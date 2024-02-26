@@ -648,14 +648,6 @@ else
         if (Email?.Trim() == "") Email = null;
         if (Email != null)
         {
-            var emailRegex = new Regex("^([\\w\\.\\-]+)@([\\w\\-]+)((\\.(\\w){2,3})+)$");
-            var emailMatch = emailRegex.Match(Email);
-            if (!emailMatch.Success)
-            {
-                _infoMessage = "Indtast venligst en gyldig email";
-                return;
-            }
-
             if (_event.Participants is not null && _event.Participants.Any(p => p.Email == Email))
             {
                 _infoMessage = "Du har allerede svaret";
