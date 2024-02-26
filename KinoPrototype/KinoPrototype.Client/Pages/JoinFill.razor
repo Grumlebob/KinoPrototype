@@ -5,6 +5,7 @@
 @using System.Text.RegularExpressions
 @using System.Web
 @using KinoPrototype.Client.ExternalAPI
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
 
@@ -185,8 +186,8 @@
 @if (_showFirstLoginDialog)
 {
     <h4>@_event.Host.Username vil gerne I biografen med dig! Du kan vælge hvilke forestillinger der passer dig bedst.</h4>
-    <a href="authentication/login">Anvend dit kino login til at stemme</a>
-    <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Anvend gæste login til at stemme</button>
+    <button onclick="@(() => { NavigationManager.NavigateToLogin("authentication/login", new InteractiveRequestOptions() { Interaction = InteractionType.SignIn, ReturnUrl = "/filling/" + _event.Id }); })" >Anvend dit kino login til at stemme</button>
+                                                                                                                                                                                                         <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Anvend gæste login til at stemme</button>
 }
 else
 {
@@ -488,6 +489,8 @@ else
                                     <h4>Event valgt</h4>
                                     <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank"); })">Bestil billetter</button>
                                     <button onclick="@(async () => { _showtimeToCalendar = showtime; await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til egen kalender</button>
+                                    <button onclick="@(async () => await GoToMailToLink(showtime))">Send mail til deltagere</button>
+                                    
                                     <button @onclick="ShareEvent">Del</button>
                                     <button @onclick="() => CloseDialog(index)">Luk</button>
                                 </dialog>
@@ -832,6 +835,13 @@ HttpContext.Current.ApplicationInstance.CompleteRequest();
 
         if (videoId == null) await JsRuntime.InvokeVoidAsync("open", $"https://www.youtube.com/results?search_query={movie.Title}+trailer", "_blank"); //search in youtube
         else _trailerUrl = $"https://www.youtube.com/embed/{videoId}";
+    }
+
+    private async Task GoToMailToLink(Showtime showtime)
+    {
+        var mails = _event.Participants.Where(p => p.Email is not null).Select(p => p.Email);
+        var text = _event.Description + "\n" + "Valgt forestilling: " + showtime.Movie.Title + ", " + showtime.Cinema.Name + ", " + showtime.Playtime.StartTime.ToLocalTime().ToString("dd. MMM HH:mm");
+        await JsRuntime.InvokeVoidAsync("open", $"mailto:{string.Join(",", mails)}?subject={_event.Title}&body={text}", "_blank");
     }
 
 }

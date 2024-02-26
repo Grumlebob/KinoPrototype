@@ -7,6 +7,7 @@ public class Host
 {
     [Key] public string AuthId { get; set; }
     public string Username { get; set; }
+    public string? Email { get; set; }
     public List<JoinEvent>? JoinEvents { get; set; }
 }
 
@@ -15,7 +16,6 @@ public class Participant
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
-    
     public string? AuthId { get; set; }
     public int JoinEventId { get; set; }
     public string Nickname { get; set; }

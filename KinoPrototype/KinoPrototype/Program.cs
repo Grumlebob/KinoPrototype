@@ -1,9 +1,7 @@
 
 using KinoPrototype;
 using KinoPrototype.Components;
-using KinoPrototype.Domain;
 using Microsoft.EntityFrameworkCore;
-using Host = Microsoft.Extensions.Hosting.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 

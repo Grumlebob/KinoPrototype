@@ -832,6 +832,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        var user = (await AuthenticationStateTask).User;
         var client = new HttpClient();
 
         baseUrl = NavigationManager.BaseUri;
@@ -1192,12 +1193,11 @@ else
         var authenticationState = await AuthenticationStateTask;
 
         var user = authenticationState.User;
-        var host = new Host() { };
-
-        var authorId = user.Claims
-            .FirstOrDefault(c => c.Type == "sub")
-            ?.Value!;
+        var host = new Host();
+        
+        var authorId = user.Claims.FirstOrDefault(c => c.Type == "sub")?.Value!;
         var name = user.Claims.FirstOrDefault(c => c.Type == "nickname")?.Value!;
+        var email = user.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
         if (user.Identity is null || !user.Identity.IsAuthenticated)
         {
             host.AuthId = "1";
@@ -1207,10 +1207,11 @@ else
         {
             host.AuthId = authorId;
             host.Username = name;
+            host.Email = email;
         }
 
 
-        var joinEvent = new JoinEvent()
+        var joinEvent = new JoinEvent
         {
             Showtimes = pickedShowtimes,
             Host = host,
@@ -1233,7 +1234,7 @@ else
             var p = new Participant
             {
                 AuthId = host.AuthId,
-                Nickname = host.Username, Email = null, Note = null,
+                Nickname = host.Username, Email = host.Email, Note = null,
                 VotedFor = pickedShowtimes.Select(s => new ParticipantVote { ShowtimeId = s.Id, Showtime = s, Vote = Vote.Yes }).ToList(),
                 JoinEventId = _joinEventId
             };
