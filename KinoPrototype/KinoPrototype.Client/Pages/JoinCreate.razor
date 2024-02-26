@@ -462,6 +462,39 @@ else if (CinemaIdAndName.Count > 0 || MovieIdAndName.Count > 0)
         </div>
     }
 
+    if (showtimes.Count > 0)
+    {
+        foreach (var movie in moviesWithoutShowtimes)
+        {
+            <div class="Redbox">
+                <div class="PosterImage">
+                    <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank">
+                        <img src="@movie.ImageUrl" alt="Movie Poster" width="200" height="300"/>
+                    </a>
+
+                    <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank">
+                        <button style="margin-top: 3px">Læs mere</button>
+                    </a>
+
+                    <button style="margin-top: 3px" @onclick="async () => { await ShowMovieTrailer(movie); }">Se trailer</button>
+
+                </div>
+                <div class="MovieDetails">
+                    <div class="MovieHeader">
+                        <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank" style="text-decoration: none; color: black">
+                            <h2>@movie.Title</h2>
+                        </a>
+
+                        <div class="movie-info">
+                            <span>Ingen forestillinger fundet for denne film med de valgte filtre</span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
     if (_trailerUrl != null)
     {
         <div id="trailerPopUp">
@@ -519,6 +552,7 @@ else
     List<string> movieStrings = new();
     List<string> cinemaStrings = new();
     List<string> genreStrings = new();
+    List<Movie> moviesWithoutShowtimes { get; set; }
 
     string baseUrl;
 
@@ -625,6 +659,57 @@ else
                 selectedCinemaFilters.Remove(cinemaId);
             }
         }
+    }
+
+    private async Task<List<Movie>> GetMoviesWithoutShowtimes()
+    {
+        var filterString = "";
+        for (var i = 0; i < selectedMovieFilters.Count; i++)
+        {
+            var movieId = selectedMovieFilters[i];
+            if (showtimes.All(f => f.MovieId != movieId))
+            {
+                filterString += (string.IsNullOrEmpty(filterString) ? "" : "&") + $"movies[{i}]=" + movieId;
+            }
+        }
+
+        if (filterString is "") return []; //all movies had showtimes
+        var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased&" +
+                        filterString + "&?region=content&format=json";
+        var httpClient = new HttpClient();
+        var json = await httpClient.GetStringAsync(apiString);
+        Root? root = JsonConvert.DeserializeObject<Root>(json);
+        if (root == null) return [];
+        List<Movie> missingMovies = new();
+        foreach (var cinema in root.Content.Content.Content.Content)
+        {
+            foreach (var movie in cinema.Movies)
+            {
+                if (!MovieIdAndName.ContainsKey(movie.Id) || missingMovies.Any(m => m.Id == movie.Id) || movies.Any(m => m.Id == movie.Id))
+                {
+                    continue;
+                }
+
+                Movie movieObject;
+                int duration;
+
+                int.TryParse(movie.Content.FieldPlayingTime, out duration);
+
+                movieObject = new Movie()
+                {
+                    Id = movie.Id,
+                    Title = MovieIdAndName[movie.Id],
+                    PremiereDate = movie.Content.FieldPremiere,
+                    KinoURL = movie.Content.URL,
+                    AgeRating = movie.Content.FieldCensorshipIcon,
+                    ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
+                    Duration = duration
+                };
+                missingMovies.Add(movieObject);
+            }
+        }
+
+        return missingMovies.ToList();
     }
 
     private async Task UpdateFilters()
@@ -836,6 +921,7 @@ else
         }
 
         selectedShowtimeIds = selectedShowtimeIds.Where(id => showtimes.Any(s => s.Id == id)).ToList();
+        moviesWithoutShowtimes = await GetMoviesWithoutShowtimes();
         _loading = false;
         StateHasChanged();
     }
@@ -1182,6 +1268,7 @@ else
             }
         }
 
+        moviesWithoutShowtimes = await GetMoviesWithoutShowtimes();
         _loading = false;
     }
 
