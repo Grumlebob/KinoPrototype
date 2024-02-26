@@ -265,31 +265,37 @@ else if (CinemaIdAndName.Count > 0 || MovieIdAndName.Count > 0)
     <h2 style="margin-top: 10px">Tilpas filtrer</h2>
 
     <p style="margin-bottom: 0px">Film</p>
-    <div style="display: inline-block; width: 400px; max-height: 100px; overflow-y: auto;">
-        @foreach (var movie in MovieIdAndName)
-        {
-            <div style="display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(40ch + 20px);">
-                <input type="checkbox" id="@($"movie-{movie.Key}")"
-                       value="@movie.Key"
-                       @onchange="@(e => HandleMovieCheckboxChange(e, movie.Key))"
-                       checked="@(selectedMovieFilters.Contains(movie.Key))"/>
-                <label for="@($"movie-{movie.Key}")" style="flex-grow: 1; text-overflow: ellipsis; overflow: hidden; margin-left: 5px;">@movie.Value</label>
-            </div>
-        }
+    <div style="display: flex; flex-direction: column; width: 400px;">
+        <input type="text" placeholder="Search Movies" @oninput="OnMovieSearchTermChanged"/>
+        <div style="display: inline-block; max-height: 100px; overflow-y: auto;">
+            @foreach (var movie in MovieIdAndName.Where(m => m.Value.ToLowerInvariant().Contains(movieSearchTerm.ToLowerInvariant())))
+            {
+                <div style="display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(40ch + 20px);">
+                    <input type="checkbox" id="@($"movie-{movie.Key}")"
+                           value="@movie.Key"
+                           @onchange="@(e => HandleMovieCheckboxChange(e, movie.Key))"
+                           checked="@(selectedMovieFilters.Contains(movie.Key))"/>
+                    <label for="@($"movie-{movie.Key}")" style="flex-grow: 1; text-overflow: ellipsis; overflow: hidden; margin-left: 5px;">@movie.Value</label>
+                </div>
+            }
+        </div>
     </div>
 
     <p style="margin-bottom: 0px">Biograf</p>
-    <div style="display: inline-block; width: 400px; max-height: 100px; overflow-y: auto;">
-        @foreach (var cinema in CinemaIdAndName)
-        {
-            <div style="display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(40ch + 20px);">
-                <input type="checkbox" id="@($"cinema-{cinema.Key}")"
-                       value="@cinema.Key"
-                       @onchange="@(e => HandleCinemaCheckboxChange(e, cinema.Key))"
-                       checked="@(selectedCinemaFilters.Contains(cinema.Key))"/>
-                <label for="@($"cinema-{cinema.Key}")" style="flex-grow: 1; text-overflow: ellipsis; overflow: hidden; margin-left: 5px;">@cinema.Value</label>
-            </div>
-        }
+    <div style="display: flex; flex-direction: column; width: 400px;">
+        <input type="text" placeholder="Search Cinemas" @oninput="OnCinemaSearchTermChanged"/>
+        <div style="display: inline-block; max-height: 100px; overflow-y: auto;">
+            @foreach (var cinema in CinemaIdAndName.Where(c => c.Value.ToLowerInvariant().Contains(cinemaSearchTerm.ToLowerInvariant())))
+            {
+                <div style="display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(40ch + 20px);">
+                    <input type="checkbox" id="@($"cinema-{cinema.Key}")"
+                           value="@cinema.Key"
+                           @onchange="@(e => HandleCinemaCheckboxChange(e, cinema.Key))"
+                           checked="@(selectedCinemaFilters.Contains(cinema.Key))"/>
+                    <label for="@($"cinema-{cinema.Key}")" style="flex-grow: 1; text-overflow: ellipsis; overflow: hidden; margin-left: 5px;">@cinema.Value</label>
+                </div>
+            }
+        </div>
     </div>
 
     <p style="margin-bottom: 0px">Start Dato</p>
@@ -513,6 +519,21 @@ else
             }
         }
     }
+    
+    private string movieSearchTerm = string.Empty;
+    private string cinemaSearchTerm = string.Empty;
+
+    private void OnMovieSearchTermChanged(ChangeEventArgs e)
+    {
+        movieSearchTerm = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private void OnCinemaSearchTermChanged(ChangeEventArgs e)
+    {
+        cinemaSearchTerm = e.Value?.ToString() ?? string.Empty;
+    }
+    
+    //FILTERS END
 
 
     private async Task ShareEvent()
