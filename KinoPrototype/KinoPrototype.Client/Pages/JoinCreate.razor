@@ -177,6 +177,21 @@
     background-color: red;
 }
 
+.chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 25px; /* This gives the chip a rounded appearance */
+    background-color: #f0f0f0;
+}
+.chip button {
+    margin-left: 5px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+}
 
 .empty-showtime {
     width: 100px;
@@ -208,7 +223,6 @@
     align-items: center;
     justify-content: center;
 }
-
 
 </style>
 
@@ -264,6 +278,7 @@ else if (CinemaIdAndName.Count > 0 || MovieIdAndName.Count > 0)
 
     <h2 style="margin-top: 10px">Tilpas filtrer</h2>
 
+    <!-- Movies Section -->
     <p style="margin-bottom: 0px">Film</p>
     <div style="display: flex; flex-direction: column; width: 400px;">
         <input type="text" placeholder="Search Movies" @oninput="OnMovieSearchTermChanged"/>
@@ -279,8 +294,19 @@ else if (CinemaIdAndName.Count > 0 || MovieIdAndName.Count > 0)
                 </div>
             }
         </div>
+        <!-- Movie Chips -->
+        <div>
+            @foreach (var movieId in selectedMovieFilters)
+            {
+                <span class="chip">
+                    @MovieIdAndName[movieId]
+                    <button @onclick="() => RemoveMovieFilter(movieId)">X</button>
+                </span>
+            }
+        </div>
     </div>
 
+    <!-- Cinemas Section -->
     <p style="margin-bottom: 0px">Biograf</p>
     <div style="display: flex; flex-direction: column; width: 400px;">
         <input type="text" placeholder="Search Cinemas" @oninput="OnCinemaSearchTermChanged"/>
@@ -294,6 +320,16 @@ else if (CinemaIdAndName.Count > 0 || MovieIdAndName.Count > 0)
                            checked="@(selectedCinemaFilters.Contains(cinema.Key))"/>
                     <label for="@($"cinema-{cinema.Key}")" style="flex-grow: 1; text-overflow: ellipsis; overflow: hidden; margin-left: 5px;">@cinema.Value</label>
                 </div>
+            }
+        </div>
+        <!-- Cinema Chips -->
+        <div>
+            @foreach (var cinemaId in selectedCinemaFilters)
+            {
+                <span class="chip">
+                    @CinemaIdAndName[cinemaId]
+                    <button @onclick="() => RemoveCinemaFilter(cinemaId)">X</button>
+                </span>
             }
         </div>
     </div>
@@ -519,7 +555,7 @@ else
             }
         }
     }
-    
+
     private string movieSearchTerm = string.Empty;
     private string cinemaSearchTerm = string.Empty;
 
@@ -532,7 +568,17 @@ else
     {
         cinemaSearchTerm = e.Value?.ToString() ?? string.Empty;
     }
-    
+
+    private void RemoveMovieFilter(int movieId)
+    {
+        selectedMovieFilters.Remove(movieId);
+    }
+
+    private void RemoveCinemaFilter(int cinemaId)
+    {
+        selectedCinemaFilters.Remove(cinemaId);
+    }
+
     //FILTERS END
 
 
@@ -1194,7 +1240,7 @@ else
 
         var user = authenticationState.User;
         var host = new Host();
-        
+
         var authorId = user.Claims.FirstOrDefault(c => c.Type == "sub")?.Value!;
         var name = user.Claims.FirstOrDefault(c => c.Type == "nickname")?.Value!;
         var email = user.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
