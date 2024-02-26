@@ -5,6 +5,7 @@
 @using System.Text.RegularExpressions
 @using System.Web
 @using KinoPrototype.Client.ExternalAPI
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
 
@@ -185,8 +186,8 @@
 @if (_showFirstLoginDialog)
 {
     <h4>@_event.Host.Username vil gerne I biografen med dig! Du kan vælge hvilke forestillinger der passer dig bedst.</h4>
-    <a href="authentication/login">Anvend dit kino login til at stemme</a>
-    <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Anvend gæste login til at stemme</button>
+    <button onclick="@(() => { NavigationManager.NavigateToLogin("authentication/login", new InteractiveRequestOptions() { Interaction = InteractionType.SignIn, ReturnUrl = "/filling/" + _event.Id }); })" >Anvend dit kino login til at stemme</button>
+                                                                                                                                                                                                         <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Anvend gæste login til at stemme</button>
 }
 else
 {
