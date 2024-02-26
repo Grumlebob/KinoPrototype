@@ -186,8 +186,8 @@
 @if (_showFirstLoginDialog)
 {
     <h4>@_event.Host.Username vil gerne I biografen med dig! Du kan vælge hvilke forestillinger der passer dig bedst.</h4>
-    <button onclick="@(() => { NavigationManager.NavigateToLogin("authentication/login", new InteractiveRequestOptions() { Interaction = InteractionType.SignIn, ReturnUrl = "/filling/" + _event.Id }); })" >Anvend dit kino login til at stemme</button>
-                                                                                                                                                                                                         <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Uden login</button>
+    <button onclick="@(() => { NavigationManager.NavigateToLogin("authentication/login", new InteractiveRequestOptions() { Interaction = InteractionType.SignIn, ReturnUrl = "/filling/" + _event.Id }); })">Anvend dit kino login til at stemme</button>
+    <button onclick="@(async () => { _showFirstLoginDialog = false; await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "firstLoginDialog"); })">Uden login</button>
 }
 else
 {
@@ -232,7 +232,7 @@ else
     {
         <p>@_event.Description</p>
     }
-    
+
     <p>
         Deadline for tilmelding:
         @if (_isEditing)
@@ -411,26 +411,18 @@ else
                 @foreach (var showtime in orderedShowtimes)
                 {
                     <th style="padding-left:0.5rem; padding-right: 0.5rem">
-                        <div class="tooltip-container">
-                            <div class="tooltip-content">
-                                <p>Bio: @showtime.Cinema.Name</p>
-                                <p>Version: @showtime.VersionTag.Type</p>
-                                <p>@showtime.Room.Name</p>
-                            </div>
-                            <div class="result-table-header" style="display:flex;flex-direction: column; justify-content: center;align-items: center; gap: 0.33rem; background-color: @(_event.ChosenShowtimeId == showtime.Id ? "green" : "lightgray")">
-                                <p class="film-title">
-                                    @(showtime.Movie.Title.Length > 20 ? $"{showtime.Movie.Title[..17]}..." : showtime.Movie.Title)
-                                </p>
-                                <p class="date">
-                                    @showtime.Playtime.StartTime.ToLocalTime().ToString("dd. MMM")
-                                </p>
-                                <p class="playtime" style="font-size: 12px">
-                                    Kl. @showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm") - @showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
-                                </p>
-                                <p class="participants" style="font-size: 10px; font-weight: bold">
-                                    Stemmer: @_event.Participants?.Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No));
-                                </p>
-                            </div>
+                        <div class="result-table-header" style="display:flex;flex-direction: column; justify-content: center;align-items: center; gap: 0.33rem; background-color: @(_event.ChosenShowtimeId == showtime.Id ? "green" : "lightgray")">
+                            <p>
+                                @(showtime.Movie.Title.Length > 20 ? $"{showtime.Movie.Title[..17]}..." : showtime.Movie.Title)
+                            </p>
+                            <p>Bio: @showtime.Cinema.Name - @showtime.Room.Name </p>
+                            <p>Version: @showtime.VersionTag.Type</p>
+                            <p>
+                                d. @showtime.Playtime.StartTime.ToLocalTime().ToString("dd. MMM") - kl. @showtime.Playtime.StartTime.ToLocalTime().ToString("HH:mm") - @showtime.Playtime.StartTime.ToLocalTime().AddMinutes(showtime.Movie.Duration).ToString("HH:mm")
+                            </p>
+                            <p style="font-weight: bold">
+                                Stemmer: @_event.Participants?.Count(p => p.VotedFor.Any(v => v.ShowtimeId == showtime.Id && v.Vote != Vote.No))
+                            </p>
                         </div>
                     </th>
                 }
@@ -490,7 +482,7 @@ else
                                     <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("open", $"https://kino.dk/ticketflow/showtimes/{showtime.Id}", "_blank"); })">Bestil billetter</button>
                                     <button onclick="@(async () => { _showtimeToCalendar = showtime; await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "calendar-dialog"); })">Tilføj til egen kalender</button>
                                     <button onclick="@(async () => await GoToMailToLink(showtime))">Send mail til deltagere</button>
-                                    
+
                                     <button @onclick="ShareEvent">Del</button>
                                     <button @onclick="() => CloseDialog(index)">Luk</button>
                                 </dialog>
@@ -564,7 +556,7 @@ else
 
     private string? loggedInUserId;
     private string? _trailerUrl;
-    
+
     private bool _isLoggedIn;
 
     protected override async Task OnInitializedAsync()
@@ -584,7 +576,6 @@ else
             _votedFor = _event.Showtimes.Select(st => new ParticipantVote { ShowtimeId = st.Id, Showtime = st, Vote = Vote.No }).ToList(); // a vote for each showtime
         }
 
-        
 
         //check if user is host
         var authState = await AuthenticationStateTask;
@@ -596,7 +587,7 @@ else
             loggedInUserId = user.FindFirst(c => c.Type == "sub")?.Value;
             _isHost = _event.Host.AuthId == loggedInUserId;
             Nickname = username;
-            if (_event.Participants.Any(p => p.AuthId==loggedInUserId))
+            if (_event.Participants.Any(p => p.AuthId == loggedInUserId))
             {
                 _alreadyAnswered = true;
             }
@@ -612,6 +603,7 @@ else
             {
                 _alreadyAnswered = true;
             }
+
             StateHasChanged();
         }
 
@@ -684,6 +676,7 @@ else
                 var expiry = DateTime.Now.AddDays(60).ToString("R"); // "R" for RFC1123 pattern
                 await JsRuntime.InvokeVoidAsync("eval", $"document.cookie = 'eventAnswer{_event.Id}={1}; expires={expiry}; path=/'");
             }
+
             StateHasChanged();
         }
         else
@@ -845,4 +838,3 @@ HttpContext.Current.ApplicationInstance.CompleteRequest();
     }
 
 }
-
