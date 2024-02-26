@@ -501,6 +501,12 @@ else
         </div>
         <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
     </dialog>
+    
+    <dialog id="same-name-dialog">
+        <h4>Der er allerede en deltager med dette navn. Ønsker du at sende et nyt svar i samme navn?</h4>
+        <button @onclick="@(async () => { await SaveParticipantAnswer(true); await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog","same-name-dialog"); })">Ja</button>
+        <button @onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog","same-name-dialog"); })">Nej</button>
+    </dialog>
 
     if (_trailerUrl != null)
     {
@@ -628,6 +634,12 @@ else
                 _infoMessage = "Indtast venligst et navn";
                 return;
             }
+            
+            if (_event.Participants is not null && _event.Participants.Any(p => p.Nickname == Nickname))
+            {
+                await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "same-name-dialog");
+                return;
+            }
 
             if (_votedFor.All(v => v.Vote == Vote.No))
             {
@@ -674,6 +686,10 @@ else
         await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "confirmEvent" + index);
         await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "confirmDetails" + index);
     }
+    
+    
+    
+   
 
     private async Task ShareEvent()
     {
