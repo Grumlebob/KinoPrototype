@@ -179,6 +179,16 @@
     justify-content: center;
 }
 
+.delete-participant-button {
+        color: red;
+        font-size: 20px;
+}
+    
+.delete-participant-button:hover {
+        background-color: lightcoral;
+        cursor: pointer;
+}
+
 
 </style>
 
@@ -413,7 +423,7 @@ else
                     <th style="padding-left:0.5rem; padding-right: 0.5rem">
                         <div class="result-table-header" style="display:flex;flex-direction: column; justify-content: center;align-items: center; gap: 0.33rem; background-color: @(_event.ChosenShowtimeId == showtime.Id ? "green" : "lightgray")">
                             <p>
-                                @(showtime.Movie.Title.Length > 20 ? $"{showtime.Movie.Title[..17]}..." : showtime.Movie.Title)
+                                @(showtime.Movie.Title.Length > 50 ? $"{showtime.Movie.Title[..47]}..." : showtime.Movie.Title)
                             </p>
                             <p>Bio: @showtime.Cinema.Name - @showtime.Room.Name </p>
                             <p>Version: @showtime.VersionTag.Type</p>
@@ -433,7 +443,10 @@ else
                 <tr>
                     <td>
                         <div style="display: flex">
-                            @participant.Nickname
+                            @if (_isHost && participant.Id != 0)
+                            {
+                                <div class="delete-participant-button" onclick="@(async () => { _participantToDelete = participant; StateHasChanged();await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirm-delete-dialog"); })">🗑</div>
+                            }
                             @if (!string.IsNullOrEmpty(participant.Note))
                             {
                                 <div class="tooltip-container">
@@ -447,6 +460,8 @@ else
                                     </div>
                                 </div>
                             }
+
+                            @participant.Nickname
                         </div>
 
                     </td>
@@ -500,6 +515,22 @@ else
             <button onclick="@(() => { DownloadCalendarFile(_showtimeToCalendar); })">Download til andre kalendre</button>
         </div>
         <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
+    </dialog>
+    
+    <dialog id="confirm-delete-dialog">
+        @if (_participantToDelete != null)
+        {
+            <h4>Er du sikker på at du vil slette @_participantToDelete.Nickname's svar?</h4>
+            <button @onclick="@(async () => { await DeleteParticipant(_participantToDelete.Id); await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "confirm-delete-dialog"); })">Ja</button>
+            <button @onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "confirm-delete-dialog"); })">Nej</button>
+        }
+
+    </dialog>
+
+    <dialog id="same-name-dialog">
+        <h4>Der er allerede en deltager med dette navn. Ønsker du at sende et nyt svar i samme navn?</h4>
+        <button @onclick="@(async () => { await SaveParticipantAnswer(true); await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "same-name-dialog"); })">Ja</button>
+        <button @onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "same-name-dialog"); })">Nej</button>
     </dialog>
 
     if (_trailerUrl != null)
@@ -558,6 +589,8 @@ else
     private string? _trailerUrl;
 
     private bool _isLoggedIn;
+    
+    private Participant? _participantToDelete;
 
     protected override async Task OnInitializedAsync()
     {
@@ -595,15 +628,6 @@ else
         else
         {
             _showFirstLoginDialog = true;
-            var cookieString = await JsRuntime.InvokeAsync<string>("eval", "document.cookie");
-            var cookies = cookieString.Split(';').Select(c => c.Trim());
-            var cookie = cookies.FirstOrDefault(c => c.StartsWith($"eventAnswer{_event.Id}="));
-
-            if (cookie is not null)
-            {
-                _alreadyAnswered = true;
-            }
-
             StateHasChanged();
         }
 
@@ -638,9 +662,16 @@ else
                 return;
             }
 
+
             if (_votedFor.All(v => v.Vote == Vote.No))
             {
                 _confirmSubmit = true;
+                return;
+            }
+
+            if (_event.Participants is not null && _event.Participants.Any(p => p.Nickname == Nickname))
+            {
+                await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "same-name-dialog");
                 return;
             }
         }
@@ -662,12 +693,9 @@ else
         {
             _infoMessage = "Svar gemt";
             _answerSaved = true;
+            p.Id = int.Parse(await response.Content.ReadAsStringAsync());
             _event.Participants.Add(p);
-            if (!_isLoggedIn)
-            {
-                var expiry = DateTime.Now.AddDays(60).ToString("R"); // "R" for RFC1123 pattern
-                await JsRuntime.InvokeVoidAsync("eval", $"document.cookie = 'eventAnswer{_event.Id}={1}; expires={expiry}; path=/'");
-            }
+            
 
             StateHasChanged();
         }
@@ -827,6 +855,19 @@ HttpContext.Current.ApplicationInstance.CompleteRequest();
         var mails = _event.Participants.Where(p => p.Email is not null).Select(p => p.Email);
         var text = _event.Description + "\n" + "Valgt forestilling: " + showtime.Movie.Title + ", " + showtime.Cinema.Name + ", " + showtime.Playtime.StartTime.ToLocalTime().ToString("dd. MMM HH:mm");
         await JsRuntime.InvokeVoidAsync("open", $"mailto:{string.Join(",", mails)}?subject={_event.Title}&body={text}", "_blank");
+    }
+
+
+    //Delete participant
+    private async Task DeleteParticipant(int participantId)
+    {
+        var httpClient = new HttpClient();
+        var response = await httpClient.DeleteAsync($"{baseUrl}deleteParticipant/{JoinEventId}/{participantId}");
+        if (response.IsSuccessStatusCode)
+        {
+            _event.Participants.RemoveAll(p => p.Id == participantId);
+            StateHasChanged();
+        }
     }
 
 }
