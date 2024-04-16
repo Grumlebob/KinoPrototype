@@ -64,6 +64,7 @@ public class Movie
     public string PremiereDate { get; set; }
 
     public string AgeRating { get; set; }
+    public bool IsSpecialShow { get; set; }
 }
 
 public class Showtime

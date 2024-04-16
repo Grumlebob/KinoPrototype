@@ -267,9 +267,19 @@ else
         return;
     }
 
-    @foreach (var showtimesByMovie in _event.Showtimes.GroupBy(s => s.Movie.Id))
+    _event.Showtimes = _event.Showtimes.OrderBy(s => s.Movie.IsSpecialShow ? 1 : 0).ToList();
+    var firstSpecialShow = true;
+    foreach (var showtimesByMovie in _event.Showtimes.GroupBy(s => s.Movie.Id))
     {
         var movie = showtimesByMovie.First().Movie;
+        if (movie.IsSpecialShow && firstSpecialShow)
+        {
+            <hr/>
+            <h1>Særvisninger</h1>
+            <br/>
+            firstSpecialShow = false;
+        }
+
         <div class="Redbox">
             <div class="PosterImage">
                 <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank">
@@ -289,8 +299,16 @@ else
                     </a>
 
                     <div class="movie-info">
-                        <span class="premiere">Premiere @movie.PremiereDate | </span>
-                        <span class="duration">Varighed @movie.Duration min</span>
+                        @if (movie.IsSpecialShow)
+                        {
+                            <span class="duration">Varighed @movie.Duration min | </span>
+                            <span class="premiere">Særvisning</span>
+                        }
+                        else
+                        {
+                            <span class="premiere">Premiere @movie.PremiereDate | </span>
+                            <span class="duration">Varighed @movie.Duration min</span>
+                        }
                     </div>
 
                 </div>

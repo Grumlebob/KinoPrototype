@@ -355,9 +355,18 @@ else if (CinemaIdAndName.Count > 0 || MovieIdAndName.Count > 0)
             <p>Du skal vælge mindst en film eller biograf til filteret</p>
         }
     }
-
+    
+    showtimes = showtimes.OrderBy(s => s.Movie.IsSpecialShow ? 1 : 0).ToList();
+    var firstSpecialShow = true;
     @foreach (var movie in showtimes.GroupBy(s => s.Movie))
     {
+        if (movie.Key.IsSpecialShow && firstSpecialShow)
+        {
+            <hr/>
+            <h1>Særvisninger</h1>
+            <br/>
+            firstSpecialShow = false;
+        }
         <div class="Redbox">
             <div class="PosterImage">
                 <a href=@($"https://kino.dk{movie.Key.KinoURL}") target="_blank">
@@ -378,8 +387,16 @@ else if (CinemaIdAndName.Count > 0 || MovieIdAndName.Count > 0)
                     </a>
 
                     <div class="movie-info">
-                        <span class="premiere">Premiere @movie.Key.PremiereDate | </span>
-                        <span class="duration">Varighed @movie.Key.Duration min</span>
+                        @if (movie.Key.IsSpecialShow)
+                        {
+                            <span class="duration">Varighed @movie.Key.Duration min | </span>
+                            <span class="premiere">Særvisning</span>
+                        }
+                        else
+                        {
+                            <span class="premiere">Premiere @movie.Key.PremiereDate | </span>
+                            <span class="duration">Varighed @movie.Key.Duration min</span>
+                        }
                     </div>
 
                 </div>
@@ -545,6 +562,7 @@ else
 
     List<Showtime> showtimes = new();
     List<Movie> movies = new();
+    List<Movie> specialShows = new();
 
     List<int> selectedShowtimeIds = new List<int>();
 
@@ -564,7 +582,7 @@ else
     Dictionary<int, string> GenrerIdAndName = new Dictionary<int, string>();
 
     private DateTime _startDate = DateTime.Today;
-    private DateTime _endDate = DateTime.Today.AddDays(30);
+    private DateTime _endDate = DateTime.Today.AddYears(1);
 
     private DateTime StartDate
     {
@@ -699,9 +717,9 @@ else
                 {
                     Id = movie.Id,
                     Title = MovieIdAndName[movie.Id],
-                    PremiereDate = movie.Content.FieldPremiere,
+                    PremiereDate = movie.Content.FieldPremiere ?? "",
                     KinoURL = movie.Content.URL,
-                    AgeRating = movie.Content.FieldCensorshipIcon,
+                    AgeRating = movie.Content.FieldCensorshipIcon ?? "",
                     ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
                     Duration = duration
                 };
@@ -804,40 +822,69 @@ else
 
             foreach (var movie in cinema.Movies)
             {
+                Movie movieObject;
                 if (!MovieIdAndName.ContainsKey(movie.Id))
                 {
-                    continue;
-                }
-
-                Movie movieObject;
-
-                if (!movies.Any(m => m.Id == movie.Id))
-                {
-                    int duration;
-
-                    int.TryParse(movie.Content.FieldPlayingTime, out duration);
-
-                    if (movie.Content.URL == null)
+                    if (!specialShows.Any(m => m.Id == movie.Id))
                     {
-                        Console.WriteLine("KINO URL NULL, BØR IKKE SKE");
+                        int duration;
+
+                        int.TryParse(movie.Content.FieldPlayingTime, out duration);
+
+                        if (movie.Content.URL == null)
+                        {
+                            Console.WriteLine("KINO URL NULL, BØR IKKE SKE");
+                        }
+
+                        movieObject = new Movie()
+                        {
+                            Id = movie.Id,
+                            Title = movie.Content.Label,
+                            PremiereDate = movie.Content.FieldPremiere ?? "",
+                            KinoURL = movie.Content.URL,
+                            AgeRating = movie.Content.FieldCensorshipIcon,
+                            ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
+                            Duration = duration,
+                            Showtimes = new List<Showtime>(),
+                            IsSpecialShow = true
+                        };
+                        specialShows.Add(movieObject);
                     }
-
-                    movieObject = new Movie()
+                    else
                     {
-                        Id = movie.Id,
-                        Title = MovieIdAndName[movie.Id],
-                        PremiereDate = movie.Content.FieldPremiere,
-                        KinoURL = movie.Content.URL,
-                        AgeRating = movie.Content.FieldCensorshipIcon,
-                        ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
-                        Duration = duration,
-                        Showtimes = new List<Showtime>()
-                    };
-                    movies.Add(movieObject);
+                        movieObject = specialShows.First(m => m.Id == movie.Id);
+                    }
                 }
                 else
                 {
-                    movieObject = movies.First(m => m.Id == movie.Id);
+                    if (!movies.Any(m => m.Id == movie.Id))
+                    {
+                        int duration;
+
+                        int.TryParse(movie.Content.FieldPlayingTime, out duration);
+
+                        if (movie.Content.URL == null)
+                        {
+                            Console.WriteLine("KINO URL NULL, BØR IKKE SKE");
+                        }
+
+                        movieObject = new Movie()
+                        {
+                            Id = movie.Id,
+                            Title = MovieIdAndName[movie.Id],
+                            PremiereDate = movie.Content.FieldPremiere ?? "",
+                            KinoURL = movie.Content.URL,
+                            AgeRating = movie.Content.FieldCensorshipIcon ?? "",
+                            ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
+                            Duration = duration,
+                            Showtimes = new List<Showtime>()
+                        };
+                        movies.Add(movieObject);
+                    }
+                    else
+                    {
+                        movieObject = movies.First(m => m.Id == movie.Id);
+                    }
                 }
 
 
@@ -1133,41 +1180,69 @@ else
 
             foreach (var movie in cinema.Movies)
             {
+                Movie movieObject;
                 if (!MovieIdAndName.ContainsKey(movie.Id))
                 {
-                    continue;
-                }
-
-
-                Movie movieObject;
-
-                if (!movies.Any(m => m.Id == movie.Id))
-                {
-                    int duration;
-
-                    int.TryParse(movie.Content.FieldPlayingTime, out duration);
-
-                    if (movie.Content.URL == null)
+                    if (!specialShows.Any(m => m.Id == movie.Id))
                     {
-                        Console.WriteLine("KINO URL NULL, BØR IKKE SKE");
+                        int duration;
+
+                        int.TryParse(movie.Content.FieldPlayingTime, out duration);
+
+                        if (movie.Content.URL == null)
+                        {
+                            Console.WriteLine("KINO URL NULL, BØR IKKE SKE");
+                        }
+
+                        movieObject = new Movie()
+                        {
+                            Id = movie.Id,
+                            Title = movie.Content.Label,
+                            PremiereDate = movie.Content.FieldPremiere ?? "",
+                            KinoURL = movie.Content.URL,
+                            AgeRating = movie.Content.FieldCensorshipIcon ?? "",
+                            ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
+                            Duration = duration,
+                            Showtimes = new List<Showtime>(),
+                            IsSpecialShow = true
+                        };
+                        specialShows.Add(movieObject);
                     }
-
-                    movieObject = new Movie()
+                    else
                     {
-                        Id = movie.Id,
-                        Title = MovieIdAndName[movie.Id],
-                        PremiereDate = movie.Content.FieldPremiere,
-                        KinoURL = movie.Content.URL,
-                        AgeRating = movie.Content.FieldCensorshipIcon,
-                        ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
-                        Duration = duration,
-                        Showtimes = new List<Showtime>()
-                    };
-                    movies.Add(movieObject);
+                        movieObject = specialShows.First(m => m.Id == movie.Id);
+                    }
                 }
                 else
                 {
-                    movieObject = movies.First(m => m.Id == movie.Id);
+                    if (!movies.Any(m => m.Id == movie.Id))
+                    {
+                        int duration;
+
+                        int.TryParse(movie.Content.FieldPlayingTime, out duration);
+
+                        if (movie.Content.URL == null)
+                        {
+                            Console.WriteLine("KINO URL NULL, BØR IKKE SKE");
+                        }
+
+                        movieObject = new Movie()
+                        {
+                            Id = movie.Id,
+                            Title = MovieIdAndName[movie.Id],
+                            PremiereDate = movie.Content.FieldPremiere ?? "",
+                            KinoURL = movie.Content.URL,
+                            AgeRating = movie.Content.FieldCensorshipIcon ?? "",
+                            ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
+                            Duration = duration,
+                            Showtimes = new List<Showtime>()
+                        };
+                        movies.Add(movieObject);
+                    }
+                    else
+                    {
+                        movieObject = movies.First(m => m.Id == movie.Id);
+                    }
                 }
 
 
@@ -1218,12 +1293,12 @@ else
 
                             if (DateTime.TryParseExact(dateString, dateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
                             {
-                                if (startDate != DateTime.MinValue && dateTime < startDate)
+                                if (_startDate != DateTime.MinValue && dateTime < _startDate)
                                 {
                                     continue;
                                 }
 
-                                if (endDate != DateTime.MinValue && dateTime > endDate)
+                                if (_endDate != DateTime.MinValue && dateTime > _endDate)
                                 {
                                     continue;
                                 }
