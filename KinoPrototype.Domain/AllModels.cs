@@ -61,9 +61,11 @@ public class Movie
     public string ImageUrl { get; set; }
     public string KinoURL { get; set; }
     public int Duration { get; set; }
-    public string PremiereDate { get; set; }
+    public string? PremiereDate { get; set; }
 
-    public string AgeRating { get; set; }
+    public string? AgeRating { get; set; }
+    
+    public bool SpecialShowing { get; set; }
 }
 
 public class Showtime
