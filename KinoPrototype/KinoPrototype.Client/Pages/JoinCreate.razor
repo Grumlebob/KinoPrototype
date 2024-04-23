@@ -226,6 +226,19 @@
 
 </style>
 
+@* Dropdown: SortBy *@
+<div class="flex flex-row justify-end">
+    <div class="max-w-60">
+        <div class="flex flex-row">
+            <select value="@_sortBy" @onchange="OnSortByChanged" class="bg-slate-700 border border-gray-300 text-sky-50 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <option value="Most_Viewed">Mest populær</option>
+                <option value="Alphabetical">Alfabetisk</option>
+                <option value="Rating">Bedst bedømt</option>
+            </select>
+        </div>
+    </div>
+</div>
+
 
 <h1>Planlæg dit biograf event</h1>
 @if (_loading)
@@ -609,6 +622,18 @@ else
 
     private string movieSearchTerm = string.Empty;
     private string cinemaSearchTerm = string.Empty;
+    
+    public SortBy _sortBy = SortBy.Most_Viewed;
+    
+    //SORTBY
+    private async Task OnSortByChanged(ChangeEventArgs e)
+    {
+        if (Enum.TryParse(e.Value.ToString(), out SortBy sortByResult))
+        {
+            _sortBy = sortByResult;
+        }
+        await OnInitializedAsync();
+    }
 
     private void OnMovieSearchTermChanged(ChangeEventArgs e)
     {
@@ -691,8 +716,19 @@ else
         }
 
         if (filterString is "") return []; //all movies had showtimes
-        var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased&" +
+        
+        var sortString = _sortBy switch
+        {
+            SortBy.Alphabetical => "alphabetical",
+            SortBy.Rating => "rating",
+            SortBy.Most_Viewed => "most_viewed",
+            _ => throw new ArgumentOutOfRangeException(nameof(_sortBy), _sortBy, null)
+        };
+        
+        var apiString = $"https://api.kino.dk/ticketflow/showtimes?sort={sortString}&" +
                         filterString + "&?region=content&format=json";
+        
+        
         var httpClient = new HttpClient();
         var json = await httpClient.GetStringAsync(apiString);
         Root? root = JsonConvert.DeserializeObject<Root>(json);
@@ -780,7 +816,15 @@ else
 
         baseUrl = NavigationManager.BaseUri;
 
-        var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased&" +
+        var sortString = _sortBy switch
+        {
+            SortBy.Alphabetical => "alphabetical",
+            SortBy.Rating => "rating",
+            SortBy.Most_Viewed => "most_viewed",
+            _ => throw new ArgumentOutOfRangeException(nameof(_sortBy), _sortBy, null)
+        };
+        
+        var apiString = $"https://api.kino.dk/ticketflow/showtimes?sort={sortString}&" +
                         filterString + "&?region=content&format=json";
 
 
@@ -993,9 +1037,29 @@ else
 
         var uri = new Uri(url);
         var queryParams = HttpUtility.ParseQueryString(uri.Query);
-
+        
+        var sortByValues = queryParams.GetValues("sort");
+        foreach (var sort in sortByValues)
+        {
+            switch (sort.ToLower())
+            {
+                case "most_viewed":
+                    _sortBy = SortBy.Most_Viewed;
+                    break;
+                case "alphabetical":
+                    _sortBy = SortBy.Alphabetical;
+                    break;
+                case "rating":
+                    _sortBy = SortBy.Rating;
+                    break;
+                default:
+                    _sortBy = SortBy.Most_Viewed;
+                    break;
+            }
+        }
         var cinemasFilter = new HashSet<int>();
         //case: url is cinemas=1&cinemas=2
+        
         var cinemaValues = queryParams.GetValues("cinemas");
         if (cinemaValues != null)
         {
@@ -1091,10 +1155,17 @@ else
                 movieIndex++;
             }
         }
-
-        var apiString = "https://api.kino.dk/ticketflow/showtimes?sort=most_purchased" +
+        
+        var sortString = _sortBy switch
+        {
+            SortBy.Alphabetical => "alphabetical",
+            SortBy.Rating => "rating",
+            SortBy.Most_Viewed => "most_viewed",
+            _ => throw new ArgumentOutOfRangeException(nameof(_sortBy), _sortBy, null)
+        };
+        
+        var apiString = $"https://api.kino.dk/ticketflow/showtimes?sort={sortString}" +
                         MovieApiString + CinemaApiString + dateApiString + "&?region=content&format=json";
-
 
         json = await client.GetStringAsync(apiString);
 

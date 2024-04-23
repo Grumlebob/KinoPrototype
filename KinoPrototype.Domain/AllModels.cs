@@ -144,3 +144,10 @@ public enum Vote
 {
     No, Yes, IfNeedBe
 }
+
+public enum SortBy
+{
+    Alphabetical,
+    Rating,
+    Most_Viewed,
+}
