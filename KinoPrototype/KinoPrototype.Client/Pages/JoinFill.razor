@@ -267,9 +267,18 @@ else
         return;
     }
 
-    @foreach (var showtimesByMovie in _event.Showtimes.GroupBy(s => s.Movie.Id))
+    var showtimesToUse = _event.Showtimes.Where(s => !s.Movie.SpecialShowing).ToList();
+    showtimesToUse.AddRange(SpecialShowings);
+
+    @foreach (var showtimesByMovie in showtimesToUse.GroupBy(s => s.Movie.Id))
     {
         var movie = showtimesByMovie.First().Movie;
+
+        if (movie.SpecialShowing && SpecialShowings.First().Movie == movie)
+        {
+            <h1>Særvisninger</h1>
+        }
+
         <div class="Redbox">
             <div class="PosterImage">
                 <a href=@($"https://kino.dk{movie.KinoURL}") target="_blank">
@@ -289,8 +298,16 @@ else
                     </a>
 
                     <div class="movie-info">
-                        <span class="premiere">Premiere @movie.PremiereDate | </span>
+                        @if (!movie.SpecialShowing)
+                        {
+                            <span class="premiere">Premiere @movie.PremiereDate | </span>
+                        }
                         <span class="duration">Varighed @movie.Duration min</span>
+                        @if (movie.SpecialShowing)
+                        {
+                            <span class="duration">| Særvisning</span>
+                        }
+
                     </div>
 
                 </div>
@@ -445,7 +462,7 @@ else
                         <div style="display: flex">
                             @if (_isHost && participant.Id != 0)
                             {
-                                <div class="delete-participant-button" onclick="@(async () => { _participantToDelete = participant; StateHasChanged();await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirm-delete-dialog"); })">🗑</div>
+                                <div class="delete-participant-button" onclick="@(async () => { _participantToDelete = participant; StateHasChanged(); await JsRuntime.InvokeVoidAsync("customFunctions.showDialog", "confirm-delete-dialog"); })">🗑</div>
                             }
                             @if (!string.IsNullOrEmpty(participant.Note))
                             {
@@ -516,7 +533,7 @@ else
         </div>
         <button onclick="@(async () => { await JsRuntime.InvokeVoidAsync("customFunctions.hideDialog", "calendar-dialog"); })" style="border: 2px solid red">Luk</button>
     </dialog>
-    
+
     <dialog id="confirm-delete-dialog">
         @if (_participantToDelete != null)
         {
@@ -589,8 +606,10 @@ else
     private string? _trailerUrl;
 
     private bool _isLoggedIn;
-    
+
     private Participant? _participantToDelete;
+
+    private IEnumerable<Showtime> SpecialShowings => _event.Showtimes.Where(s => s.Movie.SpecialShowing);
 
     protected override async Task OnInitializedAsync()
     {
@@ -695,7 +714,7 @@ else
             _answerSaved = true;
             p.Id = int.Parse(await response.Content.ReadAsStringAsync());
             _event.Participants.Add(p);
-            
+
 
             StateHasChanged();
         }

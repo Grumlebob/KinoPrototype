@@ -356,8 +356,16 @@ else if (CinemaIdAndName.Count > 0 || MovieIdAndName.Count > 0)
         }
     }
 
-    @foreach (var movie in showtimes.GroupBy(s => s.Movie))
+    var showtimesToUse = showtimes.Where(s => !s.Movie.SpecialShowing).ToList();
+    showtimesToUse.AddRange(SpecialShowings);
+
+    @foreach (var movie in showtimesToUse.GroupBy(s => s.Movie))
     {
+        if (movie.Key.SpecialShowing && SpecialShowings.First().Movie== movie.Key)
+        {
+            <h1>Særvisninger</h1>
+        }
+        
         <div class="Redbox">
             <div class="PosterImage">
                 <a href=@($"https://kino.dk{movie.Key.KinoURL}") target="_blank">
@@ -376,10 +384,17 @@ else if (CinemaIdAndName.Count > 0 || MovieIdAndName.Count > 0)
                     <a href=@($"https://kino.dk{movie.Key.KinoURL}") target="_blank" style="text-decoration: none; color: black">
                         <h2>@movie.Key.Title</h2>
                     </a>
-
+                    
                     <div class="movie-info">
-                        <span class="premiere">Premiere @movie.Key.PremiereDate | </span>
+                        @if (!movie.Key.SpecialShowing)
+                        {
+                            <span class="premiere">Premiere @movie.Key.PremiereDate | </span>
+                        }
                         <span class="duration">Varighed @movie.Key.Duration min</span>
+                        @if (movie.Key.SpecialShowing)
+                        {
+                            <span class="duration">| Særvisning</span>
+                        }
                     </div>
 
                 </div>
@@ -565,6 +580,8 @@ else
 
     private DateTime _startDate = DateTime.Today;
     private DateTime _endDate = DateTime.Today.AddDays(30);
+
+    private IEnumerable<Showtime> SpecialShowings => showtimes.Where(s => s.Movie.SpecialShowing);
 
     private DateTime StartDate
     {
@@ -804,7 +821,7 @@ else
 
             foreach (var movie in cinema.Movies)
             {
-                if (!MovieIdAndName.ContainsKey(movie.Id))
+                if (movie.Type != "movie" && movie.Type != "event")
                 {
                     continue;
                 }
@@ -825,13 +842,14 @@ else
                     movieObject = new Movie()
                     {
                         Id = movie.Id,
-                        Title = MovieIdAndName[movie.Id],
+                        Title = movie.Content.Label,
                         PremiereDate = movie.Content.FieldPremiere,
                         KinoURL = movie.Content.URL,
                         AgeRating = movie.Content.FieldCensorshipIcon,
                         ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
                         Duration = duration,
-                        Showtimes = new List<Showtime>()
+                        Showtimes = new List<Showtime>(),
+                        SpecialShowing = movie.Type == "event"
                     };
                     movies.Add(movieObject);
                 }
@@ -1133,11 +1151,10 @@ else
 
             foreach (var movie in cinema.Movies)
             {
-                if (!MovieIdAndName.ContainsKey(movie.Id))
+                if (movie.Type != "movie" && movie.Type != "event")
                 {
                     continue;
                 }
-
 
                 Movie movieObject;
 
@@ -1155,13 +1172,14 @@ else
                     movieObject = new Movie()
                     {
                         Id = movie.Id,
-                        Title = MovieIdAndName[movie.Id],
+                        Title = movie.Content.Label,
                         PremiereDate = movie.Content.FieldPremiere,
                         KinoURL = movie.Content.URL,
                         AgeRating = movie.Content.FieldCensorshipIcon,
                         ImageUrl = movie.Content.FieldPoster.FieldMediaImage.Sources[0].Srcset,
                         Duration = duration,
-                        Showtimes = new List<Showtime>()
+                        Showtimes = new List<Showtime>(),
+                        SpecialShowing = movie.Type == "event"
                     };
                     movies.Add(movieObject);
                 }
@@ -1267,6 +1285,7 @@ else
                 selectedCinemaFilters.Add(cinemaFilter);
             }
         }
+
 
         moviesWithoutShowtimes = await GetMoviesWithoutShowtimes();
         _loading = false;
